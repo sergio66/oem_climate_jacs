@@ -1,0 +1,103 @@
+[sergio@taki-usr2 MakeJacskCARTA_CLR]$ ls -lt *.sbatch
+-rw-rw-r-- 1 sergio pi_strow 1853 Jun 10 15:50 sergio_matlab_co2_ch4_n2o.sbatch
+-rw-rw-r-- 1 sergio pi_strow 3542 Jun  5 22:11 sergio_matlab_anom40.sbatch
+-rw-rw-r-- 1 sergio pi_strow 3500 Jun  5 05:43 sergio_matlab_anom.sbatch
+-rw-rw-r-- 1 sergio pi_strow 2989 Jun  3 09:08 sergio_matlab_jobB.sbatch
+
+1) sergio_matlab_co2_ch4_n2o.sbatch : is to make the column jacs at eg 370 : 5 : 415 ppm
+matlab -nodisplay -r "clust_make_co2_370_385_400_415_all; clust_make_co2_coljac_370_385_400_415; clust_make_co2_coljac_370_385_400_415v2.m exit"
+matlab -nodisplay -r "clust_make_ch4_1700_2000_all; clust_make_ch4_coljac_1700_2000; exit"
+matlab -nodisplay -r "clust_make_n2o_315_340_all; clust_make_n2o_coljac_315_340; exit"
+matlab -nodisplay -r "clust_make_co2_3lay_370_385_400_415_all; clust_make_co2_3layjac_370_385_400_415_all; exit"
+
+2) sergio_matlab_anom40.sbatch : is to run either of
+<<< set caLBLRTM in find_file_names.m and also accordingly set SYMBOLIC LINK reset_nml so you point to correct CO2 compressed database              >>>
+<<<                                                   also set SYMBOLIC LINK Anomaly365_16 -> Anomaly365_16_12p4 so you point to correct output dir >>>
+  matlab -singleCompThread -nodisplay -r "clust_do_kcarta_driver_anomaly_loop40; exit"
+  #matlab -singleCompThread -nodisplay -r "clust_do_kcarta_driver_anomaly_loop40_backwards; exit"
+
+list_anomaly_files_to_be_made.m tells you which files still need to be made! 
+  and then it creates << notstarted.sc >> so you know which timesteps still need to start
+
+Note : put_together_results.m accumulates the kCARTA temp files from /scratch 
+  and put all the final results in Anomaly365_16  so you better have correct symbolic links
+I have now changed it so it   accumulates the kCARTA temp files from /scratch 
+  and put all the final results in Anomaly365_16_12p4 or 12p8 depending on "find_file_names.m"
+
+Then finally yoou have to run
+  driver_put_together_kcarta_jacs.m
+but make sure you edit it so you are pointing to correct Anomaly365_16_12p4/RESULTS/ or Anomaly365_16_12p8/RESULTS/
+
+3) sergio_matlab_anom.sbatch : is to run either of
+#matlab -singleCompThread -nodisplay -r "clust_do_kcarta_driver_anomaly; exit"
+matlab -singleCompThread -nodisplay -r "clust_do_kcarta_driver_anomaly_filelist; exit"
+
+4) these are the most important driver files
+-rw-rw-r-- 1 sergio pi_strow 5625 Jan 11 20:23 clust_do_kcarta_driver_anomaly_loop40.m
+-rw-rw-r-- 1 sergio pi_strow 8482 Jan 11 14:57 clust_do_kcarta_driver_anomaly_loop40_strowV3.m
+-rw-rw-r-- 1 sergio pi_strow  195 Aug 27 10:32 clust_driver_put_together_kcarta_jacs.m
+-rw-rw-r-- 1 sergio pi_strow 4143 Aug 19 10:26 clust_do_kcarta_driver_anomaly_loop40_backwards.m
+
+5) these are most important batch files
+-rw-rw-r-- 1 sergio pi_strow 2845 Aug 29 04:54 sergio_matlab_anom40_strowV3.sbatch
+-rw-rw-r-- 1 sergio pi_strow 3592 Aug 27 11:31 sergio_matlab_anom40.sbatch
+-rw-rw-r-- 1 sergio pi_strow 1969 Aug 27 11:31 sergio_matlab_anom40_put_together.sbatch
+
+eg sergio_matlab_anom40.sbatch : is to run clust_do_kcarta_driver_anomaly_loop40
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+do_kcarta calls eg
+  -rw-r--r-- 1 sergio pi_strow 3694 Jun  3 08:58 templatejac_WTO.nml
+  -rw-r--r-- 1 sergio pi_strow 3547 May 29 14:59 templatejac_col.nml *** note we started out with dQ=0.1,dT=1 .. now dQ=0.001,dT=0.01 ***
+which both look at 
+  reset_nml
+
+which is a symbolic link to either
+-rw-rw-r-- 1 sergio pi_strow 2948 Jun 19 17:43 reset_CO2_lblrtm12.4_nml
+-rw-rw-r-- 1 sergio pi_strow 2948 Jun 19 17:42 reset_CO2_lblrtm12.8_nml
+
+In fact ALL the .nml files call 
+  reset_nml
+
+[sergio@taki-usr2 MakeJacskCARTA_CLR]$ grep -in caNMLReset_param_spectra *.nml
+templatejacCH4_1700_2000_col.nml:16: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejacCH4_1700_2000_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejacCO2_370_385_400_415_alllay.nml:11: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejacCO2_370_385_400_415_alllay.nml:12: caNMLReset_param_spectra = 'reset_nml'
+templatejacCO2_370_385_400_415_col.nml:16: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejacCO2_370_385_400_415_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejac_col.nml:8: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejac_col.nml:9: caNMLReset_param_spectra = 'reset_nml'
+templatejacN2O_315_340_col.nml:16: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejacN2O_315_340_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejac_WTO.nml:11: caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+templatejac_WTO.nml:12: caNMLReset_param_spectra = 'reset_nml'
+
+[sergio@taki-usr2 MakeJacskCARTA_CLR]$ grep -in caNMLReset_param_spectra *.nml | grep -ve reset_nml_MMM_BBB
+templatejacCH4_1700_2000_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejacCO2_370_385_400_415_alllay.nml:12: caNMLReset_param_spectra = 'reset_nml'
+templatejacCO2_370_385_400_415_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejac_col.nml:9: caNMLReset_param_spectra = 'reset_nml'
+templatejacN2O_315_340_col.nml:17: caNMLReset_param_spectra = 'reset_nml'
+templatejac_WTO.nml:12: caNMLReset_param_spectra = 'reset_nml'
+
+-rw-rw-r-- 1 sergio pi_strow 3649 Jun 10 14:19 templatejacCO2_370_385_400_415_alllay.nml
+-rw-r--r-- 1 sergio pi_strow 3694 Jun  3 08:58 templatejac_WTO.nml
+-rw-r--r-- 1 sergio pi_strow 3547 May 29 14:59 templatejac_col.nml
+-rw-rw-r-- 1 sergio pi_strow 3828 May 29 14:59 templatejacN2O_315_340_col.nml
+-rw-rw-r-- 1 sergio pi_strow 3834 May 29 12:46 templatejacCH4_1700_2000_col.nml
+-rw-r--r-- 1 sergio pi_strow 3852 May 28 15:22 templatejacCO2_370_385_400_415_col.nml
+
+If you are looking for .nml files you may find them in
+ UNUSED_NML
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+2) clust_do_kcarta_driver_anomaly_loop40.m
+  writes temporary files to
+  use_this_rtp = ['AnomSym/timestep_' num2str(iTimeStep,'%03d') '_16day_avg.rp.rtp'];
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+to make the Jacobians PLEASE READ ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeProfs/Readme
+
+3) clust_do_kcarta_driver_anomaly_loop40_strowV3

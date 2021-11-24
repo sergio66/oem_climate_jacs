@@ -1,0 +1,47 @@
+*~
+.DS_Store
+
+#
+# oem_pkg_run .gitignore file
+#
+
+slurm*
+disk_space*
+ugh*
+
+# tex work files
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.snm
+*.toc
+*.dvi
+
+# archives and packages
+*.gz
+*.tgz
+*.tar
+*.zip
+*.bz2
+
+# explicitly need to add in data and fig files eg .mat
+*.mat
+*.png
+*.fig
+*.pdf
+*.nc
+*.rtp*
+*.dat*
+*.jac*
+warn*.msg*
+*.html
+
+# directories
+WORKS*
+Works*
+

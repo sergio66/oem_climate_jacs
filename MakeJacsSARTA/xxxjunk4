@@ -1,0 +1,336 @@
+ sarta_cloudy: completed rdprof
+ sergio nwantp=          -1
+ sergio listp=
+ sergio FIN = 
+ xxxjunk2                                                                       
+  
+ sergio FOUT = 
+ xxxjunk3                                                                       
+  
+fmatch(): WARNING -- truncating field robsqual
+Warning! input files does not contain gas 11 = NH3 
+ sarta_cloudy: completed opnrtp
+Warning! index= 346, chan ID= 346, fastmodel freq= 750.157, RTP freq= 750.163
+Warning! index= 355, chan ID= 355, fastmodel freq= 753.054, RTP freq= 753.060
+Warning! index= 356, chan ID= 356, fastmodel freq= 753.377, RTP freq= 753.383
+Warning! index= 360, chan ID= 360, fastmodel freq= 754.673, RTP freq= 754.679
+Warning! index= 364, chan ID= 364, fastmodel freq= 755.973, RTP freq= 755.979
+Warning! index= 366, chan ID= 366, fastmodel freq= 756.624, RTP freq= 756.631
+Warning! index= 370, chan ID= 370, fastmodel freq= 757.931, RTP freq= 757.937
+Warning! index= 371, chan ID= 371, fastmodel freq= 758.258, RTP freq= 758.265
+Warning! index= 372, chan ID= 372, fastmodel freq= 758.586, RTP freq= 758.592
+Warning! index= 373, chan ID= 373, fastmodel freq= 758.914, RTP freq= 758.920
+Warning! index= 381, chan ID= 381, fastmodel freq= 761.547, RTP freq= 761.553
+Warning! index= 442, chan ID= 442, fastmodel freq= 789.255, RTP freq= 789.266
+Warning! index= 443, chan ID= 443, fastmodel freq= 789.612, RTP freq= 789.620
+Warning! index= 444, chan ID= 444, fastmodel freq= 789.966, RTP freq= 789.974
+Warning! index= 445, chan ID= 445, fastmodel freq= 790.321, RTP freq= 790.328
+Warning! index= 446, chan ID= 446, fastmodel freq= 790.675, RTP freq= 790.683
+Warning! index= 447, chan ID= 447, fastmodel freq= 791.027, RTP freq= 791.038
+Warning! index= 448, chan ID= 448, fastmodel freq= 791.382, RTP freq= 791.393
+Warning! index= 449, chan ID= 449, fastmodel freq= 791.741, RTP freq= 791.749
+Warning! index= 450, chan ID= 450, fastmodel freq= 792.097, RTP freq= 792.105
+Warning! index= 451, chan ID= 451, fastmodel freq= 792.453, RTP freq= 792.461
+Warning! index= 453, chan ID= 453, fastmodel freq= 793.167, RTP freq= 793.174
+Warning! index= 454, chan ID= 454, fastmodel freq= 793.520, RTP freq= 793.531
+Warning! index= 455, chan ID= 455, fastmodel freq= 793.881, RTP freq= 793.889
+Warning! index= 458, chan ID= 458, fastmodel freq= 794.951, RTP freq= 794.963
+Warning! index= 459, chan ID= 459, fastmodel freq= 795.310, RTP freq= 795.322
+Warning! index= 460, chan ID= 460, fastmodel freq= 795.673, RTP freq= 795.681
+Warning! index= 461, chan ID= 461, fastmodel freq= 796.028, RTP freq= 796.040
+Warning! index= 465, chan ID= 465, fastmodel freq= 797.472, RTP freq= 797.480
+Warning! index= 466, chan ID= 466, fastmodel freq= 797.829, RTP freq= 797.841
+Warning! index= 468, chan ID= 468, fastmodel freq= 798.556, RTP freq= 798.564
+Warning! index= 469, chan ID= 469, fastmodel freq= 798.918, RTP freq= 798.925
+Warning! index= 471, chan ID= 471, fastmodel freq= 799.638, RTP freq= 799.650
+Warning! index= 473, chan ID= 473, fastmodel freq= 800.364, RTP freq= 800.376
+Warning! index= 474, chan ID= 474, fastmodel freq= 800.731, RTP freq= 800.739
+Warning! index= 475, chan ID= 475, fastmodel freq= 801.095, RTP freq= 801.103
+Warning! index= 476, chan ID= 476, fastmodel freq= 801.459, RTP freq= 801.467
+Warning! index= 478, chan ID= 478, fastmodel freq= 802.188, RTP freq= 802.196
+Warning! index= 479, chan ID= 479, fastmodel freq= 802.553, RTP freq= 802.561
+Warning! index= 480, chan ID= 480, fastmodel freq= 802.918, RTP freq= 802.926
+Warning! index= 481, chan ID= 481, fastmodel freq= 803.283, RTP freq= 803.291
+Warning! index= 482, chan ID= 482, fastmodel freq= 803.649, RTP freq= 803.657
+Warning! index= 484, chan ID= 484, fastmodel freq= 804.378, RTP freq= 804.390
+Warning! index= 485, chan ID= 485, fastmodel freq= 804.745, RTP freq= 804.757
+Warning! index= 486, chan ID= 486, fastmodel freq= 805.116, RTP freq= 805.124
+Warning! index= 487, chan ID= 487, fastmodel freq= 805.483, RTP freq= 805.491
+Warning! index= 488, chan ID= 488, fastmodel freq= 805.847, RTP freq= 805.859
+Warning! index= 489, chan ID= 489, fastmodel freq= 806.215, RTP freq= 806.227
+Warning! index= 490, chan ID= 490, fastmodel freq= 806.584, RTP freq= 806.596
+Warning! index= 491, chan ID= 491, fastmodel freq= 806.952, RTP freq= 806.965
+Warning! index= 492, chan ID= 492, fastmodel freq= 807.321, RTP freq= 807.334
+Warning! index= 493, chan ID= 493, fastmodel freq= 807.691, RTP freq= 807.703
+Warning! index= 494, chan ID= 494, fastmodel freq= 808.061, RTP freq= 808.073
+Warning! index= 495, chan ID= 495, fastmodel freq= 808.431, RTP freq= 808.443
+Warning! index= 496, chan ID= 496, fastmodel freq= 808.801, RTP freq= 808.813
+Warning! index= 497, chan ID= 497, fastmodel freq= 809.172, RTP freq= 809.184
+Warning! index= 498, chan ID= 498, fastmodel freq= 809.543, RTP freq= 809.555
+Warning! index= 499, chan ID= 499, fastmodel freq= 809.914, RTP freq= 809.926
+Warning! index= 500, chan ID= 500, fastmodel freq= 810.286, RTP freq= 810.298
+Warning! index= 501, chan ID= 501, fastmodel freq= 810.658, RTP freq= 810.670
+Warning! index= 502, chan ID= 502, fastmodel freq= 811.030, RTP freq= 811.042
+Warning! index= 503, chan ID= 503, fastmodel freq= 811.407, RTP freq= 811.415
+Warning! index= 506, chan ID= 506, fastmodel freq= 812.527, RTP freq= 812.535
+Warning! index= 507, chan ID= 507, fastmodel freq= 812.900, RTP freq= 812.909
+Warning! index= 508, chan ID= 508, fastmodel freq= 813.271, RTP freq= 813.283
+Warning! index= 509, chan ID= 509, fastmodel freq= 813.649, RTP freq= 813.657
+Warning! index= 510, chan ID= 510, fastmodel freq= 814.024, RTP freq= 814.032
+Warning! index= 511, chan ID= 511, fastmodel freq= 814.399, RTP freq= 814.408
+Warning! index= 513, chan ID= 513, fastmodel freq= 815.151, RTP freq= 815.159
+Warning! index= 514, chan ID= 514, fastmodel freq= 815.523, RTP freq= 815.535
+Warning! index= 516, chan ID= 516, fastmodel freq= 816.281, RTP freq= 816.289
+Warning! index= 518, chan ID= 518, fastmodel freq= 817.035, RTP freq= 817.044
+Warning! index= 519, chan ID= 519, fastmodel freq= 817.413, RTP freq= 817.422
+Warning! index= 521, chan ID= 521, fastmodel freq= 818.170, RTP freq= 818.178
+Warning! index= 522, chan ID= 522, fastmodel freq= 818.549, RTP freq= 818.557
+Warning! index= 523, chan ID= 523, fastmodel freq= 818.924, RTP freq= 818.936
+Warning! index= 524, chan ID= 524, fastmodel freq= 819.304, RTP freq= 819.316
+Warning! index= 526, chan ID= 526, fastmodel freq= 820.068, RTP freq= 820.076
+Warning! index= 527, chan ID= 527, fastmodel freq= 820.448, RTP freq= 820.457
+Warning! index= 529, chan ID= 529, fastmodel freq= 821.210, RTP freq= 821.219
+Warning! index= 530, chan ID= 530, fastmodel freq= 821.592, RTP freq= 821.600
+Warning! index= 531, chan ID= 531, fastmodel freq= 821.970, RTP freq= 821.982
+Warning! index= 532, chan ID= 532, fastmodel freq= 822.352, RTP freq= 822.364
+Warning! index= 533, chan ID= 533, fastmodel freq= 822.735, RTP freq= 822.747
+Warning! index= 534, chan ID= 534, fastmodel freq= 823.122, RTP freq= 823.130
+Warning! index= 535, chan ID= 535, fastmodel freq= 823.501, RTP freq= 823.513
+Warning! index= 536, chan ID= 536, fastmodel freq= 823.888, RTP freq= 823.897
+Warning! index= 537, chan ID= 537, fastmodel freq= 824.268, RTP freq= 824.281
+Warning! index= 538, chan ID= 538, fastmodel freq= 824.652, RTP freq= 824.665
+Warning! index= 540, chan ID= 540, fastmodel freq= 825.426, RTP freq= 825.435
+Warning! index= 541, chan ID= 541, fastmodel freq= 825.811, RTP freq= 825.820
+Warning! index= 542, chan ID= 542, fastmodel freq= 826.197, RTP freq= 826.205
+Warning! index= 543, chan ID= 543, fastmodel freq= 826.579, RTP freq= 826.591
+Warning! index= 544, chan ID= 544, fastmodel freq= 826.965, RTP freq= 826.978
+Warning! index= 547, chan ID= 547, fastmodel freq= 828.130, RTP freq= 828.139
+Warning! index= 548, chan ID= 548, fastmodel freq= 828.518, RTP freq= 828.526
+Warning! index= 550, chan ID= 550, fastmodel freq= 829.290, RTP freq= 829.303
+Warning! index= 551, chan ID= 551, fastmodel freq= 829.683, RTP freq= 829.691
+Warning! index= 552, chan ID= 552, fastmodel freq= 830.072, RTP freq= 830.080
+Warning! index= 553, chan ID= 553, fastmodel freq= 830.461, RTP freq= 830.470
+Warning! index= 554, chan ID= 554, fastmodel freq= 830.847, RTP freq= 830.859
+Warning! index= 555, chan ID= 555, fastmodel freq= 831.237, RTP freq= 831.250
+Warning! index= 557, chan ID= 557, fastmodel freq= 832.018, RTP freq= 832.031
+Warning! index= 558, chan ID= 558, fastmodel freq= 832.409, RTP freq= 832.422
+Warning! index= 559, chan ID= 559, fastmodel freq= 832.805, RTP freq= 832.813
+Warning! index= 560, chan ID= 560, fastmodel freq= 833.197, RTP freq= 833.205
+Warning! index= 561, chan ID= 561, fastmodel freq= 833.585, RTP freq= 833.597
+Warning! index= 562, chan ID= 562, fastmodel freq= 833.977, RTP freq= 833.990
+Warning! index= 564, chan ID= 564, fastmodel freq= 834.763, RTP freq= 834.776
+Warning! index= 565, chan ID= 565, fastmodel freq= 835.157, RTP freq= 835.169
+Warning! index= 566, chan ID= 566, fastmodel freq= 835.551, RTP freq= 835.563
+Warning! index= 567, chan ID= 567, fastmodel freq= 835.945, RTP freq= 835.958
+Warning! index= 568, chan ID= 568, fastmodel freq= 836.344, RTP freq= 836.352
+Warning! index= 569, chan ID= 569, fastmodel freq= 836.739, RTP freq= 836.747
+Warning! index= 571, chan ID= 571, fastmodel freq= 837.530, RTP freq= 837.538
+Warning! index= 572, chan ID= 572, fastmodel freq= 837.922, RTP freq= 837.934
+Warning! index= 574, chan ID= 574, fastmodel freq= 838.715, RTP freq= 838.727
+Warning! index= 575, chan ID= 575, fastmodel freq= 839.112, RTP freq= 839.124
+Warning! index= 576, chan ID= 576, fastmodel freq= 839.509, RTP freq= 839.522
+Warning! index= 577, chan ID= 577, fastmodel freq= 839.911, RTP freq= 839.920
+Warning! index= 578, chan ID= 578, fastmodel freq= 840.305, RTP freq= 840.318
+Warning! index= 579, chan ID= 579, fastmodel freq= 840.704, RTP freq= 840.716
+Warning! index= 581, chan ID= 581, fastmodel freq= 841.502, RTP freq= 841.514
+Warning! index= 582, chan ID= 582, fastmodel freq= 841.901, RTP freq= 841.914
+Warning! index= 585, chan ID= 585, fastmodel freq= 843.102, RTP freq= 843.115
+Warning! index= 587, chan ID= 587, fastmodel freq= 843.908, RTP freq= 843.917
+Warning! index= 588, chan ID= 588, fastmodel freq= 844.310, RTP freq= 844.319
+Warning! index= 589, chan ID= 589, fastmodel freq= 844.708, RTP freq= 844.721
+Warning! index= 590, chan ID= 590, fastmodel freq= 845.114, RTP freq= 845.123
+Warning! index= 592, chan ID= 592, fastmodel freq= 845.920, RTP freq= 845.929
+Warning! index= 593, chan ID= 593, fastmodel freq= 846.324, RTP freq= 846.333
+Warning! index= 594, chan ID= 594, fastmodel freq= 846.724, RTP freq= 846.737
+Warning! index= 595, chan ID= 595, fastmodel freq= 847.128, RTP freq= 847.141
+Warning! index= 597, chan ID= 597, fastmodel freq= 847.942, RTP freq= 847.950
+Warning! index= 598, chan ID= 598, fastmodel freq= 848.347, RTP freq= 848.356
+Warning! index= 599, chan ID= 599, fastmodel freq= 848.749, RTP freq= 848.761
+Warning! index= 600, chan ID= 600, fastmodel freq= 849.159, RTP freq= 849.167
+Warning! index= 601, chan ID= 601, fastmodel freq= 849.565, RTP freq= 849.574
+Warning! index= 602, chan ID= 602, fastmodel freq= 849.968, RTP freq= 849.981
+Warning! index= 603, chan ID= 603, fastmodel freq= 850.375, RTP freq= 850.388
+Warning! index= 605, chan ID= 605, fastmodel freq= 851.191, RTP freq= 851.203
+Warning! index= 607, chan ID= 607, fastmodel freq= 852.011, RTP freq= 852.020
+Warning! index= 608, chan ID= 608, fastmodel freq= 852.417, RTP freq= 852.429
+Warning! index= 623, chan ID= 623, fastmodel freq= 855.796, RTP freq= 855.808
+Warning! index= 631, chan ID= 631, fastmodel freq= 858.284, RTP freq= 858.296
+Warning! index= 639, chan ID= 639, fastmodel freq= 860.787, RTP freq= 860.799
+Warning! index= 651, chan ID= 651, fastmodel freq= 864.571, RTP freq= 864.583
+Warning! index= 659, chan ID= 659, fastmodel freq= 867.114, RTP freq= 867.125
+Warning! index= 669, chan ID= 669, fastmodel freq= 870.315, RTP freq= 870.326
+Warning! index= 670, chan ID= 670, fastmodel freq= 870.636, RTP freq= 870.648
+Warning! index= 678, chan ID= 678, fastmodel freq= 873.218, RTP freq= 873.229
+Warning! index= 680, chan ID= 680, fastmodel freq= 873.866, RTP freq= 873.877
+Warning! index= 681, chan ID= 681, fastmodel freq= 874.190, RTP freq= 874.201
+Warning! index= 682, chan ID= 682, fastmodel freq= 874.514, RTP freq= 874.526
+Warning! index= 690, chan ID= 690, fastmodel freq= 877.120, RTP freq= 877.132
+Warning! index= 696, chan ID= 696, fastmodel freq= 879.086, RTP freq= 879.097
+Warning! index= 703, chan ID= 703, fastmodel freq= 881.391, RTP freq= 881.402
+Warning! index= 706, chan ID= 706, fastmodel freq= 882.383, RTP freq= 882.394
+Warning! index= 716, chan ID= 716, fastmodel freq= 885.706, RTP freq= 885.717
+Warning! index= 720, chan ID= 720, fastmodel freq= 887.043, RTP freq= 887.053
+Warning! index= 731, chan ID= 731, fastmodel freq= 890.741, RTP freq= 890.751
+Warning! index= 733, chan ID= 733, fastmodel freq= 891.417, RTP freq= 891.427
+Warning! index= 734, chan ID= 734, fastmodel freq= 891.755, RTP freq= 891.766
+Warning! index= 736, chan ID= 736, fastmodel freq= 892.432, RTP freq= 892.443
+Warning! index= 739, chan ID= 739, fastmodel freq= 893.451, RTP freq= 893.461
+Warning! index= 742, chan ID= 742, fastmodel freq= 894.472, RTP freq= 894.482
+Warning! index= 743, chan ID= 743, fastmodel freq= 894.812, RTP freq= 894.823
+Warning! index= 744, chan ID= 744, fastmodel freq= 895.154, RTP freq= 895.164
+Warning! index= 750, chan ID= 750, fastmodel freq= 897.206, RTP freq= 897.216
+Warning! index= 751, chan ID= 751, fastmodel freq= 897.549, RTP freq= 897.559
+Warning! index= 754, chan ID= 754, fastmodel freq= 898.580, RTP freq= 898.590
+Warning! index= 755, chan ID= 755, fastmodel freq= 898.924, RTP freq= 898.934
+Warning! index= 760, chan ID= 760, fastmodel freq= 900.649, RTP freq= 900.659
+Warning! index= 762, chan ID= 762, fastmodel freq= 901.341, RTP freq= 901.351
+Warning! index= 764, chan ID= 764, fastmodel freq= 902.034, RTP freq= 902.044
+Warning! index= 765, chan ID= 765, fastmodel freq= 902.380, RTP freq= 902.391
+Warning! index= 766, chan ID= 766, fastmodel freq= 902.728, RTP freq= 902.738
+Warning! index= 769, chan ID= 769, fastmodel freq= 903.771, RTP freq= 903.781
+Warning! index= 770, chan ID= 770, fastmodel freq= 911.227, RTP freq= 911.239
+Warning! index= 773, chan ID= 773, fastmodel freq= 912.293, RTP freq= 912.304
+Warning! index= 774, chan ID= 774, fastmodel freq= 912.648, RTP freq= 912.660
+Warning! index= 775, chan ID= 775, fastmodel freq= 913.004, RTP freq= 913.016
+Warning! index= 788, chan ID= 788, fastmodel freq= 917.658, RTP freq= 917.670
+Warning! index= 789, chan ID= 789, fastmodel freq= 918.018, RTP freq= 918.030
+Warning! index= 790, chan ID= 790, fastmodel freq= 918.378, RTP freq= 918.390
+Warning! index= 799, chan ID= 799, fastmodel freq= 921.634, RTP freq= 921.646
+Warning! index= 801, chan ID= 801, fastmodel freq= 922.361, RTP freq= 922.372
+Warning! index= 803, chan ID= 803, fastmodel freq= 923.089, RTP freq= 923.100
+Warning! index= 807, chan ID= 807, fastmodel freq= 924.548, RTP freq= 924.560
+Warning! index= 808, chan ID= 808, fastmodel freq= 924.914, RTP freq= 924.926
+Warning! index= 809, chan ID= 809, fastmodel freq= 925.280, RTP freq= 925.292
+Warning! index= 813, chan ID= 813, fastmodel freq= 926.746, RTP freq= 926.758
+Warning! index= 814, chan ID= 814, fastmodel freq= 927.114, RTP freq= 927.125
+Warning! index= 817, chan ID= 817, fastmodel freq= 928.218, RTP freq= 928.230
+Warning! index= 820, chan ID= 820, fastmodel freq= 929.325, RTP freq= 929.336
+Warning! index= 825, chan ID= 825, fastmodel freq= 931.175, RTP freq= 931.187
+Warning! index= 826, chan ID= 826, fastmodel freq= 931.546, RTP freq= 931.558
+Warning! index= 827, chan ID= 827, fastmodel freq= 931.918, RTP freq= 931.929
+Warning! index= 830, chan ID= 830, fastmodel freq= 933.033, RTP freq= 933.045
+Warning! index= 832, chan ID= 832, fastmodel freq= 933.779, RTP freq= 933.790
+Warning! index= 833, chan ID= 833, fastmodel freq= 934.152, RTP freq= 934.164
+Warning! index= 834, chan ID= 834, fastmodel freq= 934.525, RTP freq= 934.537
+Warning! index= 835, chan ID= 835, fastmodel freq= 934.899, RTP freq= 934.911
+Warning! index= 836, chan ID= 836, fastmodel freq= 935.273, RTP freq= 935.285
+Warning! index= 837, chan ID= 837, fastmodel freq= 935.648, RTP freq= 935.659
+Warning! index= 838, chan ID= 838, fastmodel freq= 936.022, RTP freq= 936.034
+Warning! index= 840, chan ID= 840, fastmodel freq= 936.776, RTP freq= 936.784
+Warning! index= 842, chan ID= 842, fastmodel freq= 937.524, RTP freq= 937.536
+Warning! index= 844, chan ID= 844, fastmodel freq= 938.277, RTP freq= 938.289
+Warning! index= 846, chan ID= 846, fastmodel freq= 939.035, RTP freq= 939.043
+Warning! index= 848, chan ID= 848, fastmodel freq= 939.786, RTP freq= 939.798
+Warning! index= 849, chan ID= 849, fastmodel freq= 940.168, RTP freq= 940.176
+Warning! index= 850, chan ID= 850, fastmodel freq= 940.546, RTP freq= 940.554
+Warning! index= 851, chan ID= 851, fastmodel freq= 940.921, RTP freq= 940.933
+Warning! index= 852, chan ID= 852, fastmodel freq= 941.304, RTP freq= 941.312
+Warning! index= 854, chan ID= 854, fastmodel freq= 942.059, RTP freq= 942.071
+Warning! index= 855, chan ID= 855, fastmodel freq= 942.439, RTP freq= 942.451
+Warning! index= 856, chan ID= 856, fastmodel freq= 942.823, RTP freq= 942.831
+Warning! index= 858, chan ID= 858, fastmodel freq= 943.581, RTP freq= 943.593
+Warning! index= 860, chan ID= 860, fastmodel freq= 944.344, RTP freq= 944.355
+Warning! index= 862, chan ID= 862, fastmodel freq= 945.112, RTP freq= 945.120
+Warning! index= 864, chan ID= 864, fastmodel freq= 945.873, RTP freq= 945.885
+Warning! index= 865, chan ID= 865, fastmodel freq= 946.256, RTP freq= 946.268
+Warning! index= 867, chan ID= 867, fastmodel freq= 947.027, RTP freq= 947.035
+Warning! index= 869, chan ID= 869, fastmodel freq= 947.792, RTP freq= 947.803
+Warning! index= 870, chan ID= 870, fastmodel freq= 948.177, RTP freq= 948.188
+Warning! index= 871, chan ID= 871, fastmodel freq= 948.562, RTP freq= 948.573
+Warning! index= 872, chan ID= 872, fastmodel freq= 948.950, RTP freq= 948.958
+Warning! index= 873, chan ID= 873, fastmodel freq= 949.333, RTP freq= 949.344
+Warning! index= 874, chan ID= 874, fastmodel freq= 949.722, RTP freq= 949.730
+Warning! index= 875, chan ID= 875, fastmodel freq= 950.108, RTP freq= 950.116
+Warning! index= 876, chan ID= 876, fastmodel freq= 950.491, RTP freq= 950.503
+Warning! index= 881, chan ID= 881, fastmodel freq= 952.429, RTP freq= 952.441
+Warning! index= 882, chan ID= 882, fastmodel freq= 952.818, RTP freq= 952.829
+Warning! index= 883, chan ID= 883, fastmodel freq= 953.207, RTP freq= 953.218
+Warning! index= 884, chan ID= 884, fastmodel freq= 953.596, RTP freq= 953.607
+Warning! index= 885, chan ID= 885, fastmodel freq= 953.989, RTP freq= 953.997
+Warning! index= 886, chan ID= 886, fastmodel freq= 954.375, RTP freq= 954.387
+Warning! index= 889, chan ID= 889, fastmodel freq= 955.547, RTP freq= 955.558
+Warning! index= 890, chan ID= 890, fastmodel freq= 955.938, RTP freq= 955.949
+Warning! index= 891, chan ID= 891, fastmodel freq= 956.329, RTP freq= 956.341
+Warning! index= 893, chan ID= 893, fastmodel freq= 957.116, RTP freq= 957.125
+Warning! index= 894, chan ID= 894, fastmodel freq= 957.509, RTP freq= 957.517
+Warning! index= 895, chan ID= 895, fastmodel freq= 957.898, RTP freq= 957.910
+Warning! index= 896, chan ID= 896, fastmodel freq= 958.291, RTP freq= 958.303
+Warning! index= 897, chan ID= 897, fastmodel freq= 958.685, RTP freq= 958.696
+Warning! index= 899, chan ID= 899, fastmodel freq= 959.476, RTP freq= 959.484
+Warning! index= 900, chan ID= 900, fastmodel freq= 959.867, RTP freq= 959.878
+Warning! index= 901, chan ID= 901, fastmodel freq= 960.262, RTP freq= 960.273
+Warning! index= 905, chan ID= 905, fastmodel freq= 961.844, RTP freq= 961.855
+Warning! index= 906, chan ID= 906, fastmodel freq= 962.240, RTP freq= 962.252
+Warning! index= 911, chan ID= 911, fastmodel freq= 964.230, RTP freq= 964.238
+Warning! index= 912, chan ID= 912, fastmodel freq= 964.628, RTP freq= 964.637
+Warning! index= 913, chan ID= 913, fastmodel freq= 965.024, RTP freq= 965.035
+Warning! index= 916, chan ID= 916, fastmodel freq= 966.222, RTP freq= 966.233
+Warning! index= 918, chan ID= 918, fastmodel freq= 967.022, RTP freq= 967.034
+Warning! index= 919, chan ID= 919, fastmodel freq= 967.423, RTP freq= 967.435
+Warning! index= 920, chan ID= 920, fastmodel freq= 967.824, RTP freq= 967.836
+Warning! index= 921, chan ID= 921, fastmodel freq= 968.229, RTP freq= 968.237
+Warning! index= 926, chan ID= 926, fastmodel freq= 970.237, RTP freq= 970.249
+Warning! index= 927, chan ID= 927, fastmodel freq= 970.641, RTP freq= 970.652
+Warning! index= 928, chan ID= 928, fastmodel freq= 971.044, RTP freq= 971.056
+Warning! index= 929, chan ID= 929, fastmodel freq= 971.451, RTP freq= 971.460
+Warning! index= 930, chan ID= 930, fastmodel freq= 971.853, RTP freq= 971.864
+Warning! index= 931, chan ID= 931, fastmodel freq= 972.258, RTP freq= 972.269
+Warning! index= 932, chan ID= 932, fastmodel freq= 972.666, RTP freq= 972.674
+Warning! index= 934, chan ID= 934, fastmodel freq= 973.477, RTP freq= 973.485
+Warning! index=1105, chan ID=1105, fastmodel freq=1056.544, RTP freq=1056.556
+Warning! index=1109, chan ID=1109, fastmodel freq=1058.452, RTP freq=1058.463
+Warning! index=1111, chan ID=1111, fastmodel freq=1059.408, RTP freq=1059.420
+Warning! index=1112, chan ID=1112, fastmodel freq=1059.886, RTP freq=1059.898
+Warning! index=1115, chan ID=1115, fastmodel freq=1061.325, RTP freq=1061.337
+Warning! index=1125, chan ID=1125, fastmodel freq=1066.147, RTP freq=1066.159
+Warning! index=1127, chan ID=1127, fastmodel freq=1067.117, RTP freq=1067.128
+Warning! index=1129, chan ID=1129, fastmodel freq=1068.088, RTP freq=1068.099
+Warning! index=1148, chan ID=1148, fastmodel freq=1077.397, RTP freq=1077.409
+Warning! index=1154, chan ID=1154, fastmodel freq=1080.369, RTP freq=1080.381
+Warning! index=1155, chan ID=1155, fastmodel freq=1080.866, RTP freq=1080.878
+Warning! index=1156, chan ID=1156, fastmodel freq=1081.363, RTP freq=1081.375
+Warning! index=1157, chan ID=1157, fastmodel freq=1081.861, RTP freq=1081.873
+Warning! index=1158, chan ID=1158, fastmodel freq=1082.359, RTP freq=1082.371
+Warning! index=1166, chan ID=1166, fastmodel freq=1086.359, RTP freq=1086.372
+Warning! index=1167, chan ID=1167, fastmodel freq=1086.861, RTP freq=1086.874
+Warning! index=1168, chan ID=1168, fastmodel freq=1087.364, RTP freq=1087.376
+Warning! index=1179, chan ID=1179, fastmodel freq=1092.920, RTP freq=1092.933
+Warning! index=1190, chan ID=1190, fastmodel freq=1098.530, RTP freq=1098.543
+Warning! index=1192, chan ID=1192, fastmodel freq=1099.556, RTP freq=1099.569
+Warning! index=1195, chan ID=1195, fastmodel freq=1101.098, RTP freq=1101.111
+Warning! index=1197, chan ID=1197, fastmodel freq=1102.128, RTP freq=1102.141
+Warning! index=1203, chan ID=1203, fastmodel freq=1105.230, RTP freq=1105.243
+Warning! index=1204, chan ID=1204, fastmodel freq=1105.749, RTP freq=1105.762
+Warning! index=1207, chan ID=1207, fastmodel freq=1107.307, RTP freq=1107.320
+Warning! index=1208, chan ID=1208, fastmodel freq=1107.827, RTP freq=1107.841
+Warning! index=1209, chan ID=1209, fastmodel freq=1108.348, RTP freq=1108.361
+Warning! index=1214, chan ID=1214, fastmodel freq=1110.959, RTP freq=1110.973
+Warning! index=1216, chan ID=1216, fastmodel freq=1112.007, RTP freq=1112.021
+Warning! index=1217, chan ID=1217, fastmodel freq=1112.532, RTP freq=1112.545
+Warning! index=1225, chan ID=1225, fastmodel freq=1116.745, RTP freq=1116.758
+Warning! index=1230, chan ID=1230, fastmodel freq=1119.393, RTP freq=1119.407
+Warning! index=1231, chan ID=1231, fastmodel freq=1119.924, RTP freq=1119.938
+Warning! index=1232, chan ID=1232, fastmodel freq=1120.456, RTP freq=1120.470
+Warning! index=1233, chan ID=1233, fastmodel freq=1120.988, RTP freq=1121.002
+Warning! index=1235, chan ID=1235, fastmodel freq=1122.053, RTP freq=1122.067
+Warning! index=1242, chan ID=1242, fastmodel freq=1125.797, RTP freq=1125.812
+Warning! index=1243, chan ID=1243, fastmodel freq=1126.334, RTP freq=1126.349
+Warning! index=1246, chan ID=1246, fastmodel freq=1127.947, RTP freq=1127.962
+Warning! index=1248, chan ID=1248, fastmodel freq=1129.025, RTP freq=1129.040
+Warning! index=1251, chan ID=1251, fastmodel freq=1130.646, RTP freq=1130.660
+Warning! index=1254, chan ID=1254, fastmodel freq=1132.270, RTP freq=1132.285
+Warning! index=1255, chan ID=1255, fastmodel freq=1132.813, RTP freq=1132.828
+Warning! index=1378, chan ID=1378, fastmodel freq=1289.430, RTP freq=1289.441
+Warning! index=1381, chan ID=1381, fastmodel freq=1291.134, RTP freq=1291.145
+Warning! index=1387, chan ID=1387, fastmodel freq=1294.556, RTP freq=1294.567
+Warning! index=1396, chan ID=1396, fastmodel freq=1299.722, RTP freq=1299.733
+Warning! index=1397, chan ID=1397, fastmodel freq=1300.298, RTP freq=1300.310
+Warning! index=1398, chan ID=1398, fastmodel freq=1300.875, RTP freq=1300.887
+Warning! index=1399, chan ID=1399, fastmodel freq=1301.452, RTP freq=1301.464
+Warning! index=1405, chan ID=1405, fastmodel freq=1304.927, RTP freq=1304.939
+Warning! index=1408, chan ID=1408, fastmodel freq=1306.672, RTP freq=1306.684
+Warning! index=1420, chan ID=1420, fastmodel freq=1313.694, RTP freq=1313.706
+Warning! index=1430, chan ID=1430, fastmodel freq=1319.602, RTP freq=1319.615
+Warning! index=1458, chan ID=1458, fastmodel freq=1336.420, RTP freq=1336.433
+Warning! index=1459, chan ID=1459, fastmodel freq=1337.028, RTP freq=1337.041
+Warning! index=1460, chan ID=1460, fastmodel freq=1337.637, RTP freq=1337.650

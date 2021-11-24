@@ -1,0 +1,72 @@
+Code to make jacobians in 4 (yes FOUR) easy steps.
+--------------------------------------------------
+
+Assumptions
+------------
+Assumes you are giving an rtp file with LAYERS profiles (see ../MakeProfs directory!)
+
+Still needs to be fixed/checked
+-------------------------------
+1) names of sarta execs in override_defaults.m
+
+What you need to do
+--------------------
+1) create file "blah.m" which has some parameters such as rtp file to process, number of profiles (1:N) to process etc
+2) edit file "set_file_override_settings" to include
+   file_override_settings = blah.m;
+   And inside "blah.m" you need to specify topts.iJacType = 0;     %% clr sky jacs!
+                                        or topts.iJacType = 100;   %% cld sky jacs! DEFAULT
+   (see below)
+4) /bin/rm slurm*.out; sbatch --array=1-N sergio_matlab_jobB.sbatch
+5) run "put_together_sarta_jacs" to concat together all the files
+
+What can be in "blah.m"
+------------------------
+
+The following defaults are set in "override_defaults.m" -- you can override them by setting eg topts.x = y in blah.m
+Typially you would only specify the following two
+  topts.fINPUT_rtp = '/path_to_latest_stats_avgs/file_with_40layers_avg_thermo_cloudslabs.rtp';
+  topts.savedir    = '/path_to_jacs/';
+though you may also want to reset the instrument (so correct SARTA is called)
+  topts.iInstr = 3;
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%
+These are the defaults and possible options
+%% instrument type
+%% instrument type
+params.iInstr = +2;  strInstr = 'CrIS hi-res';
+params.iInstr = -2;  strInstr = 'CrIS lo-res';
+params.iInstr = -3;  strInstr = 'IASI RTP1';
+params.iInstr = +3;  strInstr = 'IASI RTP2';
+params.iInstr = -1;  strInstr = 'AIRS L1b';
+params.iInstr = +1;  strInstr = 'AIRS L1c';
+
+%% name of input rtp file for jacobians
+params.fINPUT_rtp = 'cloudNclear40latbinsAIRS.op.rtp';  %% satzen = 22
+
+%% number of profiles in the rtp file
+params.numProfs = 40;
+
+%% what type of jacobian is needed
+%params.ix = 41; %% cloud jacs (with O3) from layers
+params.iJacType = 0;   %% clear sky T(z), WV(z), O3(z), stemp jacs + col CO2,CH4,N2O
+params.iJacType = 100; %% cloud sky T(z), WV(z), O3(z), stemp jacs + col CO2,CH4,N2O +  cpsize/cngwat/cprtop
+
+%%%%%
+%% set output dir based on iJacType
+if params.iJacType == 0
+  params.savedir = 'SARTA_CLRJACS_97_T_WV_O3_stemp_col_CO2_CH4_N2O';
+elseif params.iJacType == 100
+  params.savedir = 'SARTA_CLDJACS_97_T_WV_O3_stemp_col_CO2_CH4_N2O_cpsize_cngwat_cprtop';
+else
+  params.savedir = 'JUNK';
+end
+
+%%%%
+%% set sarta based on the instrument type and clr/cld jacs needed
+params.sarta = f(cld/clr/instr)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+finally translate 2834 to 2645 chans using 
+  translate2834to2645_addCFCjacs.m
+note you first have to set if you are doing AVG or 365 anomaly

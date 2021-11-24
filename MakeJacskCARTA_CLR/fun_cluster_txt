@@ -1,0 +1,12 @@
+real    0m50.874s
+user    0m9.814s
+sys    0m0.417s
+/bin/bash: /scratch/1090434/Anomaly365_16_12p8/001//status40: Too many open files in system
+Caught "std::exception" Exception message is:
+Message Catalog MATLAB:load was not loaded from the file. Please check file location, format or contents
+MATLAB: runtime/shutdown.cpp:368: void mnShutdownMatlabInternal(bool, bool, mwboost::optional<int>, std::promise<void>, bool, bool): Assertion `' failed.
+Could not create on-disk crash report: failed opening file: Too many open files in system: iostream error
+
+
+[sergio@taki-usr2 MakeJacskCARTA_CLR]$ more slurm-1090850.out
+Error running slurm prolog: 1

@@ -1,0 +1,7 @@
+## see eg http://homepages.cae.wisc.edu/~hessel/faqs/howDoIEnterCronJobs.html
+#
+# submit with         crontab  cronner
+#
+# check status with eg     crontab -l
+## do every 5 minutes
+*/15 * * * * /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeJacskCARTA_CLR/rm_slurm.sc

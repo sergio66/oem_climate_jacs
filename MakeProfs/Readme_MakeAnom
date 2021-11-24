@@ -1,0 +1,24 @@
+-rw-rw-r-- 1 sergio pi_strow  1612 Jun  3 21:30 do16dayavg.m
+-rw-rw-r-- 1 sergio pi_strow   934 Jun  3 21:26 plot_bad_profs.m
+-rw-rw-r-- 1 sergio pi_strow  1453 Jun  3 21:22 check_anom_profiles40.m
+-rw-rw-r-- 1 sergio pi_strow  2978 Jun  3 20:47 completed_16day_avgprof_VS_lat.m
+-rw-rw-r-- 1 sergio pi_strow 16349 Jun  2 22:23 clust_make_lats40_16dayavg.m
+-rw-rw-r-- 1 sergio pi_strow  2363 Jun  2 21:14 time_series_tracegas.m
+-rw-rw-r-- 1 sergio pi_strow  1458 Jun  1 22:00 set_dirIN_dirOUT.m
+
+1) Edit set_dirIN_dirOUT.m
+2) From dirOUT, make sure you make the dir
+   dirOUT = [dirOUT '/16DayAvg/'];
+3) use sbatch --array=1-40 sergio_matlab_jobB.sbatch to run 
+   clust_make_lats40_16dayavg.m  which eventually makes for each latbin 1 .. 40
+     fopx = [dirOUT '/latbin' num2str(ii) '_16day_avg.op.rtp'];
+     frpx = [dirOUT '/latbin' num2str(ii) '_16day_avg.rp.rtp'];
+4) now from these 40 rtp files which have about 365 timesteps, call 
+     completed_16day_avgprof_VS_lat.m
+   so that you can make 365 rtp files, each with 40 latbins, for kCARTA to read in 
+5) check these files for Nan or INF using
+     check_anom_profiles40.m
+
+when happy
+6) cd /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeJacskCARTA_CLR
+   and run sergio_matlab_anom.sbatch or sergio_matlab_anom40.sbatch

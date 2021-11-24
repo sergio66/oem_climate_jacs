@@ -1,0 +1,57 @@
+This is to make RATES for USUAL 40 latbins
+------------------------------------------
+
+0) Edit set_dirIN_dirOUT.m so that it has the locations of the statlat files from LLS
+   Currently
+     dirIN = '/home/strow/Work/Airs/Stability/Data/Desc/';              dirOUT = 'LATS40_avg/';     %% AIRS 16 year
+     dirIN  = ['/home/strow/Work/Iasi/Stability/Data/' statsType '/'];  dirOUT = ['LATS40_avg_IASI_11year/' statsType '/'];  %% IASI 11 year
+
+1) Check make_lats40_avg_and_monthly_profs.m  eg p.zobs = 705000 for AIRS
+                                                 p.zobs = 824000 for CRIS
+                                                 p.zobs = 817000 for IASI
+
+2) Run the "make_lats40_avg_and_monthly_profs.m" code
+
+3) Edit rates_profiles40.m to check dirOUT is correct
+4) run clust_make_geophysical_rates40.m using the cluster and sergio_matlab_jobB.sbatch  (VERY FAST)
+
+5) run put_together_latbins_profs_rates.m by making sure dirOUT is correct
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This is to make ANOMALY profiles for JACOBIANS
+----------------------------------------------
+
+0) Edit set_dirIN_dirOUT.m so that it has the locations of the statlat files from LLS
+   Currently
+     dirIN = '/home/strow/Work/Airs/Stability/Data/Desc/';              dirOUT = 'LATS40_avg/';     %% AIRS 16 year
+     dirIN  = ['/home/strow/Work/Iasi/Stability/Data/' statsType '/'];  dirOUT = ['LATS40_avg_IASI_11year/' statsType '/'];  %% IASI 11 year
+
+1) Check make_lats40_avg_and_monthly_profs.m  eg p.zobs = 705000 for AIRS
+                                                 p.zobs = 824000 for CRIS
+                                                 p.zobs = 817000 for IASI
+
+2) sbatch --exclude=cnode[205,239,241-242] --array=1-40 sergio_matlab_jobB.sbatch 1  to make 40 latbin 16day avg, no seasonal 
+  this runs clust_make_lats40_16dayavg_noseasonal and produces eg
+[sergio@taki-usr2 MakeProfs]$ ls CLO_LAT40_avg_made_Dec2019_Clr/Desc/16DayAvgNoS/
+latbin10_16day_avg.op.rtp  latbin14_16day_avg.rp.rtp  latbin20_16day_avg.rp.mat  latbin25_16day_avg.op.rtp  latbin30_16day_avg.rp.rtp  latbin35_16day_avg.rp.mat  latbin5_16day_avg.op.rtp
+latbin10_16day_avg.rp.mat  latbin15_16day_avg.op.rtp  latbin20_16day_avg.rp.rtp  latbin25_16day_avg.rp.mat  latbin31_16day_avg.op.rtp  latbin35_16day_avg.rp.rtp  latbin5_16day_avg.rp.mat
+
+3) make sure you run
+  completed_16day_avgprof_VS_lat.m   to make eg  CLO_LAT40_avg_made_Dec2019_Clr/Desc/16DayAvgNoS/timestep_[001-365]_16day_avg.rp.rtp
+  since the output is needed to make jacs at each timestep!!!!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+
+4) Most critical thing : now go to eg /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeJacskCARTA_CLR and make/edit symbolic link
+  eg ln -s ../MakeProfs/LATS40_avg_made_Aug20_2019_Clr/Desc//16DayAvgNoS/ AnomSym
+     ln -s ../MakeProfs/LATS40_avg_made_Aug20_2019_Clr/Desc//16DayAvgNoS/ AnomSym_UsedforAIRS_AMTpaper2019
+
+  eg ln -s ../MakeProfs/CLO_LAT40_avg_made_Dec2019_Clr/Desc/16DayAvgNoS/ AnomSym
+
+5) now you can run clust_do_kcarta_driver_anomaly_loop40_strowV3.m in that dir, using sergio_matlab_anom40_strowV3.sbatch 1  -- to make the trace gas anomaly jacs
+6) now you can run clust_do_kcarta_driver_anomaly_loop40.m         in that dir, using sergio_matlab_anom40_strowV3.sbatch 2  -- to make the main trace gas + T WV O3 anomaly jacs
+7) check progress using "list_anomaly_files_to_be_made.m"
+8) then call "clust_driver_put_together_kcarta_jacs" and "put_together_results_coljacV3.m"
+    sbatch --array=130-157 sergio_matlab_anom40_put_together.sbatch
+    

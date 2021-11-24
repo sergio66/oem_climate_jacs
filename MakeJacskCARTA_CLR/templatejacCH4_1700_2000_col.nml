@@ -1,0 +1,162 @@
+ $nm_params
+ namecomment	=  '******* PARAMS section *******'
+ KCKD = 32
+ kRTP = +1
+ kJacobOutput = +1
+ kActualJacs= +100
+
+ !! turn on/off CO2 chi function
+ iaaOverride(1,3) = 0
+ !! turn on/off CO2/WV/N2 continuum function (0) nothing (2) WV/CO2 (4) N2/CO2 (6) both
+ !! iaaOverride(1,9) = 2
+ !! iaaOverride(1,9) = 4
+ !! iaaOverride(1,9) = 6
+ iaaOverride(1,9) = 0
+
+ caNMLReset_param_spectra = 'reset_nml_MMM_BBB'
+ caNMLReset_param_spectra = 'reset_nml'
+
+ $end
+
+ $nm_frqncy
+ namecomment	=  '******* FRQNCY section *******'
+ rf1	        = 605
+ rf2    	= 2830
+ $end
+
+ $nm_molgas
+ namecomment	=  '******* MOLGAS section *******'
+ !use all gases in MOLGAS
+ iNGas	=            -1
+ $end
+
+ $nm_xscgas
+ namecomment	=  '******* XSCGAS section *******'
+ !use all gases in XSCGAS
+ iNxsec	=             -1
+ $end
+
+ $nm_prfile
+ namecomment	=  '******* PRFILE section *******'
+ iBinOrAsc    = 1
+ iNclouds_RTP   = 0
+ !  iaNML_Ctype(1)  = 301
+ !    caaCloudFile(1) =
+ !            '/asl/s1/sergio/CLOUDS_MIEDATA/VOLCANO/andesite_405_2905_280'
+
+ !iaNML_Ctype(1)  = 101
+ ! caaCloudFile(1) = '/asl/s1/sergio/CLOUDS_MIEDATA/WATER250/water_405_2905_250'
+
+ !iaNML_Ctype(2)  = 201
+ !  caaCloudFile(2) =
+ !         '/asl/s1/sergio/CLOUDS_MIEDATA/BARAN_ICE_AGGREGATES/ice_agg_333_2980_forkcarta'
+
+ !iaNML_Ctype(2)  = 201
+ !  caaCloudFile(2) =
+ !         '/asl/s1/sergio/CLOUDS_MIEDATA/CIRRUS_BRYANBAUM/v2013/ice_yangbaum_GHM_333_2980_forkcarta'
+
+ iRTP = MMM	  
+ iMPSetForRadRTP = 1
+ caPFname = 'trp.prof'
+ caPFname = 'pin_feb2002_sea_airsnadir_rad.so2.latlon.const_emiss.rtp'
+ caPFname = 'latbin1_40.rp.rtp'
+ caPFname = 'XYZXYZ'   
+ caPFname = 'CH4_1700_2000/make_ch4_1700_2000_latbin_XYZXYZ.op.rtp'
+ 
+ $end
+
+ $nm_weight
+ namecomment	=  '******* WEIGHT section *******'
+ !this is to develop fast forward models
+ iNpmix	=             1
+ caaMixFileLines(1)	= 
+    '1   -1    1.0    -1'
+ $end
+
+ $nm_radnce
+ namecomment	=  '******* RADNCE section *******'
+ !4 atmospheres
+ iNatm          =  -1
+ $end
+
+ $nm_jacobn
+ namecomment	=  '******* JACOBN section *******'
+ !no jacobians
+ iJacob	=     5
+ iaJacob(1) = 2
+ iaJacob(2) = 4
+ iaJacob(3) = 5
+ iaJacob(4) = 6
+ iaJacob(5) = 51 
+
+ iJacob	=     1
+ iaJacob(1) = 6
+ $end
+
+ $nm_spectr
+ namecomment	=  '******* SPECTRA section ******'
+ !no external spectra
+ iNumNewGases	=             -1
+ $end
+
+ $nm_nonlte
+ namecomment    =  '******* NONLTE section ******'
+ iNumNLTEGases    = -1
+
+ iNumNLTEGases    = +1
+ iaNLTEGasID(1)  = 2
+ iNLTE_SlowORFast = -1
+ iaNLTEChunks(1) = 8
+ iaaNLTEChunks(1,1) = 2205
+ iaaNLTEChunks(1,2) = 2230
+ iaaNLTEChunks(1,3) = 2255
+ iaaNLTEChunks(1,4) = 2280
+ iaaNLTEChunks(1,5) = 2305
+ iaaNLTEChunks(1,6) = 2330
+ iaaNLTEChunks(1,7) = 2355
+ iaaNLTEChunks(1,8) = 2380
+
+ !!! below this is not needed for FAST nlte
+ !!! below this is not needed for FAST nlte
+
+ iDoUpperAtmNLTE    = +1
+ caaUpperMixRatio = '/home/sergio/KCARTADATA/General/NLTE/atm_md.ip'
+
+ iAllLayersLTE      = -1
+ iUseWeakBackGnd    = +1
+ iSetBloat          = -1
+ raNLTEstrength(1)   =        1.000
+ raNLTEstart(1)      =        30.0
+ !comment out this so kCARTA finds optimum profile!!!!!
+ !!!caaNLTETemp(1)     =
+ !!!  '../SRCv1.12/NONLTE2/sergio/VT_48PROFILES/sergio_merge/vt5_s0.prf'
+ caaStrongLines(1) =
+     '/strowdata1/s1/sergio/AIRSCO2/CO2_BANDS_PARAM/co2_4um_bands.txt'
+
+ $end
+
+ $nm_scattr
+ namecomment	=  '******* SCATTR section *******'
+ !no scattering
+ iNclouds	  =             0
+ $end
+
+ $nm_output
+ namecomment	=  '******* OUTPUT section *******'
+ caComment      = 'data for reflected thermal fit'
+ caLogFile      = '/dev/null'
+ caLogFile      = 'CH4_1700_2000/coljacXYZXYZ.log'
+ 
+ !dump out radiance at TOA
+ iaPrinter(1)   =    3
+ iaGPMPAtm(1)   =   -1
+ iaNp(1)        =    1
+ raaOp(1,1)     =    0.0
+ raaOp(1,1)     =    1200.0
+ raaOp(1,1)     =    -1
+
+ $end
+
+ $nm_endinp
+ namecomment	=  '******* ENDINP section *******'
+ $end

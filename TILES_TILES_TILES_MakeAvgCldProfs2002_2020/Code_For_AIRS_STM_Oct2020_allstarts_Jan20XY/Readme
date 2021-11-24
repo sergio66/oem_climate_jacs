@@ -1,0 +1,105 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% GENERAL
+-rw-rw-r-- 1 sergio pi_strow  3879 Sep 17 10:21 cluster_anomaly_and_trends_16day_calcs_howard.m  %% makes anomalies and trends and saves them
+-rw-rw-r-- 1 sergio pi_strow  4280 Sep 17 11:26 driver_gather16day_calcs_N_obs_howard.m          %% makes HUGE file with all the rcalcs
+-rw-rw-r-- 1 sergio pi_strow  1010 Sep 22 13:57 make_summary_latbin_files_txt.m                  %% USED by ~/MATLABCODE/CRODGERS_FAST_CLOUD/clustbatch_redo_stemp_wv_cloud_filelist.m!!!! 
+                                                                                                 %% for retrievals
+
+-rw-rw-r-- 1 sergio pi_strow  3854 Sep 16 18:46 driver_gather16day_calcs_howard.m                %% does through the rcalc rtps and puts them together to make the BIG FAT anomaly
+-rw-rw-r-- 1 sergio pi_strow 2640 Sep 26 08:50 save_gather16day_calcs_howard.m                   %% robs rcld rclr stemp mmw into DATA/ObsNCalcs/breakout_lat_
+    
+-rw-rw-r-- 1 sergio pi_strow  6891 Sep 13 10:34 stats_average.m
+-rw-rw-r-- 1 sergio pi_strow  3210 Sep  8 13:22 do_the_trends.m           
+-rw-rw-r-- 1 sergio pi_strow  1880 Sep  8 09:06 gather_pall.m                                    %% once you have read in a saved matfile, put togeher the stats
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% clust_make_profs_data_howard_bins_OneYearStartJan1.m makes the 23 timesteps x 4608 files from which you an make stats
+%%   each file will have p2x (about 3000x16 timesteps) and pavg (one average)
+%%   from this you can build up eg hottest 10% to make jacobians
+-rw-rw-r-- 1 sergio pi_strow 11942 Nov  3 17:09 clust_make_profs_data_howard_bins_OneYearStartJan1.m
+-rw-rw-r-- 1 sergio pi_strow 11941 Nov  3 17:09 test_make_profs_data_howard_bins_OneYearStartJan1.m
+-rw-rw-r-- 1 sergio pi_strow   556 Nov  3 16:33 check_progress_OneYearStartJan1.m
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+>>>>>>>>>>>>>>>>>>>>>>>>>------------------------->>>>>>>>>>>>>>>>>>>>>>>>>
+%% SPLITS/RECOMBINES APART the LARGE NUMBER OF FLES AND RECOMBINES into 64x72 files (one per latbin/lonbin)  
+%% eg /asl/s1/sergio/MakeAvgProfs2002_2020/LatBin01/summary_latbin_01_lonbin_37.rtp
+%% also makes the average file for trend jacs : eg DATA/summary_17years_all_lat_all_lon_2002_2019.rtp                used in kCARTA to make the jacs
+%%                                              eg DATA_StartSept2002/summary_17years_all_lat_all_lon_2002_2019.rtp  used in kCARTA to make the jacs
+%% after which you go to ~/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/set_rtp.m and make kcarta jacs!!
+%%
+%% when you run kCARTA, do the column CO2/CH4/N2O jacs, and the 100 layer jacs by appropriately resetting set_gasOD_cumOD_rad_jac_flux_cloud_lblrtm.m
+%% then the jacs are stored in /home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/JUNK/AIRS_gridded_Oct2020_trendsonly
+%%                and          /home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/JUNK/AIRS_gridded_Oct2020_startSept2002_trendsonly
+%% after which (assuming you have run SARTA cloud jacs) you go to where these kCARTA jacs are stored, and save off file with the kCARTA gas/thermo jacs + SARTA cloud jacs
+%%   by running clust_put_together_jacs.m in eg /home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/JUNK/AIRS_gridded_Oct2020_startSept2002_trendsonly
+%%
+%% to make SARTA jacs go to 
+%%  1) ~/MATLABCODE/CRODGERS_FAST_CLOUD/clustbatch_redo_stemp_wv_cloud_filelist.m                               WORKS_Nov10_2020_SARTAJACS_2002_2020_CldSKy version
+%%           JOB = 72*64 + 1  % avg16day allday grid
+%%           iFileNum = +1816; %% 16 day cloudy average gridded profiles
+%%  2) ~/MATLABCODE/CRODGERS_FAST_CLOUD/reset_oem_sst_water.m                                                   WORKS_Nov10_2020_SARTAJACS_2002_2020_CldSKy version
+%%           iSubsetChans = -1;  %% if you have all the time in the world to do jacs eg for the AllSky 64x72 allsky jacs
+%% and run clustbatch_redo_stemp_wv_cloud_filelist
+%% then save off the HUGE jacs and put them together using 
+%%   split_apart_2645chan_all_lat_all_lon_16_allchans_jacs.m
+%%   split_apart_2645chan_all_lat_all_lon_16_allchans_jacs_startSept2002.m
+%% which use eg
+%% rlon = poem.rlon; rlat = poem.rlat;
+%% save -v7.3 /asl/s1/sergio/rtp/MakeAvgProfs2002_2020_startSept2002/Retrieval/LatBin65/all_lat_all_lon_16_iDET_4_iStemp_ColWV_8_V4_allchans_jaconly.mat jac* hoem rlon rlat    %% megahuge file only of jacs
+
+%%
+%% after which you go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_Oct2020_trendsonly
+%%   modify strow_override_defaults_latbins_AIRS_fewlays.m
+%%   AHA = '/asl/s1/sergio/rtp/MakeAvgProfs2002_2020/Retrieval/LatBin65/SubsetJacLatbin/';
+    AHA = '/asl/s1/sergio/rtp/MakeAvgProfs2002_2020/Retrieval/LatBin65/SubsetJacLatbin/';
+    AHA = '/asl/s1/sergio/rtp/MakeAvgProfs2002_2020_startSept2002/Retrieval/LatBin65/SubsetJacLatbin/';
+    and then run the jobs on ze kluster
+        sbatch --constraint=hpcf2013       --array=1-64 sergio_matlab_jobB.sbatch
+
+%%   ~/MATLABCODE/CRODGERS_FAST_CLOUD/split_apart_2645chan_all_lat_all_lon_16_allchans_jacs.m
+%%   ~/MATLABCODE/CRODGERS_FAST_CLOUD/split_apart_2645chan_all_lat_all_lon_16_allchans_jacs_startSept2002.m
+
+>>>>>>>>>>>>>>>>>>>>>>>>>------------------------->>>>>>>>>>>>>>>>>>>>>>>>>
+
+-rw-rw-r-- 1 sergio pi_strow 6724 Nov  2 21:28 call_save_split_apart_rtp_howard_bins_startSept2002.m
+-rw-rw-r-- 1 sergio pi_strow 4717 Nov  2 06:35 driver_split_apart_rtp_howard_bins_startSept2002.m
+  make foutNyearaverage = ['DATA_StartSept2002/summary_17years_all_lat_all_lon_2002_2019.rtp'];
+
+[sergio@taki-usr2 MakeAvgCldProfs2002_2020]$ mv driver_split_apart_rtp.m driver_split_apart_rtp_howard_bins.m
+[sergio@taki-usr2 MakeAvgCldProfs2002_2020]$ mv call_save_split_apart_rtp.m call_save_split_apart_rtp_howard_bins.m
+-rw-rw-r-- 1 sergio pi_strow  4125 Sep 22 14:27 call_save_split_apart_rtp_howard_bins.m
+-rw-rw-r-- 1 sergio pi_strow  5563 Sep 18 18:25 driver_split_apart_rtp_howard_bins.m          
+  make foutNyearaverage = ['DATA/summary_17years_all_lat_all_lon_2002_2019.rtp'];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% USES HOWARDS 64 LATBINS, starts Jan1, 2013 and goes onto Dec 31, 2014
+%%% it actually saves off the profiles fro each gridbox, so we can do a selection of FVOS eg hottest/average/coldest etc
+%%% so it basically like clust_make_profs_data_howard_bins.m
+-rw-rw-r-- 1 sergio pi_strow 11799 Sep 15 09:26 clust_make_profs_data_howard_bins_OneYearStartJan1.m %% makes rtp files with 7 window chans (cind1)
+
+%%% USES HOWARDS 64 LATBINS, but starts Sept1, 2002
+-rw-rw-r-- 1 sergio pi_strow 6824 Nov  1 21:59 clust_gather_pall_howardV3_startSept2002.m 
+  and then loop_gather_pall_howardV3_startSept2002.m to make the "not done" ones
+-rw-rw-r-- 1 sergio pi_strow 11799 Sep 15 09:26 clust_make_profs_data_howard_bins_startSept2002.m %% makes rtp files with 7 window chans (cind1)
+
+%%% USES HOWARDS 64 LATBINS, but starts Jan1 for every year
+-rw-rw-r-- 1 sergio pi_strow  3374 Sep 16 14:58 job_done_already_howard.m
+-rw-rw-r-- 1 sergio pi_strow  7251 Sep 18 13:53 loop_gather_pall_howardV3.m         %% even spiffier than v2 as it puts together obs cldcal clrcal ****** and makes rtp files to make 2645 chans ********
+-rw-rw-r-- 1 sergio pi_strow  6057 Sep 16 18:22 loop_gather_pall_howardV2.m         %% this just looks for mising rtps and runs sarta to****** make the missing 2645 rcalc ******
+-rw-rw-r-- 1 sergio pi_strow  5829 Sep 16 10:11 loop_gather_pall_howard.m           %% this assumes all pavg*.mat files done and ****** makes rtp files with 2645 rcalc in them ******
+-rw-rw-r-- 1 sergio pi_strow 11799 Sep 15 09:26 clust_make_profs_data_howard_bins.m %% makes rtp files with 7 window chans (cind1)
+-rw-rw-r-- 1 sergio pi_strow 11063 Sep 12 11:12 test_make_profs_data_howard_bins.m
+-rw-rw-r-- 1 sergio pi_strow  1778 Sep 14 18:56 testplot_howard_bins.m
+
+%%% USES SERGIO 60 LATBINS starts Sept1, 2002
+-rw-rw-r-- 1 sergio pi_strow  3307 Sep 14 17:05 loop_gather_pall.m
+-rw-rw-r-- 1 sergio pi_strow   448 Sep 15 08:48 job_done_already.m
+-rw-rw-r-- 1 sergio pi_strow  1746 Sep 14 18:57 testplot.m                 %% compare against Howards OBS averages
+-rw-rw-r-- 1 sergio pi_strow 12334 Sep 12 08:25 stats_averageOld.m
+-rw-rw-r-- 1 sergio pi_strow  8443 Sep 14 14:46 clust_make_profs_data.m    %% run on cluster, makes rtp files with 7 window chans (cind1)
+-rw-rw-r-- 1 sergio pi_strow  8695 Sep  3 06:32 test_make_profs_data.m     %% testing

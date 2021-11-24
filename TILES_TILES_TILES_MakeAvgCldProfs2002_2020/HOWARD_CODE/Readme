@@ -1,0 +1,17 @@
+I've mentioned some of this before, but things get lost easily, in
+slack.  So here are some relevant functions, from
+/home/motteler/shome/airs_tiling
+
+tile_loop1.m - this loops on all tiles; the outer loops are lat, lon,
+               and the inner loop is on sets (time).  But the loops can be taken in
+               any order.  It does a couple of data checks, but is mainly just an
+               example of looping on tiles.
+
+tile_index.m - tile lat/lon indices from lat/lon lists
+
+tile_file.m - name and path for tile files, from lat/lon indices.
+              Note that you can set the "tpre" parameter to generate your own names.
+
+set2dlist.m - 16-day set number to datenum list
+
+setspan.m - two 16-day set numbers spanning a year

@@ -1,0 +1,10 @@
+*.mat
+*.rtp
+*.fig
+*.pdf
+*.png
+*.nc
+
+WORKS*
+DATA*
+LookAtTimeSeries/RTP_PROFS*

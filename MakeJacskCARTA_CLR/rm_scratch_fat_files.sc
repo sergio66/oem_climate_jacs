@@ -1,0 +1,2 @@
+BEG=002;END=029;for i in $(seq -w $BEG $END); do srun --partition=high_mem --qos=short+ --nodelist=cnode${i} --pty /usr/bin/find /scratch -user sergio -delete; done
+BEG=031;END=044;for i in $(seq -w $BEG $END); do srun --partition=high_mem --qos=short+ --nodelist=cnode${i} --pty /usr/bin/find /scratch -user sergio -delete; done

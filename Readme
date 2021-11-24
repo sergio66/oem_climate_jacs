@@ -1,0 +1,36 @@
+drwxrwxr-x  5 sergio pi_strow 4096 Mar  3 16:00 LoopMake_CFC_JacskCARTA
+drwxrwxr-x 10 sergio pi_strow 4096 Mar  3 06:26 MakeJacskCARTA_CLR
+drwxrwxr-x  9 sergio pi_strow 4096 Mar  3 06:26 MakeJacskCARTA_CLD
+drwxrwxr-x  7 sergio pi_strow 4096 Mar  3 06:06 MakeJacsSARTA
+drwxrwxr-x  3 sergio pi_strow 4096 Feb 27 21:40 LoopMake_T100_WV100_JacskCARTA
+drwxrwxr-x  5 sergio pi_strow 4096 Jan 23 18:05 MakeProfs
+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+SARTA jacs in "MakeJacsSARTA" can be either clear or cloudy!
+  When you specify the rtp file to process, 
+  See MakeJacsSARTA/Readme : 
+
+   (2) edit file "set_file_override_settings" to include
+   file_override_settings = blah.m;
+   And inside "blah.m" you need to specify topts.iJacType = 0;     %% clr sky jacs!
+                                        or topts.iJacType = 100;   %% cld sky jacs! DEFAULT
+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+
+kCARTA 100 layer jacs are either clear or cloudy, since TwoSlab clouds
+dump out files with x5 number that you expect
+
+So have to use either MakeJacskCARTA_CLR or MakeJacskCARTA_CLD
+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+
+kCARTA looping through perturbing 100 layers (to check the above two)
+right now has only been tested on cloudy jacs, and agrees quite
+well. Should be easy to do clear jacs
+
+>>>>>>>>>>>>>>>>>>>>>>>>>
+
+kCARTA doing column jacs for eg CFC is for either clear or cloudy : set iCLD = +1 or -1
+Look at LoopMake_CFC_JacskCARTA/set_rtp.m
+
+>>>>>>>>>>>>>>>>>>>>>>>>>

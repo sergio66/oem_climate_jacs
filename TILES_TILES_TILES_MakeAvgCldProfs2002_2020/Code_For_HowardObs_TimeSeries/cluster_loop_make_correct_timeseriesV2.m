@@ -82,6 +82,7 @@ fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%
 fnameoutII = [fdirOUTII '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
 save(fnameoutII,'-struct','all_72lonbins');
 fprintf(1,'\n');
+fprintf(1,'DONE : finished all 72 lonbins for latbin %2i \n',JOB)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{

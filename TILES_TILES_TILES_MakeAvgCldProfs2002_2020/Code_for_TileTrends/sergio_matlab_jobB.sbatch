@@ -21,7 +21,8 @@
 #SBATCH --cpus-per-task 1
 
 #  Specify the desired partition develop/batch/prod
-#SBATCH --partition=batch
+#SBATCH --partition=cpu2021
+##SBATCH --partition=batch
 ##SBATCH --partition=strow
 
 ## this is for choices 3,4
@@ -33,11 +34,12 @@
 #SBATCH --qos=short+
 #SBATCH --time=00:59:00 
 
+########################################################################
 # for most things # 1,2,3
-##SBATCH --mem-per-cpu=16000
+#SBATCH --mem-per-cpu=16000
 
 # for #4 clust_zonalavg_fits_quantiles since we read in a lot of stuff
-#SBATCH --mem-per-cpu=32000
+##SBATCH --mem-per-cpu=32000
 
 ########################################################################
 ### check the number of input arguments

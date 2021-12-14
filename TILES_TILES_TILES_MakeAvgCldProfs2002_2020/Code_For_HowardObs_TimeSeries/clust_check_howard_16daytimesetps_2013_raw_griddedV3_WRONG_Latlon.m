@@ -23,10 +23,10 @@ disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab d
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 
-iQAX = +1; %% quantile
 iQAX =  0; %% quantile and extreme
 iQAX = -1; %% extreme
 iQAX = +2; %% mean
+iQAX = +1; %% quantile
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

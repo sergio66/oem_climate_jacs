@@ -1,10 +1,25 @@
+0) so for example quick updates in Dec 2021 (to complete the Sept 2002-Aug2021 19 year time series
+
+cd Code_For_HowardObs_TimeSeries/
+more Readme
+ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
+xnw sergio_matlab_jobB.sbatch
+MAKE SURE clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m is running on=ff steps and not a list (iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/');
+kleenslurm; sbatch             --array=430-440  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data
+kleenslurm; sbatch             --array=430-440  sergio_matlab_jobB.sbatch 11  -- to correct things
+
+cd ../Code_for_TileTrends/
+edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps,
+  ensure start/stop are [2021 08 31],[2002 09 01]
+sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
+
 1) Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m
    Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3.m 
 
   are SYMBOLICALLY linked to each other
 
   does the gridding making of files that we use for stats
-  eg  /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/../DATAObsStats_StartSept2002/LatBin03/LonBin01/stats_data_YYYY_sTTT.ma
+  eg  /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/../DATAObsStats_StartSept2002/LatBin03/LonBin01/stats_data_YYYY_sTTT.mat
   where YYYY is the year 2002-    and TTT is the 16 day timestep (currently Aug 2021 - timestep 433)
   
   This file has 3 choices

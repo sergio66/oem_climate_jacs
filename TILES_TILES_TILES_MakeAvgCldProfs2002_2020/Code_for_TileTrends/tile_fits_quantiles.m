@@ -43,6 +43,19 @@ end
 mtime = tai2dtime(airs2tai(d.tai93_desc));
 dtime = datenum(mtime);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
+%% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
+%% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
+if nargin > 5
+  timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+  rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
+  rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
+  iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);
+  fprintf(1,'anticipate %4i timesteps to be used \n',length(iaSE);
+end
+
 %k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(2015,8,28));
 %k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(2015,8,28));
 if nargin == 5
@@ -50,14 +63,46 @@ if nargin == 5
   k_desc = d.count_desc./median(d.count_desc) > 0.98; % all data
   k_asc = d.count_asc./median(d.count_asc) > 0.98;    % all data
 elseif nargin == 6
-  fprintf(1,'  fitting till %4i/%2i/%2i \n',stopdate)
+  fprintf(1,'  fitting till and including %4i/%2i/%2i \n',stopdate)
   k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
   k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
+
+  if length(k_desc) ~= length(iaSE)
+    fprintf(1,'whoops 6A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
+    error('please check');
+  elseif length(k_asc) ~= length(iaSE)
+    fprintf(1,'whoops 6B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
+    error('please check');
+  end
+  %% passed the length test, now check the indices are the same
+  if sum(reshape(k_desc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+    error('whoops 6C k_desc) ~= iaSE')
+  elseif sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+    error('whoops 6C k_asc) ~= iaSE')
+  end
+
 elseif nargin == 7
-  fprintf(1,'  fitting between %4i/%2i/%2i and %4i/%2i/%2i \n',startdate,stopdate)
+  fprintf(1,'  fitting between and including both time end points %4i/%2i/%2i and %4i/%2i/%2i \n',startdate,stopdate)
   k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
   k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
+
+  if length(k_desc) ~= length(iaSE)
+    fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
+    error('please check');
+  elseif length(k_asc) ~= length(iaSE)
+    fprintf(1,'whoops 7B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
+    error('please check');
+  end
+  %% passed the length test, now check the indices are the same
+  if sum(reshape(k_desc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+    error('whoops 7C k_desc) ~= iaSE')
+  elseif sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+    error('whoops 7C k_asc) ~= iaSE')
+  end
+
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 b_asc = NaN(2645,16,10);
 b_desc = NaN(2645,16,10);

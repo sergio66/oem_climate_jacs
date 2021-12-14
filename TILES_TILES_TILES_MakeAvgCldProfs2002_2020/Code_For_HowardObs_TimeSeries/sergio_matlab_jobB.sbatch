@@ -31,6 +31,7 @@
 
 #  Specify the desired partition develop/batch/prod
 #SBATCH --partition=batch
+#SBATCH --partition=cpu2021
 ##SBATCH --partition=strow
 
 ## this is for choices 0,1,2,5,7
@@ -43,20 +44,20 @@
 ##SBATCH --time=00:59:00 
 ##SBATCH --mem-per-cpu=16000
 
-## this is for choices 10
-#SBATCH --qos=medium+
-#SBATCH --time=23:59:00 
-#SBATCH --mem-per-cpu=24000
+## this is for choices 10 = quantiles
+##SBATCH --qos=medium+
+##SBATCH --time=23:59:00 
+##SBATCH --mem-per-cpu=24000
 
-## this is for choices 12
+## this is for choices 12 = extremes
 ##SBATCH --qos=medium+
 ##SBATCH --time=07:59:00 
 ##SBATCH --mem-per-cpu=24000
 
 ## this is for choices 11,13
-##SBATCH --qos=medium+
-##SBATCH --time=05:59:00 
-##SBATCH --mem-per-cpu=12000
+#SBATCH --qos=medium+
+#SBATCH --time=05:59:00 
+#SBATCH --mem-per-cpu=12000
 
 ########################################################################
 ### check the number of input arguments
@@ -91,6 +92,7 @@ elif [[ "$1" -eq "8" ]]; then
   matlab -nodisplay -r "clust_make_profs_data_howard_bins_OneYearStartJan1_Desc; exit"
 elif [[ "$1" -eq "9" ]]; then
   matlab -nodisplay -r "clust_make_profs_data_howard_bins_OneYearStartJan1_Asc; exit"
+##
 ######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
 ######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
 ######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
@@ -102,6 +104,7 @@ elif [[ "$1" -eq "10" ]]; then
 elif [[ "$1" -eq "11" ]]; then
   echo "cluster_loop_make_correct_timeseriesV2 : FIX Quantile, All or eXtremes"
   matlab -nodisplay -r "cluster_loop_make_correct_timeseriesV2; exit"
+##
 ## sbatch -p high_mem --array=1-400%16 sergio_matlab_jobB.sbatch 12
 elif [[ "$1" -eq "12" ]]; then
   echo "clust_check_howard_16daytimesetps_2013_raw_griddedV3 : set iQAX to do Quantile, All or eXtremes"

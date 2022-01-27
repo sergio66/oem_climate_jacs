@@ -7,13 +7,13 @@ warning off
 % function [fitc err]=Math_tsfit_lin(x,y,n)
 % x - days
 % y - ppm
-% n - 0,1,2,3,4 - number of sine functions
+% n - 0,1/1,1/2,1/3,1/4 - number of sine functions
 %
 % fitc = [ b Trent Amplitude0 Phase0 A1 P1]
 
-f = @(c,x) Math_timeseries_2(x,c);
+f = @(c,x) Math_timeseries_2_lowfreq(x,c);
 
-nloop = 2*n + 2;
+nloop = 2*abs(n) + 2;
 fc = zeros(1,nloop);
 for i=1:nloop
    fc(i) = 1;
@@ -25,17 +25,17 @@ end
 %% copied from ~/MATLABCODE/FIND_TRENDS/Math_tsfit_lin_robust.m
 if n == 6
   err=stats.se(1:14)*2; 
-elseif n == 5
+elseif abs(n) == 5
   err=stats.se(1:12)*2; 
-elseif n == 4
+elseif abs(n) == 4
   err=stats.se(1:10)*2; 
-elseif n == 3
+elseif abs(n) == 3
   err=stats.se(1:8)*2; 
-elseif n == 2
+elseif abs(n) == 2
   err=stats.se(1:6)*2; 
-elseif n == 1
+elseif abs(n) == 1
   err=stats.se(1:4)*2; 
-elseif n == 0
+elseif abs(n) == 0
   err=stats.se(1:2)*2;
 else
   error('hmm err == ????')

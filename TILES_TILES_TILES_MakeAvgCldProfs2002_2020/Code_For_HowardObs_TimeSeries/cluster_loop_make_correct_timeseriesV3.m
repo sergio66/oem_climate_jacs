@@ -1,6 +1,7 @@
 %% DATAObsStats_StartSept2002/LatBin32/LonBin36/stats_data_2009_s158.mat
 
 addpath /asl/matlib/aslutil/
+addpath /home/sergio/MATLABCODE/TIME
 
 thedataS_E = load('timestepsStartEnd_2002_09_to_2020_09.mat');
 thedataS_E = load('timestepsStartEnd_2002_09_to_2024_09.mat');
@@ -17,37 +18,46 @@ jj = 59; ii = 27;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
-%% run this by hand first, so as to make the DIRS to save things to
-
-cd .. 
-mkdir /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon_v3
-[sergio@taki-usr2 TILES_TILES_TILES_MakeAvgCldProfs2002_2020]$ ln -s /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon_v3 DATAObsStats_StartSept2002_CORRECT_LatLon_v3
-
-%% see do_the_save_howard_16daytimesetps_2013_raw_griddedV3
-%    junkLat = iiix; junkLon = jjjx;
-%    if iQAX == 1
-%      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_quantile_' date_stamp '.mat'];
-%    elseif iQAX == 0
-%      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_quantile_n_extreme_' date_stamp '.mat'];
-%    elseif iQAX == -1
-%      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_extreme_' date_stamp '.mat'];
-%    end
-iQAX = -1;
-for jj = 1 : 64
-  for ii = 1 : 72
-    if iQAX == -1
-      fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-    else
-      error('unknown iQAX')
-    end
-    if ~exist(fdirOUT)
-      mker = ['!mkdir -p ' fdirOUT];
-      eval(mker)
-    end
-  end
-end
+%% %% run this by hand first, so as to make the DIRS to save things to
+%% 
+%% cd .. 
+%% mkdir /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon_v3
+%% [sergio@taki-usr2 TILES_TILES_TILES_MakeAvgCldProfs2002_2020]$ ln -s /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon_v3 DATAObsStats_StartSept2002_CORRECT_LatLon_v3
+%% 
+%% %% see do_the_save_howard_16daytimesetps_2013_raw_griddedV3
+%% %    junkLat = iiix; junkLon = jjjx;
+%% %    if iQAX == 1
+%% %      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_quantile_' date_stamp '.mat'];
+%% %    elseif iQAX == 0
+%% %      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_quantile_n_extreme_' date_stamp '.mat'];
+%% %    elseif iQAX == -1
+%% %      foutXY = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_v3_extreme_' date_stamp '.mat'];
+%% %    end
+%% 
+%% startdate = [2002 09 01]; stopdate = [2021 08 31]; 
+%% startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+%% i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
+%% 
+%% iQAX = -1;
+%% for jj = 1 : 64
+%%   for ii = 1 : 72
+%%     if iQAX == -1
+%%       fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+%%     else
+%%       error('unknown iQAX')
+%%     end
+%%     if ~exist(fdirOUT)
+%%       mker = ['!mkdir -p ' fdirOUT];
+%%       eval(mker)
+%%     end
+%%   end
+%% end
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%startdate = [2002 09 01]; stopdate = [2021 08 31]; 
+%startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+%i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
 
 all_72lonbins = struct;
 iiMin = 59; iiMax = 59;
@@ -74,6 +84,7 @@ for ii = iiMin : iiMax
   else
     error('unknown iQAX')
   end
+
   fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
   lonbin_time = struct;  
   for tt = 1 : length(thedir)

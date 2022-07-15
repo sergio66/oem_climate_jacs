@@ -1,4 +1,4 @@
-function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate)
+function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16daysStepsX)
 
 %% copied from /home/strow/Work/Airs/Tiles/tile_fits.m
 
@@ -8,9 +8,11 @@ end
 if nargin == 5
   startdate = [2002 09 01];
   stopdate = [];
+  i16daysStepsX = i16daysSteps;
 end
 if nargin == 6
   startdate = [2002 09 01];
+  i16daysStepsX = i16daysSteps;
 end
 
 addpath /asl/matlib/aslutil
@@ -26,18 +28,19 @@ load_fairs
 
 p = [-0.17 -0.15 -1.66  1.06];
 
-fn = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
-fn = fullfile(fdirpre,fn);
+fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
+fn_summary = fullfile(fdirpre,fn_summary);
 
-if exist(fn)
-  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading %s with %3i i16daysSteps\n',lati,loni,fn,i16daysSteps)
-  d = load(fn);
+if exist(fn_summary)
+  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading %s with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
+  d = load(fn_summary);
   if length(d.lat_asc) < i16daysSteps
     [length(d.lat_asc) i16daysSteps]
     error('length(d.lat_asc) < i16daysSteps')
   end
 else
-  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  %s with %3i i16daysSteps DNE \n',lati,loni,fn,i16daysSteps)
+  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  %s with %3i i16daysSteps DNE \n',lati,loni,fn_summary,i16daysSteps)
+  error('stopppppp and look at eg ../Code_For_HowardObs_TimeSeries/cluster_loop_make_correct_timeseriesV3.m')
 end
 
 mtime = tai2dtime(airs2tai(d.tai93_desc));
@@ -53,7 +56,7 @@ if nargin > 5
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
   rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
   iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);
-  fprintf(1,'anticipate %4i timesteps to be used \n',length(iaSE);
+  fprintf(1,'anticipate %4i timesteps to be used \n',length(iaSE));
 end
 
 %k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(2015,8,28));
@@ -62,6 +65,7 @@ if nargin == 5
   fprintf(1,'  fitting entire data set \n')
   k_desc = d.count_desc./median(d.count_desc) > 0.98; % all data
   k_asc = d.count_asc./median(d.count_asc) > 0.98;    % all data
+
 elseif nargin == 6
   fprintf(1,'  fitting till and including %4i/%2i/%2i \n',stopdate)
   k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
@@ -81,23 +85,46 @@ elseif nargin == 6
     error('whoops 6C k_asc) ~= iaSE')
   end
 
-elseif nargin == 7
+elseif nargin >= 7
   fprintf(1,'  fitting between and including both time end points %4i/%2i/%2i and %4i/%2i/%2i \n',startdate,stopdate)
-  k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
-  k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
+  k_desc = find(d.count_desc./median(d.count_desc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
+  k_asc  = find(d.count_asc./median(d.count_asc)   > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
+
+  k_desc = find(d.count_desc./median(d.count_desc) > 0.98 & (dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
+  k_asc  = find(d.count_asc./median(d.count_asc)   > 0.98 & (dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
+
+  k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
+  k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
 
   if length(k_desc) ~= length(iaSE)
     fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
-    error('please check');
-  elseif length(k_asc) ~= length(iaSE)
+    %% if off by 1, reset
+    if abs(length(k_desc) - length(iaSE)) <= 1 & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
+      disp('since lengths are only off by 1 reset k_desc')
+      k_desc = iaSE;
+    else
+      error('please check');
+    end
+  end
+  if length(k_asc) ~= length(iaSE)
     fprintf(1,'whoops 7B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
-    error('please check');
+    %% if off by 1, reset
+    if abs(length(k_asc) - length(iaSE)) <= 1 & ( (k_asc(1) == iaSE(1)) | (k_asc(end) == iaSE(end)))
+      disp('since lengths are only off by 1 reset k_asc')
+      k_asc = iaSE;
+    else
+      error('please check');
+    end
   end
   %% passed the length test, now check the indices are the same
+
   if sum(reshape(k_desc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
-    error('whoops 7C k_desc) ~= iaSE')
-  elseif sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
-    error('whoops 7C k_asc) ~= iaSE')
+    disp('whoops 7C k_desc) ~= iaSE, reset k_desc')
+    k_desc = iaSE;
+  end
+  if sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+    disp('whoops 7C k_asc) ~= iaSE, reset k_asc')
+    k_asc = iaSE;
   end
 
 end

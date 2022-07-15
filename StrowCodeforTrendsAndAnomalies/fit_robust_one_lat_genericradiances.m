@@ -5,6 +5,7 @@ function [] = fit_robust_one_lat_genericradiances(fout,foutsm,latid,fit_type,rti
 addpath /home/strow/Matlab/Math
 addpath /home/strow/Matlab/Utility/
 addpath /asl/matlib/aslutil
+rmpath /umbc/xfs2/strow/asl/s1/strow/home/Matlab/Utility/
 
 latid_out = latid;
 
@@ -15,125 +16,132 @@ ndi = 1 : length(rtime_mean);
 nd = length(ndi);
 %--------------------------------------------------------------------------------
 if inst == 'cris'
-   nf = 1305;
-   load_fcris
-   f = fcris;
-   load /asl/matlib/cris/ch_std_from1317  % get ch_std_i
-   count = count(ndi,1);
-   dmtime = dmtime(ndi);
-   robs = squeeze(nanmean(robs(ndi,ch_std_i,:),3));
-   rcldy = squeeze(nanmean(rcldcal(ndi,ch_std_i,:),3));
-   btobs = real(rad2bt(f,robs'));
-   btcal = real(rad2bt(f,rcldy'));
-   bias = btobs-btcal;
-   bias = bias';
-else
-   % add robs, rcldy, etc. for AIRS and IASI here.
-   dmtime = dmtime(ndi);
-   count = count(ndi,:);
+  nf = 1305;
+  load_fcris %%
+  f = fcris;
+  load /asl/matlib/cris/ch_std_from1317  % get ch_std_i
+  count = count(ndi,1);
+  dmtime = dmtime(ndi);
+  robs = squeeze(nanmean(robs(ndi,ch_std_i,:),3));
+  rcalc = squeeze(nanmean(rcalc(ndi,ch_std_i,:),3));
+    rclr = rcalc;
+  btobs = real(rad2bt(f,robs'));
+  btcal = real(rad2bt(f,rcalc'));
+  bias = btobs-btcal;
+  bias = bias';
+%else
+%   % add robs, rcldy, etc. for AIRS and IASI here.
+%   dmtime = dmtime(ndi);
+%   count = count(ndi,:);
 end
+
 %--------------------------------------------------------------------------------
 if inst == 'iasi'
-   rtime_mean = rtime;
-   nf = 8461;
-   load_fiasi;
-   f = fiasi;
-   robs = robs(ndi,:);
-%   rcldy = rcldy(ndi,:);
-   rcldy = rcal(ndi,:);
-   btobs = real(rad2bt(f,robs'));
-   btcal = real(rad2bt(f,rcldy'));
-   bias = btobs-btcal;
-   bias = bias';
+  rtime_mean = rtime;
+  nf = 8461;
+  load_fiasi;
+  f = fiasi;
+  robs = robs(ndi,:);
+% rcldy = rcldy(ndi,:);
+  rcldy = rcalc(ndi,:);
+  btobs = real(rad2bt(f,robs'));
+  btcal = real(rad2bt(f,rcldy'));
+  bias = btobs-btcal;
+  bias = bias';
 end
+
 %--------------------------------------------------------------------------------   
 if inst == 'airs'
-   nf = 2378;
-   load_fairs;
-   robs = robs(ndi,:);
-   rcldy = rcldy(ndi,:);
-   btobs = real(rad2bt(f,robs'));
-   btcal = real(rad2bt(f,rcldy'));
-   bias = btobs-btcal;
-   bias = bias';
+  nf = 2378;
+  load_fairs;
+  robs = robs(ndi,:);
+  rcldy = rcalc(ndi,:);
+  btobs = real(rad2bt(f,robs'));
+  btcal = real(rad2bt(f,rcldy'));
+  bias = btobs-btcal;
+  bias = bias';
 end
 %--------------------------------------------------------------------------------
 if inst == 'al1c'
-   nf = 2645
-   load_fairs;
-%   load /home/sbuczko1/git/rtp_prod2/airs/util/sarta_chans_for_l1c.mat
-   f = fairs;
-   robs = robs(ndi,:);
-%   rcldy = rcldy(ndi,:);
-%   rclr = rclr(ndi,:);
-   rcalc = rcalc(ndi,:);
-   btobs = real(rad2bt(f,robs'));
-%   btcal = real(rad2bt(f,rcldy'));
-%   btcal = real(rad2bt(f,rclr'));
-   btcal = real(rad2bt(f,rcalc'));
-   bias = btobs-btcal;
-   bias = bias';
+  nf = 2645
+  load_fairs;
+  %   load /home/sbuczko1/git/rtp_prod2/airs/util/sarta_chans_for_l1c.mat
+  f = fairs;
+  robs = robs(ndi,:);
+% rcldy = rcldy(ndi,:);
+% rclr = rclr(ndi,:);
+  rcalc = rcalc(ndi,:);
+  btobs = real(rad2bt(f,robs'));
+%  btcal = real(rad2bt(f,rcldy'));
+%  btcal = real(rad2bt(f,rclr'));
+  btcal = real(rad2bt(f,rcalc'));
+  bias = btobs-btcal;
+  bias = bias';
 end
 %--------------------------------------------------------------------------------
 if inst == 'a2cx'
-   a2c_fin = strrep(fin,'statlat','a2c_statlat');
-   a2c_fin = [a2c_fin int2str(latid)];
-   load(a2c_fin,'a2crad');
-   nf = 1178
-   load_fairs;
-   f = cfrq;
-   robs = a2crad';
-   robs = robs(ndi,:);
-   btobs = real(rad2bt(f,robs'));
+  a2c_fin = strrep(fin,'statlat','a2c_statlat');
+  a2c_fin = [a2c_fin int2str(latid)];
+  load(a2c_fin,'a2crad');
+  nf = 1178
+  load_fairs;
+  f = cfrq;
+  robs = a2crad';
+  robs = robs(ndi,:);
+  btobs = real(rad2bt(f,robs'));
 end
 %--------------------------------------------------------------------------------
 if inst == 'a2cc'   % Mixed a2c and cris; this is a real kludge
 
-   % First subset a2crad to dmtime
-   dxmtime = datenum(1958,1,1,0,0,rtime_mean);
-   ndx = find( dxmtime >= start_time & dxmtime <= stop_time);
-   
-   a2c_fin = strrep(fin,'statlat','a2c_statlat');
-   a2c_fin = [a2c_fin int2str(latid)];
-   load(a2c_fin,'a2crad');
-   a2crad = a2crad(:,ndx);  % now matching dmtime
-   load_fairs;
+  % First subset a2crad to dmtime
+  dxmtime = datenum(1958,1,1,0,0,rtime_mean);
+  ndx = find( dxmtime >= start_time & dxmtime <= stop_time);
+  
+  a2c_fin = strrep(fin,'statlat','a2c_statlat');
+  a2c_fin = [a2c_fin int2str(latid)];
+  load(a2c_fin,'a2crad');
+  a2crad = a2crad(:,ndx);  % now matching dmtime
+  load_fairs;
 %   load /home/sbuczko1/git/rtp_prod2/airs/util/sarta_chans_for_l1c.mat
-   f = cfrq;
-   % a2c times
-   ndi_a2c = find( dmtime >= start_time & dmtime <= (start_time + 365*5));
-   nd = length(ndi_a2c);
-   robs_a2c = a2crad;
-   btobs_a2c = real(rad2bt(f,robs_a2c(:,ndi_a2c)));
-   dmtime = dmtime(ndi_a2c);   
+  f = cfrq;
+  % a2c times
+  ndi_a2c = find( dmtime >= start_time & dmtime <= (start_time + 365*5));
+  nd = length(ndi_a2c);
+  robs_a2c = a2crad;
+  btobs_a2c = real(rad2bt(f,robs_a2c(:,ndi_a2c)));
+  dmtime = dmtime(ndi_a2c);   
 
-   % Now load in CrIS
-   c = load(['../../Cris/Random/Data/Desc/statlat' int2str(latid)]);
-   c.dmtime = datenum(1958,1,1,0,0,c.rtime_mean);
-   c.dmtime = nanmean(c.dmtime,2);
-   ndi_c = find( c.dmtime >= (start_time +365*5) & c.dmtime <= stop_time);
-   load_fcris
-   load /asl/matlib/cris/ch_std_from1317
-   c.robs = c.robs(:,ch_std_i);
-   
-   [cc iaa ibb]=intersect(fcris,cfrq);
-   robs_c = c.robs(ndi_c,iaa)';
-   c.dmtime = c.dmtime(ndi_c);
-   
-   load cris_airs_overlap_stats_v2
-   robs_c = robs_c(ig.all,:);
+  % Now load in CrIS
+  c = load(['../../Cris/Random/Data/Desc/statlat' int2str(latid)]);
+  c.dmtime = datenum(1958,1,1,0,0,c.rtime_mean);
+  c.dmtime = nanmean(c.dmtime,2);
+  ndi_c = find( c.dmtime >= (start_time +365*5) & c.dmtime <= stop_time);
+  load_fcris
+  load /asl/matlib/cris/ch_std_from1317
+  c.robs = c.robs(:,ch_std_i);
+  
+  [cc iaa ibb]=intersect(fcris,cfrq);
+  robs_c = c.robs(ndi_c,iaa)';
+  c.dmtime = c.dmtime(ndi_c);
+  
+  load cris_airs_overlap_stats_v2
+  robs_c = robs_c(ig.all,:);
 
 % Now add in offset to a2c (make sure include secant adjustment)
-    f = cfrq(ig.all);
-   btobs_c = real(rad2bt(f,robs_c));
+  f = cfrq(ig.all);
+  btobs_c = real(rad2bt(f,robs_c));
 %   m = repmat(a_m_c(latid,:),1785,1)';
-   m = repmat(nanmean(a_m_c(5:36,:)),1785,1)';
-   btobs_a2c = btobs_a2c(ig.all,:) - 0.*m;
-   btobs = [btobs_a2c btobs_c];
-   dmtime = [dmtime; c.dmtime];
-    robs = bt2rad(f,btobs)';
-   nf = length(ig.all);
+  m = repmat(nanmean(a_m_c(5:36,:)),1785,1)';
+  btobs_a2c = btobs_a2c(ig.all,:) - 0.*m;
+  btobs = [btobs_a2c btobs_c];
+  dmtime = [dmtime; c.dmtime];
+   robs = bt2rad(f,btobs)';
+  nf = length(ig.all);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %--------------------------------------------------------------------------------
 % Start common code
 %--------------------------------------------------------------------------------
@@ -252,16 +260,18 @@ for i = 1:nf
    end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 fprintf(1,'fout = %s \n',[fout int2str(latid_out)])
 
 switch saveopt
 case 'saveboth'
-       save([fout int2str(latid_out)],'dbt','dbt_err','lag','deriv', 'all_b', 'all_berr', 'all_bt_anom', 'all_bt_resid', 'all_times', 'all_bcorr' );
-       save([foutsm int2str(latid_out)],'dbt','dbt_err','all_b','all_berr','all_bcorr','all_rms','lag');
+  save([fout int2str(latid_out)],'dbt','dbt_err','lag','deriv', 'all_b', 'all_berr', 'all_bt_anom', 'all_bt_resid', 'all_times', 'all_bcorr' );
+  save([foutsm int2str(latid_out)],'dbt','dbt_err','all_b','all_berr','all_bcorr','all_rms','lag');
 case 'savesmall'
-       save([foutsm int2str(latid_out)],'dbt','dbt_err','all_b','all_berr','all_bcorr','all_rms','lag');
+  save([foutsm int2str(latid_out)],'dbt','dbt_err','all_b','all_berr','all_bcorr','all_rms','lag');
 case 'savebig'
-       save([fout int2str(latid_out)],'dbt','dbt_err','lag','deriv', 'all_b', 'all_berr', 'all_bt_anom', 'all_bt_resid', 'all_times', 'all_bcorr' );
+  save([fout int2str(latid_out)],'dbt','dbt_err','lag','deriv', 'all_b', 'all_berr', 'all_bt_anom', 'all_bt_resid', 'all_times', 'all_bcorr' );
 end
 
 

@@ -15,7 +15,8 @@ addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
-%% JOB = 2222
+%JOB = 2222
+%JOB = 1
 
 system_slurm_stats
 
@@ -54,14 +55,28 @@ i16daysSteps = 429;   %% 2002/09 to 2021/07
 i16daysSteps = 431;   %% 2002/09 to 2021/08
 i16daysSteps = 433;   %% 2002/09 to 2021/09
 
+startdate = [2002 09 01]; stopdate = [2021 08 31]; 
+startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+i16daysStepsX = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
+
+if i16daysStepsX < i16daysSteps
+  wah = [startdate stopdate];
+  fprintf(1,'expecting i16daysSteps = %3i but using time period %4/%2i/%2i to %4/%2i/%2i which is %3i steps \n',i16daysSteps,wah,i16daysStepsX)
+end
+
 % Create outputfile name and save
-fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+if sum(startdate - [2002 09 01]) == 0
+  fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+else
+  fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'  num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+end
 fnout = fullfile(fdirpre_out,fnout);
 if ~exist(fnout)
   fprintf(1,'making fnout = %s \n',fnout)
 else
   fprintf(1,'fnout = %s already exists\n',fnout)
-  error('fnout already exists')
+  disp('fnout already exists')
+  return
 end
 
 if ~exist(fdirpre_out)
@@ -70,11 +85,13 @@ end
 
 if exist(fnout)
   fprintf(1,'fnout = %s already exists, skipping \n',fnout)
+  return
 end
 
 % run the target script
 %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+%tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 
 % only for tests
 % fprintf(1, 'pause for the cause\n')

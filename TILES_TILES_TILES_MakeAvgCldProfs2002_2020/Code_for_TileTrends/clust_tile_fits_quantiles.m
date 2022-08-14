@@ -33,6 +33,8 @@ nodeid  = sscanf(getenv('SLURMD_NODENAME'), '%s');  % node name
 
 iset = jarid + procid;
 
+disp('at end go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+
 fprintf(1, 'airs_tile_task: set %d node %s\n', iset, nodeid);
 fprintf(1, 'airs_tile_task: jarid %d procid %d nprocs %d\n',jarid, procid, nprocs)
 
@@ -45,18 +47,22 @@ disp(' ')
 %% Strows stuff (run from his dir)
 fdirpre      = '/home/strow/Work/Airs/Tiles/Data/Quantv1';        %% symbolic link to /home/strow/Work/Airs/Tiles/Data/Quantv1 -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '/home/strow/Work/Airs/Tiles/Data/Quantv1_fits';
-i16daysSteps = 412;   %% 2002/09 to 2020/08
 
 %% Sergio stuff (run from my dir)
 fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
-i16daysSteps = 412;   %% 2002/09 to 2020/08, testing that I get same results as Larrabee
-i16daysSteps = 429;   %% 2002/09 to 2021/07
-i16daysSteps = 431;   %% 2002/09 to 2021/08
-i16daysSteps = 433;   %% 2002/09 to 2021/09
+
+startdate = [2002 09 01]; stopdate = [2020 08 31]; i16daysSteps = 412;                       %% 2002/09 to 2020/08, testing that I get same results as Larrabee
+startdate = [2002 09 01]; stopdate = [2021 06 31]; i16daysSteps = 429;                       %% 2002/09 to 2021/06
+startdate = [2002 09 01]; stopdate = [2021 07 31]; i16daysSteps = 431;                       %% 2002/09 to 2021/07
+startdate = [2002 09 01]; stopdate = [2021 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2021/08  **********
+startdate = [2002 09 01]; stopdate = [2014 08 31]; i16daysSteps = 273; i16daysSteps = 433;   %% 2002/09 to 2014/09, but use this extended period
 
 startdate = [2002 09 01]; stopdate = [2021 08 31]; 
 startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+startdate = [2003 01 01]; stopdate = [2012 12 31];  % Joao wants 10 years
+startdate = [2002 09 01]; stopdate = [2014 08 31];  % overlap with CMIP6/AMIP6
+
 i16daysStepsX = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
 
 if i16daysStepsX < i16daysSteps
@@ -65,7 +71,7 @@ if i16daysStepsX < i16daysSteps
 end
 
 % Create outputfile name and save
-if sum(startdate - [2002 09 01]) == 0
+if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
   fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
 else
   fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'  num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
@@ -96,3 +102,9 @@ tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16d
 % only for tests
 % fprintf(1, 'pause for the cause\n')
 % pause(5)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')

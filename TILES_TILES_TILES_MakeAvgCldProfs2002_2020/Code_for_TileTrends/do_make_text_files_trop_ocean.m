@@ -1,4 +1,3 @@
-
 addpath /asl/matlib/h4tools
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/COLORMAP
@@ -55,6 +54,8 @@ if i10or20 == 19
   fid = fopen('areaweight_19years_trop_ocean.txt','w');
 elseif i10or20 == 10
   fid = fopen('areaweight_10years_trop_ocean.txt','w');
+elseif i10or20 == 10.1
+  fid = fopen('areaweight_10years_trop_ocean_200301_201212.txt','w');
 end
 array = [freq aw_bt_trend_asc aw_bt_trend_desc aw_rad_trend_asc aw_rad_trend_desc aw_rad_std_asc aw_rad_std_desc aw_rad_asc aw_rad_desc];
 fprintf(fid,'%%   FREQ                BTtrend/yr                      rad trend/yr                  std rad trend/yr                    mean rad \n');

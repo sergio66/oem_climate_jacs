@@ -1,15 +1,24 @@
-
 addpath /asl/matlib/h4tools
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/COLORMAP
+addpath /home/sergio/MATLABCODE/COLORMAP/LLS
+addpath /asl/matlib/plotutils
+
+rlat = load('/home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/latB64.mat'); rlat65 = rlat.latB2; rlat = 0.5*(rlat.latB2(1:end-1)+rlat.latB2(2:end));
+rlon73 = (1:73); rlon73 = -180 + (rlon73-1)*5;  rlon = (1:72); rlon = -177.5 + (rlon-1)*5;
+[Y,X] = meshgrid(rlat,rlon); X = X(:); Y = Y(:);
+
+load llsmap5
 
 [h,ha,p,pa] = rtpread('/home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/RTP/summary_17years_all_lat_all_lon_2002_2019_palts_startSept2002_CLEAR.rtp');
 
 figure(1); boo = squeeze(bt_trend_asc(1520,:,:)); boo = boo'; boo = boo(:);
-scatter_coast(p.rlon,p.rlat,30,boo); colormap jet; caxis([-0.1 +0.1]); colormap(usa2); title('asc dBT1231/dt')
+scatter_coast(p.rlon,p.rlat,50,boo); colormap jet; caxis([-1 +1]*0.15); colormap(llsmap5); title('asc dBT1231/dt')
+aslmap(1,rlat65,rlon73,smoothn(reshape(boo,72,64)',1), [-90 +90],[-180 +180]); colormap(llsmap5); title('asc dBT1231/dt'); caxis([-1 +1]*0.15);
 
 figure(2); boo = squeeze(bt_trend_desc(1520,:,:)); boo = boo'; boo = boo(:);
-scatter_coast(p.rlon,p.rlat,30,boo); colormap jet; caxis([-0.1 +0.1]); colormap(usa2); title('desc dBT1231/dt')
+scatter_coast(p.rlon,p.rlat,50,boo); colormap jet; caxis([-1 +1]*0.15); colormap(llsmap5); title('desc dBT1231/dt')
+aslmap(2,rlat65,rlon73,smoothn(reshape(boo,72,64)',1), [-90 +90],[-180 +180]); colormap(llsmap5); title('desc dBT1231/dt'); caxis([-1 +1]*0.15);
 
 figure(3)
 bt1231 =  squeeze(bt_trend_asc(1520,:,:));
@@ -50,6 +59,8 @@ if i10or20 == 19
   fid = fopen('areaweight_19years.txt','w');
 elseif i10or20 == 10
   fid = fopen('areaweight_10years.txt','w');
+elseif i10or20 == 10.1
+  fid = fopen('areaweight_10years_200301_201212.txt','w');
 end
 array = [freq aw_bt_trend_asc aw_bt_trend_desc aw_rad_trend_asc aw_rad_trend_desc aw_rad_std_asc aw_rad_std_desc aw_rad_asc aw_rad_desc];
 fprintf(fid,'%%   FREQ                BTtrend/yr                      rad trend/yr                  std rad trend/yr                    mean rad \n');

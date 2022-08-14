@@ -1,7 +1,9 @@
 iQuant = 16;
 
-i10or20 = 10; %% 2005/01 to 2014/12
-i10or20 = 19; %% 2002/09 to 2021/08
+i10or20 = 19;   %% 2002/09 to 2021/08
+i10or20 = 10;   %% 2005/01 to 2014/12
+i10or20 = 10.1; %% 2003/01 to 2012/12
+i10or20 = 13;   %% 2002/09 to 2014/08
 
 i10or20
 
@@ -14,9 +16,15 @@ for ii = 1 : 64
   for jj = 1 : 72
     if i10or20 == 19
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(ii,'%02d') '/LonBin' num2str(jj,'%02d') '/fits_LonBin' num2str(jj,'%02d') '_LatBin' num2str(ii,'%02d') '_V1_TimeSteps433.mat'];
-    elseif i10or20 == 10
+    elseif i10or20 == 13
       %% fits_LonBin*_LatBin01_V1_200500010001_201400120031_TimeStepsX228.mat
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(ii,'%02d') '/LonBin' num2str(jj,'%02d') '/fits_LonBin' num2str(jj,'%02d') '_LatBin' num2str(ii,'%02d') '_V1_200500010001_201400120031_TimeStepsX228.mat'];
+    elseif i10or20 == 13
+      %% fits_LonBin*_LatBin01_V1_200200090001_201400080031_TimeStepsX273.mat
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(ii,'%02d') '/LonBin' num2str(jj,'%02d') '/fits_LonBin' num2str(jj,'%02d') '_LatBin' num2str(ii,'%02d') '_V1_200200090001_201400080031_TimeStepsX273.mat'];
+    elseif i10or20 == 10.1
+      %% fits_LonBin*_LatBin01_V1_200300010001_201200120031_TimeStepsX228.mat
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(ii,'%02d') '/LonBin' num2str(jj,'%02d') '/fits_LonBin' num2str(jj,'%02d') '_LatBin' num2str(ii,'%02d') '_V1_200300010001_201200120031_TimeStepsX228.mat'];
     end
     a = load(fname);
     rad_desc(:,ii,jj) = squeeze(a.b_desc(:,iQuant,1));
@@ -38,9 +46,14 @@ if i10or20 == 19
   save ../DATAObsStats_StartSept2002_CORRECT_LatLon/globaltrends20years.mat freq rad_trend_desc rad_trend_asc bt_trend_desc bt_trend_asc rad_desc rad_asc
 elseif i10or20 == 10
   save ../DATAObsStats_StartSept2002_CORRECT_LatLon/globaltrends10years.mat freq rad_trend_desc rad_trend_asc bt_trend_desc bt_trend_asc rad_desc rad_asc
+elseif i10or20 == 13
+  save ../DATAObsStats_StartSept2002_CORRECT_LatLon/globaltrends13years.mat freq rad_trend_desc rad_trend_asc bt_trend_desc bt_trend_asc rad_desc rad_asc
+elseif i10or20 == 10.1
+  save ../DATAObsStats_StartSept2002_CORRECT_LatLon/globaltrends10years_200301_201212.mat freq rad_trend_desc rad_trend_asc bt_trend_desc bt_trend_asc rad_desc rad_asc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
 do_make_text_files
+do_make_text_files_trop_ocean
 %}

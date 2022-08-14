@@ -249,7 +249,7 @@ for i = 1:nf
       l = xcorr(y(k),1,'coeff');
       lag(i) = l(1);
    else
-      lat(i) = NaN;
+      lag(i) = NaN;
    end
 end
 

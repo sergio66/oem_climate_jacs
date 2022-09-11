@@ -14,7 +14,8 @@ addpath /asl/matlib/rtptools
 addpath /home/sergio/MATLABCODE
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
-%JOB = 18;
+% JOB = 18;
+
 iiBin = JOB;
 
 klayers = '/asl/packages/klayers/Bin/klayers_airs'; 
@@ -33,7 +34,12 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('make sure you correctly set "set_dirIN_dirOUT" as it is called by rates_profiles40')
-rates_profiles40  %%% see make_lats40_avg_and_monthly_profs.m
+iAirs = -1;
+if iAirs > 0 
+  rates_profiles40       %%% see make_lats40_avg_and_monthly_profs.m
+else
+  rates_profiles40_cris  %%% see make_lats40_avg_and_monthly_profs.m
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-disp('now use put_together_rates')
+disp('after you have made all 40 latbins, use put_together_rates')

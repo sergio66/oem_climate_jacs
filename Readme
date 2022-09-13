@@ -34,3 +34,44 @@ kCARTA doing column jacs for eg CFC is for either clear or cloudy : set iCLD = +
 Look at LoopMake_CFC_JacskCARTA/set_rtp.m
 
 >>>>>>>>>>>>>>>>>>>>>>>>>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+MakeProfs
+-rw-rw-r-- 1 sergio pi_strow 33057 Sep 12 06:08 MakeProfs/clust_make_lats40_16dayavg_noseasonal.m                    makes the profiles, sves into what is set by set_dirIN_dirOUT
+-rw-rw-r-- 1 sergio pi_strow 11807 Sep 12 06:07 MakeProfs/clust_make_lats40_16dayavg_noseasonal_16daybdry_cris.m     tells you the 16 day boundaries
+-rw-rw-r-- 1 sergio pi_strow 26226 Sep 12 06:04 MakeProfs/driver_make_lats40_avg_and_monthly_profs.m                 
+-rw-rw-r-- 1 sergio pi_strow  1653 Sep 11 08:00 MakeProfs/clust_make_geophysical_rates40.m
+-rw-rw-r-- 1 sergio pi_strow  5738 Sep 11 07:57 MakeProfs/rates_profiles40_cris.m
+MakeProfs/CLO_LAT40_avg_made_Dec2019_Clr/Desc/16DayAvgNoS/  has the CRIS anomaly 2012/05 - 2019/04 (157 timesteps, 40 latbins)
+
+To make anoms for 40 latbins for eg CRIS LORES (CLO)
+1) clust_make_lats40_16dayavg_noseasonal   run it for 1 - 40 (all 40 latbins)
+2) completed_16day_avgprof_VS_lat.m        make sure iMaxLatbin = 40
+note for CRIS 40 latbins
+-rw-r--r-- 1 strow pi_strow 430341903 May 18 15:11 /home/strow/Work/Cris/Stability/Data/Desc//statlat40.mat
+-rw-r--r-- 1 strow pi_strow 517470587 May 18 15:11 /home/strow/Work/Cris/Stability/Data/Desc//statlat39.mat
+-rw-r--r-- 1 strow pi_strow 515317939 May 18 15:10 /home/strow/Work/Cris/Stability/Data/Desc//statlat38.mat
+so latbin 40 only lasts for about 152 timesteps, while the other 39 last 157 timesteps
+
+So this kinda messes up making 40 latbins jacs for all timesteps!!!!!!!!!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+MakeJacskCARTA_CLR
+-rw-rw-r-- 1 sergio pi_strow 13295 Sep 12 00:00 MakeJacskCARTA_CLR/driver_put_together_kcarta_jacs.m
+-rw-rw-r-- 1 sergio pi_strow  5769 Sep 11 22:38 MakeJacskCARTA_CLR/clust_do_kcarta_driver_anomaly_filelist.m
+-rw-rw-r-- 1 sergio pi_strow  3904 Sep 11 22:37 MakeJacskCARTA_CLR/find_file_names.m
+-rw-r--r-- 1 sergio pi_strow  3200 Sep 11 22:34 MakeJacskCARTA_CLR/do_kcarta.m
+-rw-rw-r-- 1 sergio pi_strow  9949 Sep 11 21:23 MakeJacskCARTA_CLR/set_gasOD_cumOD_rad_jac_flux_cloud_lblrtm.m
+-rw-rw-r-- 1 sergio pi_strow  6401 Sep 11 19:40 MakeJacskCARTA_CLR/list_anomaly_files_to_be_made.m
+
+1) list_anomaly_files_to_be_made.m : to find whih jacs files are missing, into anomaly_list.txt
+2) edit and run notfinished0.sc
+3) cd ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeJacskCARTA_CLR/
+for CRIS NSR anomalies can do
+ for iTimeStep = 1 : 157
+   iAIRSorCRIS = 2;
+   [kcjac,savestr] = driver_put_together_kcarta_jacs(iTimeStep,iAIRSorCRIS);eval(savestr);
+ end

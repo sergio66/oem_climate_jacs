@@ -19,6 +19,7 @@ elseif iAIRSorCRIS == 2
   iMaxTimeStep = 136;  %% 6 years
   iMaxTimeStep = 157;  %% 7 years
   iMaxLatbin = 38;
+  iMaxLatbin = 40;
 end
 
 iPrint2File = -1;

@@ -136,6 +136,8 @@ elseif iHITRAN == 2016
   kcartaexec = '/home/sergio/KCARTA/BIN/kcarta.x_f90_400ppmv_H16';       %% H16, v1.20, allows raAltComprDirsScale
   kcartaexec = '/home/sergio/KCARTA/BIN/kcarta.x_f90_121_400ppmv_H16';   %% H16, v1.21, allows raAltComprDirsScale ooer variable res
   kcartaexec = '/home/sergio/KCARTA/BIN/kcarta.x_f90_121_400ppmv_H16_orig605_805res'; %% lazy, use one res
+  kcartaexec = '/home/sergio/KCARTA/BIN/kcarta.x_f90_122_400ppmv_H16_orig605_805res'; %% lazy, use one res
+  kcartaexec = '/home/sergio/KCARTA/BIN/kcarta.x_f90_122_400ppmv_H20';   %% lazy, use one res
 elseif iHITRAN == 2015
   kcartaexec = '/home/sergio/KCARTA//BIN/kcarta.x_f90_400ppmv_G15';      %% G15, v1.20, allows raAltComprDirsScale
 end

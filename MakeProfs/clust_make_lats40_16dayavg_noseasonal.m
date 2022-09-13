@@ -14,6 +14,7 @@ JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% latbins 1-40
 %JOB = 34
 %JOB = 9
 %JOB = 1
+JOB = 40
 
 set_dirIN_dirOUT    %% set the input/output directory here
   dirOUT = [dirOUT '/16DayAvgNoS/'];  %% this has seasonal anomaly REMOVED

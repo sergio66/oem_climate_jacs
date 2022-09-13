@@ -22,6 +22,7 @@ elseif strfind(dirIN,'Cris')
 end
 
 ii = 20;
+ii = 40;
 fopx = [dirOUT '/latbin' num2str(ii) '_16day_avg.op.rtp'];
 frpx = [dirOUT '/latbin' num2str(ii) '_16day_avg.rp.rtp'];
 if exist(frpx)
@@ -36,8 +37,8 @@ end
 iNumTimeStep = 365;
 iNumTimeStep = length(p20x.stemp);
 
-iMaxLatbin = 40;  % should be true for all instr
 iMaxLatbin = 39;  % dont ask about CriS
+iMaxLatbin = 40;  % should be true for all instr
 
 xtimestart = 2002.75;   %% AIRS
 xtimestart = 2012+4/12; %% CrIS lo

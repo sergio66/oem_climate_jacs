@@ -27,6 +27,9 @@ elseif strfind(dirIN,'Iasi')
   mapper = load('/home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD/map2645to2378.mat');  %%  I know, this is IASI but Larrabee converted to AIRS
   i2378 = 1:2378;
   iDude = mapper.closest2645to2378_ind;
+elseif strfind(dirIN,'Cris')
+  i2378 = 1:1317;
+  iDude = 1:1317;
 end
 
 startYY = 2002; startMM = 09;
@@ -35,8 +38,11 @@ stopYY  = 2017; stopMM  = 08;
 rtimeStart = utc2taiSergio(startYY,startMM,01,eps);
 rtimeStop  = utc2taiSergio(stopYY, stopMM, 30,24-eps);
 
-xstartYY = 2010; xstartMM = 01;
-xstopYY  = 2010; xstopMM  = 12;
+xstartYY = 2010; xstartMM = 01; xstopYY  = 2010; xstopMM  = 12;
+if strfind(dirIN,'Cris')
+  xstartYY = 2014; xstartMM = 01; xstopYY  = 2014; xstopMM  = 12;
+end
+
 xrtimeStart = utc2taiSergio(xstartYY,xstartMM,01,eps);
 xrtimeStop  = utc2taiSergio(xstopYY, xstopMM, 30,24-eps);
 
@@ -57,7 +63,11 @@ yyaxis right; plot(1:40,mean_nlevs); xlabel('latitude index'); ylabel('nlevs mea
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-iChangeSatZen = +1;
+if strfind(dirIN,'Cris')
+  iChangeSatZen = -1;
+else
+  iChangeSatZen = +1;
+end
 if iChangeSatZen > 0
   load('satzen_per_lat_for_env_data.mat');
   addpath /home/sergio/MATLABCODE/PLOTTER
@@ -68,17 +78,19 @@ if iChangeSatZen > 0
   dirOUT = [dirOUT '/ChangeSatZen2HottestSatZen/'];
 end
 
-for ii = 1 : 40
+iiS = 40; iiE = 40;
+iiS = 1;  iiE = 40;
+
+for ii = iiS : iiE
 
   iSwapAngle = ii;
 
   fname = ['/home/strow/Work/Airs/Stability/Data/Desc/statlat' num2str(ii) '.mat'];         %% done in 2017, does look like cloudss  
   fname = ['/home/strow/Data/Work/Airs/Random/Data/Desc_ocean/statlat' num2str(ii) '.mat']; %% done in May 2018
   fname = ['/home/strow/Data/Work/Airs/Random/Data/Desc//statlat' num2str(ii) '.mat'];      %% done in May 2018
-  fname = ['/home/strow/Work/Airs/Random/Data/Desc//statlat' num2str(ii) '.mat'];           %% done in July 2018;
-  
+  fname = ['/home/strow/Work/Airs/Random/Data/Desc//statlat' num2str(ii) '.mat'];           %% done in July 2018;  
   fname = ['/home/strow/Work/Airs/Random/Data/' statsType '/statlat' num2str(ii) '.mat'];   %% done in August 2018;
-  
+
   fname = [dirIN '/statlat' num2str(ii) '.mat'];                                            %% done in March 2019
 
   fprintf(1,'latbin %2i of 40  fname = %s \n',ii,fname)
@@ -104,6 +116,25 @@ for ii = 1 : 40
     ax.rclrbias_std = ax.rbias_std_mean;
     ax.count = ax.count_mean;
     a = ax;
+  elseif strfind(dirIN,'Cris')
+    ax = struct;
+    thenames = fieldnames(a);
+    for oo = 1 : length(thenames)
+      str = ['junk = a.' thenames{oo} ';'];    
+      eval(str);
+      [mmboo,nnboo,ooboo] = size(junk);
+      if ooboo == 1
+        str = ['ax.' thenames{oo} ' = a.' thenames{oo} '(:,5);'];
+      elseif ooboo > 1
+        str = ['ax.' thenames{oo} ' = squeeze(a.' thenames{oo} '(:,5,:));'];
+      end
+      eval(str);
+    end
+    a = ax;
+    if mean(a.satzen_mean) > 30
+      disp('warning : a.satzen_mean > 30, reset to 22')
+      a.satzen_mean = ones(size(a.satzen_mean)) * 22;
+    end
   end
 
   yes = find(a.rtime_mean >= rtimeStart & a.rtime_mean <= rtimeStop);
@@ -146,7 +177,8 @@ for ii = 1 : 40
   %% first do MEAN over one year
 
   clear xh xp
-  count = nanmean(a.count')';  xgood = find(count >= countmin & a.rtime_mean >= xrtimeStart & a.rtime_mean <= xrtimeStop);
+  count = nanmean(a.count')';  
+  xgood = find(count >= countmin & a.rtime_mean >= xrtimeStart & a.rtime_mean <= xrtimeStop);
   fprintf(1,'  for ONE year need a fraction of %9.6f of the remaining data \n',length(xgood)/length(a.rtime_mean)*100);
 
   if ~isfield(a,'plevs_mean')
@@ -213,6 +245,8 @@ for ii = 1 : 40
     xp.zobs = 705000;
   elseif strfind(dirIN,'Iasi')
     xp.zobs = 817000;
+  elseif strfind(dirIN,'Cris')
+    xp.zobs = 805000;
   end
   xp.satheight = xp.zobs;
   xp.scanang  = saconv(xp.satzen,xp.zobs);
@@ -351,6 +385,8 @@ for ii = 1 : 40
     p.zobs = 705000;
   elseif strfind(dirIN,'Iasi')
     p.zobs = 817000;
+  elseif strfind(dirIN,'Cris')
+    p.zobs = 805000;
   end
   p.satheight = p.zobs;
   p.upwell = +1;
@@ -459,7 +495,7 @@ for ii = 1 : 40
     end
 
     p.solzen = nanmean(a.solzen_mean(oo));  
-    p.nlevs  = nanmean(a.nlevs_mean(oo));
+    p.nlevs  = floor(nanmean(a.nlevs_mean(oo)));
     p.spres = max(p.spres,990);     	
     p.nlevs = max(p.nlevs,97);
 
@@ -485,6 +521,8 @@ for ii = 1 : 40
       p.zobs = 705000;
     elseif strfind(dirIN,'Iasi')
       p.zobs = 817000;
+    elseif strfind(dirIN,'Cris')
+      p.zobs = 805000;
     end
     p.satheight = p.zobs;
     p.upwell = +1;
@@ -604,13 +642,15 @@ for ii = 1 : 40
         end
 
         p.solzen = nanmean(a.solzen_mean(oo));  
-        p.nlevs  = nanmean(a.nlevs_mean(oo));
+        p.nlevs  = floor(nanmean(a.nlevs_mean(oo)));
         p.spres = max(p.spres,990);     	
         p.nlevs = max(p.nlevs,97);
 	  
         if strfind(dirIN,'Airs')
           p.zobs = 705000;
         elseif strfind(dirIN,'Iasi')
+          p.zobs = 817000;
+        elseif strfind(dirIN,'Cris')
           p.zobs = 817000;
         end
         p.satheight = p.zobs;
@@ -683,7 +723,11 @@ for ii = 1 : 40
       end     %% if length(oo) > 0
     end       %% loop over month    
   end         %% loop over year
-  rtpwrite([outdir '/latbin' num2str(ii) '_eachmonth.op.rtp'],hall,ha,pall,pa);
+
+error(';lkhd;hlkjd;hjdh;jdh;jdh')
+
+  fileout = [outdir '/latbin' num2str(ii) '_eachmonth.op.rtp'];
+  rtpwrite(fileout,hall,ha,pall,pa);
   figure(3)
   plot(pall.stemp); title(['Each Month Avg stemp latbin = ' num2str(ii)]); pause(0.1);
 

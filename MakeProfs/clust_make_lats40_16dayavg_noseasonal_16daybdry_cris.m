@@ -11,7 +11,10 @@ addpath /asl/matlib/aslutil
 
 system_slurm_stats
 
-for JOB = 1 : 40
+iLatS = 1;  iLatE = 40;
+iLatS = 40; iLatE = 40;
+
+for JOB = iLatS : iLatE
 
   set_dirIN_dirOUT    %% set the input/output directory here
     dirOUT = [dirOUT '/16DayAvgNoS/Anomaly/'];

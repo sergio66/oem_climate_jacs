@@ -12,6 +12,9 @@
  !! iaaOverride(1,9) = 6 
  iaaOverride(1,9) = 0
 
+ !!! temperature variation : default is none
+ iaaOverride(2,1) = -1
+
  !!! caNMLReset_param_spectra = 'breakout_reset_nm_spectra.nml'
  
  $end

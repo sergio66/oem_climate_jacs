@@ -3,7 +3,7 @@
 %% need to modify template_QXYZ.nml CORRECTLY for the rtp file to process!
 
 addpath /home/sergio/MATLABCODE
-global iRunAmomaly iColJacOnly tempscratchdir
+global iRunAmomaly iColJacOnly tempscratchdir iAIRSorCRIS
 
 system_slurm_stats;
 
@@ -28,6 +28,7 @@ JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
 % JOB = 1
 % JOB = 2
 % JOB = 3
+% JOB = 1
 
 JOB0 = JOB;
 thelist = load('anomaly_list.txt');
@@ -59,6 +60,9 @@ rmer = ['!/bin/rm -r /umbc/lustre/strow/sergio/scratch/Anomaly365_16_12p8/' num2
 eval(lser);
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+iAIRSorCRIS = 1; %% AIRS
+iAIRSorCRIS = 2; %% CRIS
 
 set_rtp_anomaly
 set_gasOD_cumOD_rad_jac_flux_cloud_lblrtm

@@ -1,4 +1,4 @@
-global iRunAmomaly  iColJacOnly tempscratchdir
+global iRunAmomaly  iColJacOnly tempscratchdir iAIRSorCRIS
 
 if iRunAmomaly == -1
   %% usual 40 latbins only, simple

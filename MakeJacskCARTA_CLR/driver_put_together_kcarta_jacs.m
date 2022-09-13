@@ -5,10 +5,16 @@ addpath /asl/matlib/h4tools
 
 %{
 so for usual latbins can do eg
-  [kcjac,savestr] = driver_put_together_kcarta_jacs(-1);eval(savestr);
-and for anomalies can do
+  [kcjac,savestr] = driver_put_together_kcarta_jacs(-1,iAIRSorCRIS);eval(savestr);
+and for AIRS anomalies can do
  for iTimeStep = 1 : 365
-   [kcjac,savestr] = driver_put_together_kcarta_jacs(iTimeStep);eval(savestr);
+   iAIRSorCRIS = 1;
+   [kcjac,savestr] = driver_put_together_kcarta_jacs(iTimeStep,iAIRSorCRIS);eval(savestr);
+ end
+and for CRIS NSR anomalies can do
+ for iTimeStep = 1 : 157
+   iAIRSorCRIS = 2;
+   [kcjac,savestr] = driver_put_together_kcarta_jacs(iTimeStep,iAIRSorCRIS);eval(savestr);
  end
 %}
 
@@ -47,6 +53,8 @@ semilogy(prof.gas_51,prof.plevs); set(gca,'ydir','reverse');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%iAIRSorCRIS = 2;
+
 if iAIRSorCRIS == 1
   snorm = zeros(2834,5);
   iMaxLatbin = 40;
@@ -54,8 +62,9 @@ if iAIRSorCRIS == 1
   iFinalNumChan = 2645;
 elseif iAIRSorCRIS == 2
   snorm = zeros(2235,5);
-  iMaxLatbin = 40;
   iMaxLatbin = 38;
+  iMaxLatbin = 39;
+  iMaxLatbin = 40;
   i1231 = 731;
   iFinalNumChan = 2235;
 end
@@ -162,16 +171,17 @@ for ii = 1 : 4
   elseif ii == 4
     title('CFC11')
   end
-  disp('ret'); pause
+  %disp('ret'); pause
   pause(0.1);
 end
 for ii = 5 : 5
   figure(1); plot(fKc,squeeze(alljac(20,:,ii+1)),'b.-',sarta.f,squeeze(sarta.M_TS_jac_all(20,:,ii)),'r');
   hl = legend('this CRIS','old sarta AIRS','location','best');
   title('stemp')
-  disp('ret'); pause
+  %disp('ret'); pause
   pause(0.1);
 end
+
 ii = 006:102; iiK=ii+1; plot(fKc,sum(squeeze(alljac(20,:,iiK))'),'b.-',sarta.f,sum(squeeze(sarta.M_TS_jac_all(20,:,ii))'),'r'); title('sum W'); pause(0.1)
   pause(0.1)
 ii = 103:199; iiK=ii+1; plot(fKc,sum(squeeze(alljac(20,:,iiK))'),'b.-',sarta.f,sum(squeeze(sarta.M_TS_jac_all(20,:,ii))'),'r'); title('sum T'); pause(0.1)
@@ -206,11 +216,11 @@ i500 = find(pt.plevs(1:97,1) > 500,1);
 [ppmvLAY,ppmvAVG,ppmvMAX,pavgLAY,tavgLAY,ppmv500,ppmv75] = layers2ppmv_dryair(ht,pt,1:length(pt.stemp),52);  ppmv_CFC12 = ppmvLAY(i500,:);
 
 if iAIRSorCRIS == 2
-  ppmv_CO2 = ppmv_CO2(1:38);
-  ppmv_N2O = ppmv_N2O(1:38);
-  ppmv_CH4 = ppmv_CH4(1:38);
-  ppmv_CFC11 = ppmv_CFC11(1:38);
-  ppmv_CFC12 = ppmv_CFC12(1:38);
+  ppmv_CO2 = ppmv_CO2(1:iMaxLatbin);
+  ppmv_N2O = ppmv_N2O(1:iMaxLatbin);
+  ppmv_CH4 = ppmv_CH4(1:iMaxLatbin);
+  ppmv_CFC11 = ppmv_CFC11(1:iMaxLatbin);
+  ppmv_CFC12 = ppmv_CFC12(1:iMaxLatbin);
 end
 
 iNewNorm = 0; %% stick to 2.2/370, 5/1860 etc not very smart quite nasty
@@ -241,7 +251,6 @@ end
 tracegas0 = alljac(:,:,1:5);
 tracegas  = tracegas0;
 
-whos tracegas ppmv_CO2
 tracegas(:,:,1) = tracegas(:,:,1) .* ppmv_CO2;
 tracegas(:,:,2) = tracegas(:,:,2) .* ppmv_N2O;
 tracegas(:,:,3) = tracegas(:,:,3) .* ppmv_CH4;

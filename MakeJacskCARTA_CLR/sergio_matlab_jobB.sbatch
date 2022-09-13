@@ -6,6 +6,7 @@
 # run this with   /bin/rm batchout*.* slurm* JUNK/individual_prof_convolved_kcarta* JUNK/rad.dat* JUNK/jac.dat*; sbatch --array=1-40 sergio_matlab_jobB.sbatch
 # run this with   /bin/rm batchout*.* slurm* JUNK/individual_prof_convolved_kcarta* JUNK/rad.dat*; sbatch --array=1-Nmax%128 sergio_matlab_jobB.sbatch
 # run this with   rmer_slurm_JUNKrad.sc; sbatch --array=1-Nmax%128 sergio_matlab_jobB.sbatch  
+# run this with   kleenslurm; sbatch -p cpu2021 --array=1-Nmax%128 sergio_matlab_jobB.sbatch 2    to do filelist stuff (need to create anomaly_list.txt)
 #
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 # if putting ONE job per node (ie no loop)
@@ -68,5 +69,21 @@
 ########################################################################
 
 ##  Specify the job array (format:  start-stop:step)
-matlab -nodisplay -r "clust_do_kcarta_driver; exit"
+if [ $# -gt 0 ]; then
+  echo "Your command line contains $# arguments"
+elif [ $# -eq 0 ]; then
+  echo "Your command line contains no arguments"
+fi
+
+if [[ "$1" -eq "" ]]; then
+  # this is individual clear/cld runs
+  matlab -nodisplay -r "clust_do_kcarta_driver; exit"
+elif [[ "$1" -eq "1" ]]; then
+  # this is individual clear/cld runs
+  matlab -nodisplay -r "clust_do_kcarta_driver; exit"
+elif [[ "$1" -eq "2" ]]; then
+  # this is filelist clear/cld runs
+  matlab -nodisplay -r "clust_do_kcarta_driver_anomaly_filelist; exit"
+fi
+
 

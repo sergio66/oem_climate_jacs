@@ -16,7 +16,7 @@ end
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-iTimeStep = floor(JOB/40) + 1;
+iTimeStep = floor((JOB-1)/40) + 1;
 iLatbin  = mod(JOB,40); 
 if iLatbin == 0
   iLatbin = 40;

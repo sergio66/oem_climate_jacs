@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# run this with sbatch --exclude=cnode203,cnode260,cnode267 --array=1-48%128 --output='testslurm' sergio_matlab_jobB.sbatch
-# run this with sbatch --exclude=cnode203,cnode260,cnode267 --array=1-48%128 sergio_matlab_jobB.sbatch 
-# run this with sbatch --exclude=cnode203,cnode260,cnode267 --array=1-3000%256 --output='/dev/null' sergio_matlab_jobB.sbatch
+# run this with      kleenslurm; sbatch --exclude=cnode203,cnode260,cnode267 --array=1-48%128 --output='testslurm' sergio_matlab_jobB.sbatch
+# run this with      kleenslurm; sbatch --exclude=cnode203,cnode260,cnode267 --array=1-48%128 sergio_matlab_jobB.sbatch 
+# run this with      kleenslurm; sbatch --exclude=cnode203,cnode260,cnode267 --array=1-3000%256 --output='/dev/null' sergio_matlab_jobB.sbatch
 #
-# run this with sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
-# run this with sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 2   for clust_tile_fits_extremes.m
-# run this with sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 3   for clust_tile_fits_means.m
-# run this with sbatch -p high_mem --array=1-64 sergio_matlab_jobB.sbatch 4         for clust_zonalavg_fits_quantiles.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 2   for clust_tile_fits_extremes.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 3   for clust_tile_fits_means.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64 sergio_matlab_jobB.sbatch 4         for clust_zonalavg_fits_quantiles.m
 
 #  Name of the job:
 #SBATCH --job-name=FIT_TILE_TRENDS

@@ -25,9 +25,43 @@ for jj = 1 : 64
 end
 %}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+
+iaFound = zeros(1,600);
+for ii = 3 : length(hugedir)
+  junk = hugedir(ii).name;
+  junk = str2num(junk(end-2:end));
+  iaFound(junk) = 1;
+end
+junk = find(iaFound == 1); junk = max(junk); maxN = junk; 
+  fprintf(1,'max(iaFound) = %3i so will save "summarystats_LatBin32_LonBin36_timesetps_001_%3i_V1.mat" \n',junk,junk);
+
+disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0)
+  iTimeStepNotFound = 0;
+  iTimeStepNotFound = length(junk);
+fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+disp(' ' )
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 all_72lonbins = struct;
 iiMin = 59; iiMax = 59;
 iiMin = 01; iiMax = 72;
+
+all_72lonbins.rlon = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.rlat = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.yy = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.mm = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.dd = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.meanBT1231 = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.maxBT1231 = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.minBT1231 = nan(iiMax-iiMin+1,maxN);
+all_72lonbins.dccBT1231 = nan(iiMax-iiMin+1,maxN);
+
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0
   %  fprintf(1,'+')
@@ -44,20 +78,29 @@ for ii = iiMin : iiMax
 
   fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
   fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+  fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
   lonbin_time = struct;  
 
-  fprintf(1,'reading in %3i files for %s \n',length(thedir),fdirOUT)
+  fprintf(1,'reading in %3i files for %s o=100,.=10 \n',length(thedir),fdirOUT)
 
-  for tt = 1 : length(thedir)
-    if mod(tt,100) == 0
+  clear ttsave
+  for ttt = 1 : length(thedir)
+    if mod(ttt,100) == 0
       fprintf(1,'+\n');
-    elseif mod(tt,10) == 0
+    elseif mod(ttt,10) == 0
       fprintf(1,'o');
     else
       fprintf(1,'.');
     end
-    fx = [fdirIN '/' thedir(tt).name];
+
+    fx = [fdirIN '/' thedir(ttt).name];
     a = load(fx);
+    tt = thedir(ttt).name;
+    tt = tt(1:end-4);
+    tt = str2num(tt(end-2:end));
+    %fprintf(1,'[ttt tt] = %3i %3i %3i \n',ttt,tt,ttt-tt)
+    ttsave(tt) = tt;
+
     lonbin_time = cat_lonbin_time(lonbin_time,tt,a);
     all_72lonbins.rlon(ii,tt) = a.lon_asc;
     all_72lonbins.rlat(ii,tt) = a.lat_asc;
@@ -73,14 +116,21 @@ for ii = iiMin : iiMax
     %thetimestep(JOBB,tt) = str2num(thedir(tt).name(18:end-4));
   end
   fprintf(1,'\n');
-  plot(all_72lonbins.meanBT1231(:)); pause(0.1);
+
+  notfound = find(ttsave == 0);
+  lonbin_time.timestep_notfound = notfound;
+  lonbin_time = nan_lonbin_time_notfound(lonbin_time);
+
+  plot(all_72lonbins.meanBT1231(ii,:)); pause(0.1);
   save(fnameoutIIJJ,'-struct','lonbin_time');
   fprintf(1,'saved %s \n',fnameoutIIJJ);
 end
+
 %all_72lonbins.meanBT1231 = rad2bt(1231,all_72lonbins.meanBT1231);
 fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
 fnameoutII = [fdirOUTII '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
 save(fnameoutII,'-struct','all_72lonbins');
+
 fprintf(1,'\n');
 fprintf(1,'DONE : finished all 72 lonbins for latbin %2i \n',JOB)
 

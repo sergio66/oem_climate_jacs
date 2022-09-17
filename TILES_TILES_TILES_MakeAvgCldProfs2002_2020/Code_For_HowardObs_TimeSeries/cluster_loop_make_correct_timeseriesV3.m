@@ -37,6 +37,11 @@ jj = 59; ii = 27;
 %% startdate = [2002 09 01]; stopdate = [2021 08 31]; 
 %% startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
 %% i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
+%%
+%% iQAX =  0; %% quantile and extreme
+%% iQAX = -1; %% extreme
+%% iQAX = +2; %% mean
+%% iQAX = +1; %% quantile
 %% 
 %% iQAX = -1;
 %% for jj = 1 : 64
@@ -59,10 +64,39 @@ jj = 59; ii = 27;
 %startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
 %i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+
+iaFound = zeros(1,600);
+for ii = 3 : length(hugedir)
+  junk = hugedir(ii).name;
+  junk = str2num(junk(end-2:end));
+  iaFound(junk) = 1;
+end
+junk = find(iaFound == 1); junk = max(junk); maxN = junk; 
+  fprintf(1,'max(iaFound) = %3i so will save "EXTREMEorMEAN/summarystats_LatBin32_LonBin36_timesetps_001_%3i_V1.mat" \n',junk,junk);
+
+disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0)
+  iTimeStepNotFound = 0;
+  iTimeStepNotFound = length(junk);
+fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+disp(' ' )
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 all_72lonbins = struct;
 iiMin = 59; iiMax = 59;
 iiMin = 01; iiMax = 72;
-iQAX = -1;
+
+%% iQAX =  0; %% quantile and extreme
+%% iQAX = -1; %% extreme
+%% iQAX = +2; %% mean
+%% iQAX = +1; %% quantile
+set_iQAX
+
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0
   %  fprintf(1,'+')
@@ -77,15 +111,22 @@ for ii = iiMin : iiMax
   x = translator_wrong2correct(JOBB);
   if iQAX == -1
     fdirIN  = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-    thedir = dir([fdirIN '/*.mat']);
+    thedir = dir([fdirIN '/*extreme*.mat']);
     fprintf(1,'  there are %3i files inside %s \n',length(thedir),fdirIN);
 
     fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+  elseif iQAX == 2
+    fdirIN  = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
+    thedir = dir([fdirIN '/*mean*.mat']);
+    fprintf(1,'  there are %3i files inside %s \n',length(thedir),fdirIN);
+
+    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Mean/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
   else
     error('unknown iQAX')
   end
 
   fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+  fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
   lonbin_time = struct;  
   for tt = 1 : length(thedir)
     fx = [fdirIN '/' thedir(tt).name];

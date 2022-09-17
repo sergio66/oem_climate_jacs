@@ -13,10 +13,12 @@
 # run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
 # run this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
 #
+########################################################################
 # run this with sbatch -p high_mem --array=1-440%16 sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3 -- used this for extremens, but can also do quantiles
 # run this with sbatch             --array=1-440%8  sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3
 # run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 13  for cluster_loop_make_correct_timeseriesV3
 # run this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  for cluster_loop_make_correct_timeseriesV3
+########################################################################
 
 #  Name of the job:
 #SBATCH --job-name=MAKE_16day_avg

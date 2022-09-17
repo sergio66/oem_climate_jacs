@@ -6,11 +6,15 @@ drwxrwxr-x  3 sergio pi_strow 4096 Feb 27 21:40 LoopMake_T100_WV100_JacskCARTA
 drwxrwxr-x  5 sergio pi_strow 4096 Jan 23 18:05 MakeProfs
 
 >>>>>>>>>>>>>>>>>>>>>>>>>
-SARTA jacs in "MakeJacsSARTA" can be either clear or cloudy!
-  When you specify the rtp file to process, 
+SARTA jacs in "MakeJacsSARTA" can be either clear or cloudy! But are typically for 40 latbins or 40 anomaly latbins
+
+For 4608. better to make the average profile, then look at eg
+ /home/sergio/MATLABCODE/oem_pkg.run/AIRS_gridded_STM_May2021_trendsonlyCLR/Readme_make_avg_profs_N_jacs_4608
+
+When you specify the rtp file to process, 
   See MakeJacsSARTA/Readme : 
 
-   (2) edit file "set_file_override_settings" to include
+(2) edit file "set_file_override_settings" to include
    file_override_settings = blah.m;
    And inside "blah.m" you need to specify topts.iJacType = 0;     %% clr sky jacs!
                                         or topts.iJacType = 100;   %% cld sky jacs! DEFAULT

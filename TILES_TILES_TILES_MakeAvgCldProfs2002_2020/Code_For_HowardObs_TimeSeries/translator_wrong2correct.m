@@ -28,13 +28,19 @@ fprintf(1,' CORRECT %4i     %s   %2i %2i %8.f4 %8.4f \n',JOB,correctorder_howard
 fprintf(1,' WRONG   %4i     %s   %2i %2i %8.f4 %8.4f \n',JOB,wrongorder_howardfilenames_from_dirs.savedirname.fname{themapWrong2Right(JOB)},junk2);
 
 %% see translator_wrong2correct.m
+
+for JOB = 1 : 4608
+  x = translator_wrong2correct(JOB,1);
+end
 %}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin == 1
   iPrint = -1;
 end
 
-load  reorder_indexing.mat
+load reorder_indexing.mat
 
 correctorder_howardfilenames.name{JOB};
 wrongorder_howardfilenames_from_dirs.savedirname.fname{themapWrong2Right(JOB)};

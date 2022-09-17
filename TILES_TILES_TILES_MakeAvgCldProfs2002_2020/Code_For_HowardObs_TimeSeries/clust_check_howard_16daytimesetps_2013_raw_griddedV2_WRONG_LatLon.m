@@ -19,16 +19,36 @@ iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
 %JOB = 100
-%JOB = 1
+%JOB = 457
+%JOB = 396 %% this one had a few NaNs and was not being done, did a fix 2022/09/16, but this might cause trouble in trends
 
 %% 2013_s237 to 2013_s259
 %% 2015_s283
 date_stamp = ['2015_s283'];   %% example
 
 hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+
+iaFound = zeros(1,600);
+for ii = 3 : length(hugedir)
+  junk = hugedir(ii).name;
+  junk = str2num(junk(end-2:end));
+  iaFound(junk) = 1;
+end
+junk = find(iaFound == 1); junk = max(junk); maxN = junk; 
+  fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
+
+disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0)
+  iTimeStepNotFound = 0;
+  iTimeStepNotFound = length(junk);
+fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+disp(' ' )
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if iVers == 0
-  JOB = JOB+2;  %% because first two are '.' and '..'
+  JOB = JOB + 2 - iTimeStepNotFound;  %% because first two are '.' and '..'
 elseif iVers == 1
   disp('make sure you have run driver_loop_checkprogress_timeseries before this')
   disp('make sure you have run driver_loop_checkprogress_timeseries before this')
@@ -39,17 +59,46 @@ end
 
 date_stamp = hugedir(JOB).name;
 fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
-
+%error('kjskjs')
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% check to see if 64*72 files have been made for that date_stamp
 
+disp('looping over 64 latbins .....')
 numdone = zeros(72,64);
 for jj = 1 : 64      %% latitude
-  fprintf(1,'.');
+  if mod(jj,10) == 0
+    fprintf(1,'+')
+  else
+    fprintf(1,'.');
+  end
+
   for ii = 1 : 72    %% longitude
     JOB = (jj-1)*72 + ii;
+
     %% x = translator_wrong2correct(JOB);  don't need this since we are not translating
     fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+
+    iDebug = -1;
+    if iDebug > 0
+      thedirjunk = dir([fdirIN '/*.mat']);
+      iaFound2 = zeros(1,600);
+      for ii2 = 1 : length(thedirjunk)
+        junk = thedirjunk(ii2).name;
+        junk = junk(1:end-4);
+        junk = str2num(junk(end-2:end));
+        iaFound2(junk) = 1;
+      end
+      junk = find(iaFound2 == 1); junk = max(junk); maxN2 = junk; 
+      disp('these timesteps are not found : '); junk = find(iaFound2(1:junk) == 0)
+        iTimeStepNotFound2 = 0;
+        iTimeStepNotFound2 = length(junk);
+
+      X = maxN - iTimeStepNotFound;
+      Y = length(thedirjunk);
+      str = ['LatBin ' num2str(jj,'%02i') ' LonBin ' num2str(ii,'%02i') ' expects ' num2str(X,'%03i') ' files and found ' num2str(Y,'%03i') ' files'];
+      fprintf(1,'%s \n',str);
+    end
+
     thedir = dir([fdirIN '/stats_data_' date_stamp '.mat']);
     if length(thedir) == 1
       if thedir.bytes > 0           
@@ -59,7 +108,7 @@ for jj = 1 : 64      %% latitude
   end        
 end
 fprintf(1,'\n');
-sum(numdone(:))
+fprintf(1,'sum(numdone(:)) = %8i ',sum(numdone(:)))
 
 if sum(numdone(:)) == 72*64
   disp('have already made all 4608 files for this timestep');
@@ -210,10 +259,14 @@ for iii = 3 : length(thedir0)
         thesave.rad_asc(iCnt,qq,:) = nanmean(s.rad(:,asc(Z)),2);   
         thesave.satzen_quantile1231_asc(iCnt,qq) = nanmean(s.sat_zen(asc(Z)));
         thesave.solzen_quantile1231_asc(iCnt,qq) = nanmean(s.sol_zen(asc(Z)));
-      else
+      elseif length(Z) == 1
         thesave.rad_asc(iCnt,qq,:) = s.rad(:,asc(Z));   
         thesave.satzen_quantile1231_asc(iCnt,qq) = s.sat_zen(asc(Z));
         thesave.solzen_quantile1231_asc(iCnt,qq) = s.sol_zen(asc(Z));
+      elseif length(Z) == 0
+        thesave.rad_asc(iCnt,qq,:) = NaN;
+        thesave.satzen_quantile1231_asc(iCnt,qq) = NaN;
+        thesave.solzen_quantile1231_asc(iCnt,qq) = NaN;
       end
     end
        
@@ -255,10 +308,14 @@ for iii = 3 : length(thedir0)
         thesave.rad_desc(iCnt,qq,:) = nanmean(s.rad(:,desc(Z)),2);   
         thesave.satzen_quantile1231_desc(iCnt,qq) = nanmean(s.sat_zen(desc(Z)));
         thesave.solzen_quantile1231_desc(iCnt,qq) = nanmean(s.sol_zen(desc(Z)));
-      else
+      elseif length(Z) == 1
         thesave.rad_desc(iCnt,qq,:) = s.rad(:,desc(Z));   
         thesave.satzen_quantile1231_desc(iCnt,qq) = s.sat_zen(desc(Z));
         thesave.solzen_quantile1231_desc(iCnt,qq) = s.sol_zen(desc(Z));
+      elseif length(Z) == 0
+        thesave.rad_desc(iCnt,qq,:) = NaN;
+        thesave.satzen_quantile1231_desc(iCnt,qq) = NaN;
+        thesave.solzen_quantile1231_desc(iCnt,qq) = NaN;
       end
     end
   end

@@ -1,9 +1,11 @@
 function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16daysStepsX)
 
+xnargin = nargin;
+
 %% copied from /home/strow/Work/Airs/Tiles/tile_fits.m
 
 if nargin < 5
-  error('need 5 arguments loni,lati,fdirpre,fout,i16daysSteps')
+  error('need 5 arguments loni,lati,fdirpre,fout,i16daysSteps [stopdate,startdate,i16daysStepsX] are optional')
 end
 if nargin == 5
   startdate = [2002 09 01];
@@ -18,6 +20,7 @@ end
 addpath /asl/matlib/aslutil
 addpath /asl/matlib/time
 addpath /home/strow/Matlab/Math
+
 load_fairs
 
 % loni = 40;
@@ -28,13 +31,41 @@ load_fairs
 
 p = [-0.17 -0.15 -1.66  1.06];
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp(' ')
+%% see eg ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
+hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+
+fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
+
+iaFound = zeros(1,600);
+for ii = 3 : length(hugedir)
+  junk = hugedir(ii).name;
+  junk = str2num(junk(end-2:end));
+  iaFound(junk) = 1;
+end
+junk = find(iaFound == 1); junk = max(junk); maxN = junk;
+  fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
+
+disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0); iaNoData = junk
+  iTimeStepNotFound = 0;             iaNoData = [];
+  iTimeStepNotFound = length(junk);  iaNoData = junk;
+  
+fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+disp(' ' )
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
 fn_summary = fullfile(fdirpre,fn_summary);
 
 if exist(fn_summary)
-  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading %s with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
+  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading  << %s >> with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
   d = load(fn_summary);
-  if length(d.lat_asc) < i16daysSteps
+  if length(d.lat_asc) < i16daysSteps-iTimeStepNotFound
     [length(d.lat_asc) i16daysSteps]
     error('length(d.lat_asc) < i16daysSteps')
   end
@@ -43,30 +74,55 @@ else
   error('stopppppp and look at eg ../Code_For_HowardObs_TimeSeries/cluster_loop_make_correct_timeseriesV3.m')
 end
 
-mtime = tai2dtime(airs2tai(d.tai93_desc));
-dtime = datenum(mtime);
+%mtime = tai2dtime(airs2tai(d.tai93_desc + offset1958_to_1993));
+mtime = tai2dtime(airs2tai(d.tai93_desc)); 
+dtime = datenum(mtime); 
 
+% [mtime(1)]
+% [d.tai93_desc(1)/1000 dtime(1)]
+% which tai2dtime 
+% which datenum 
+% which airs2tai
+% disp('1 ret to continue'); pause
+
+% restoredefaultpath
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE
+% [yyjunk,mmjunk,ddjunk] = tai2utcSergio(d.tai93_desc + offset1958_to_1993);
+% daysSince2002 = change2days(yyjunk,mmjunk,ddjunk,2002);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
 %% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
 %% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
-if nargin > 5
+
+disp(' timestep_notfound = ')
+d.timestep_notfound
+if length(setdiff(d.timestep_notfound,iaNoData)) > 0
+  disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
+  disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
+  disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
+end
+
+if xnargin > 5
   timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
   rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
   iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);
-  fprintf(1,'anticipate %4i timesteps to be used \n',length(iaSE));
+  if length(iaNoData) > 0
+    iaSE = setdiff(iaSE,iaNoData);
+  end
+  fprintf(1,'taking into account %3i missing timetieps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
 end
 
 %k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(2015,8,28));
 %k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(2015,8,28));
-if nargin == 5
+if xnargin == 5
   fprintf(1,'  fitting entire data set \n')
   k_desc = d.count_desc./median(d.count_desc) > 0.98; % all data
   k_asc = d.count_asc./median(d.count_asc) > 0.98;    % all data
 
-elseif nargin == 6
+elseif xnargin == 6
   fprintf(1,'  fitting till and including %4i/%2i/%2i \n',stopdate)
   k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
   k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
@@ -85,7 +141,7 @@ elseif nargin == 6
     error('whoops 6C k_asc) ~= iaSE')
   end
 
-elseif nargin >= 7
+elseif xnargin >= 7
   fprintf(1,'  fitting between and including both time end points %4i/%2i/%2i and %4i/%2i/%2i \n',startdate,stopdate)
   k_desc = find(d.count_desc./median(d.count_desc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
   k_asc  = find(d.count_asc./median(d.count_asc)   > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
@@ -96,11 +152,21 @@ elseif nargin >= 7
   k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
   k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
 
+% mtime = tai2dtime(airs2tai(d.tai93_desc)); 
+% dtime = datenum(mtime); 
+% mtime(1)
+% [d.tai93_desc(1)/1000 dtime(1)]
+% which tai2dtime 
+% which datenum 
+% which airs2tai
+% disp('2 ret to continue'); pause
+% keyboard_nowindow
+
   if length(k_desc) ~= length(iaSE)
     fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
-    %% if off by 1, reset
-    if abs(length(k_desc) - length(iaSE)) <= 1 & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
-      disp('since lengths are only off by 1 reset k_desc')
+    %% if off by 1 or 2, reset
+    if abs(length(k_desc) - length(iaSE)) <= iTimeStepNotFound & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
+      disp('since lengths are only off by 1 or 2 reset k_desc')
       k_desc = iaSE;
     else
       error('please check');
@@ -108,9 +174,9 @@ elseif nargin >= 7
   end
   if length(k_asc) ~= length(iaSE)
     fprintf(1,'whoops 7B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
-    %% if off by 1, reset
-    if abs(length(k_asc) - length(iaSE)) <= 1 & ( (k_asc(1) == iaSE(1)) | (k_asc(end) == iaSE(end)))
-      disp('since lengths are only off by 1 reset k_asc')
+    %% if off by 1 or 2, reset
+    if abs(length(k_asc) - length(iaSE)) <= iTimeStepNotFound & ( (k_asc(1) == iaSE(1)) | (k_asc(end) == iaSE(end)))
+      disp('since lengths are only off by 1 or 2 reset k_asc')
       k_asc = iaSE;
     else
       error('please check');
@@ -148,6 +214,8 @@ resid_asc_std = NaN(2645,16);
 stats_desc = NaN(2645,16,6);
 stats_asc = NaN(2645,16,6);
 
+% keyboard_nowindow
+
 % Run off tsurf using bt1231/bt1228 regression for qi = 16;  
 for qi = 12:16
    r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
@@ -170,7 +238,6 @@ for qi = 12:16
    dbt_asc_tsurf_err(qi-11,2) = stats.se(2);
 %   dbt_asc_tsurf_err(qi-11,2)
 end
-
 
 warning off   
 for qi = 1:16

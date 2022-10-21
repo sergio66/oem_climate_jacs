@@ -8,14 +8,14 @@
 # run this with sbatch --array=1-360%128 sergio_matlab_jobB.sbatch 2   for clust_make_profs_data_howard_bins
 # run this with sbatch --array=1-360%128 sergio_matlab_jobB.sbatch 3   for cluster_anomaly_and_trends_16day_calcs_howard
 #
-# run this with sbatch -p high_mem --array=1-400%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2 -- used this for quantiles for AIRS STM May 2021
-# run this with sbatch             --array=1-400%8  sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+# run this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2 -- used this for quantiles for AIRS STM May 2021
+# run this with sbatch             --array=1-460%8  sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
 # run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
 # run this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
 #
 ########################################################################
-# run this with sbatch -p high_mem --array=1-440%16 sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3 -- used this for extremens, but can also do quantiles
-# run this with sbatch             --array=1-440%8  sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3
+# run this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3 -- used this for extremens, but can also do quantiles
+# run this with sbatch             --array=1-460%8  sergio_matlab_jobB.sbatch 12  for clust_check_howard_16daytimesetps_2013_raw_griddedV3
 # run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 13  for cluster_loop_make_correct_timeseriesV3
 # run this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  for cluster_loop_make_correct_timeseriesV3
 ########################################################################

@@ -47,6 +47,13 @@ disp(' ' )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+dbt = 180 : 1 : 340;
+set_iQAX
+
+if iQAX ~= 1 & iQAX ~= 3 & iQAX ~= 4
+  error('need iQAX = 1,3,4')
+end
+
 if iVers == 0
   JOB = JOB + 2 - iTimeStepNotFound;  %% because first two are '.' and '..'
 elseif iVers == 1
@@ -99,7 +106,13 @@ for jj = 1 : 64      %% latitude
       fprintf(1,'%s \n',str);
     end
 
-    thedir = dir([fdirIN '/stats_data_' date_stamp '.mat']);
+    if iQAX == 1
+      thedir = dir([fdirIN '/stats_data_' date_stamp '.mat']);
+    elseif iQAX == 3
+      thedir = dir([fdirIN '/iQAX_3_stats_data_' date_stamp '.mat']);
+    elseif iQAX == 4
+      thedir = dir([fdirIN '/iQAX_4_stats_data_' date_stamp '.mat']);
+    end
     if length(thedir) == 1
       if thedir.bytes > 0           
         numdone(ii,jj) = 1;    
@@ -118,6 +131,37 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
+
+if iQAX == 1
+  disp('iQAX == 1 so looking for regular quantiles   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00]')
+elseif iQAX == 3
+  disp('iQAX == 3 so looking for newer   quantiles   quants = [0.50 0.80 0.90 0.95 0.97 1.00]')
+elseif iQAX == 4
+  disp('iQAX == 4 so looking for newer   quantiles   quants = [0.50 0.80 0.90 0.95 0.97 1.00] and will do LLS Tsurf quants')
+%elseif iQAX == 0
+%  disp('iQAX == 0 so looking for quantiles and extreme')
+%elseif iQAX == -1
+%  disp('iQAX == -1 so looking for extreme')
+%elseif iQAX == 2
+%  disp('iQAX == 2 so looking for mean')
+else
+  error('iQAX')
+end
+
+if iQAX == 3
+  %% new in Oct 2022 : 6 quantile steps, do the stats so you find how robs1 has changed between Q(ii) and Q(1.00)
+  quants = [0.50 0.80 0.90 0.95 0.97 1.00];
+elseif iQAX == 4
+  %% new in Oct 2022 : 6 quantile steps, do the stats so you find how robs1 has changed between Q(ii) and Q(1.00)
+  quants = [0.50 0.80 0.90 0.95 0.97 1.00];
+elseif iQAX == 1
+  %% original till Oct 2022 : 17 quantile steps, and do the stats so you find how robs1 has changed between Q(ii) and Q(ii+1)
+  quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+else
+  error('need iQAX = 1,3,4')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tic 
 thesave = struct;
@@ -146,12 +190,13 @@ thesave.stdrad_asc  = nan(4608,2645);
 thesave.max1231_asc = nan(1,4608);
 thesave.min1231_asc = nan(1,4608);
 thesave.DCC1231_asc = nan(1,4608);
-thesave.hist_asc = nan(4608,161);
-thesave.quantile1231_asc = nan(4608,16);
-thesave.rad_asc = nan(4608,16,2645);
-thesave.count_quantile1231_asc = nan(4608,16);
-thesave.satzen_quantile1231_asc = nan(4608,16);
-thesave.solzen_quantile1231_asc = nan(4608,16);
+%thesave.hist_asc = nan(4608,length(quants)-1);
+thesave.hist_asc = nan(4608,length(dbt));
+thesave.quantile1231_asc = nan(4608,length(quants)-1);
+thesave.rad_asc = nan(4608,length(quants)-1,2645);
+thesave.count_quantile1231_asc = nan(4608,length(quants)-1);
+thesave.satzen_quantile1231_asc = nan(4608,length(quants)-1);
+thesave.solzen_quantile1231_asc = nan(4608,length(quants)-1);
 
 thesave.count_desc = nan(1,4608);
 thesave.lat_desc = nan(1,4608);
@@ -175,12 +220,13 @@ thesave.stdrad_desc  = nan(4608,2645);
 thesave.max1231_desc = nan(1,4608);
 thesave.min1231_descc = nan(1,4608);
 thesave.DCC1231_desc = nan(1,4608);
-thesave.hist_desc = nan(4608,161);
-thesave.quantile1231_desc = nan(4608,16);
-thesave.rad_desc = nan(4608,16,2645);
-thesave.count_quantile1231_desc = nan(4608,16);
-thesave.satzen_quantile1231_desc = nan(4608,16);
-thesave.solzen_quantile1231_desc = nan(4608,16);
+%thesave.hist_desc = nan(4608,length(quants)-1);
+thesave.hist_desc = nan(4608,length(dbt));
+thesave.quantile1231_desc = nan(4608,length(quants)-1);
+thesave.rad_desc = nan(4608,length(quants)-1,2645);
+thesave.count_quantile1231_desc = nan(4608,length(quants)-1);
+thesave.satzen_quantile1231_desc = nan(4608,length(quants)-1);
+thesave.solzen_quantile1231_desc = nan(4608,length(quants)-1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -194,10 +240,7 @@ plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
 plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 
-quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
-
 pause(1)
-dbt = 180 : 1 : 340;
 iCnt = 0;
 thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
 for iii = 3 : length(thedir0)
@@ -241,18 +284,26 @@ for iii = 3 : length(thedir0)
     thesave.stdsatzen_asc(iCnt)  = nanstd(s.sat_zen(asc));
     thesave.mean_rad_asc(iCnt,:) = nanmean(s.rad(:,asc),2);
     thesave.std_rad_asc(iCnt,:)  = nanstd(s.rad(:,asc),0,2);    
-    X = rad2bt(1231,s.rad(1520,asc)); Y = quantile(X,quants);
+    X = rad2bt(1231,s.rad(1520,asc)); 
+    Y = quantile(X,quants);
     thesave.max1231_asc(iCnt) = max(X);
     thesave.min1231_asc(iCnt) = min(X);
     thesave.DCC1231_asc(iCnt) = length(find(X < 220));
     thesave.hist_asc(iCnt,:) = histc(X,dbt)/length(X);
     for qq = 1 : length(quants)-1
-      if qq <  length(quants)-1
-        Z = find(X >= Y(qq) & X < Y(qq+1));
-      else
-        Z = find(X >= Y(qq) & X <= Y(qq+1));
+      if iQAX == 1
+        if qq <  length(quants)-1
+          Z = find(X >= Y(qq) & X < Y(qq+1));
+        else
+          Z = find(X >= Y(qq) & X <= Y(qq+1));
+          Z = find(X >= Y(qq));
+        end
+      elseif iQAX == 3
         Z = find(X >= Y(qq));
+      elseif iQAX == 4
+        Z = find(X >= do_tile(Y(qq)));
       end
+
       thesave.quantile1231_asc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_asc(iCnt,qq) = length(Z);
       if length(Z) >= 2
@@ -290,18 +341,26 @@ for iii = 3 : length(thedir0)
     thesave.stdsatzen_desc(iCnt)  = nanstd(s.sat_zen(desc));
     thesave.mean_rad_desc(iCnt,:) = nanmean(s.rad(:,desc),2);
     thesave.std_rad_desc(iCnt,:)  = nanstd(s.rad(:,desc),0,2);
-    X = rad2bt(1231,s.rad(1520,desc)); Y = quantile(X,quants);
+    X = rad2bt(1231,s.rad(1520,desc)); 
+    Y = quantile(X,quants);
     thesave.max1231_desc(iCnt) = max(X);
     thesave.min1231_desc(iCnt) = min(X);
     thesave.DCC1231_desc(iCnt) = length(find(X < 220));
     thesave.hist_desc(iCnt,:) = histc(X,dbt)/length(X);
     for qq = 1 : length(quants)-1
-      if qq <  length(quants)-1
-        Z = find(X >= Y(qq) & X < Y(qq+1));
-      else
-        Z = find(X >= Y(qq) & X <= Y(qq+1));
+      if iQAX == 1
+        if qq <  length(quants)-1
+          Z = find(X >= Y(qq) & X < Y(qq+1));
+        else
+          Z = find(X >= Y(qq) & X <= Y(qq+1));
+          Z = find(X >= Y(qq));
+        end
+      elseif iQAX == 3
         Z = find(X >= Y(qq));
+      elseif iQAX == 4
+        Z = find(X >= do_tile(Y(qq)));
       end
+
       thesave.quantile1231_desc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_desc(iCnt,qq) = length(Z);
       if length(Z) >= 2
@@ -321,12 +380,12 @@ for iii = 3 : length(thedir0)
   end
 
   if mod(iCnt,72) == 0
-    figure(1); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
-    figure(2); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
-    figure(3); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc); colormap jet; title('desc hh UTC')
-    figure(4); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc); colormap jet; title('desc hh UTC')
-%    figure(5); scatter_coast(thesave.lon,thesave.lat_asc,50,thesave.stdhour_asc); colormap jet; title('std asc hh UTC')
-%    figure(6); scatter_coast(thesave.lon,thesave.lat_asc,50,thesave.stdhour_desc); colormap jet; title('std desc hh UTC')
+    figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
+    figure(2); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meansolzen_asc);    colormap jet; title('asc solzen')
+    figure(3); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc);   colormap jet; title('desc hh UTC')
+    figure(4); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meanhour_asc);      colormap jet; title('asc hh UTC')
+    figure(5); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.stdhour_desc);      colormap jet; title('std desc hh UTC')
+    figure(6); clf; scatter_coast(thesave.lon_desc,thesave.lat_asc,50,thesave.stdhour_asc);      colormap jet; title('std asc hh UTC')
     pause(0.1);
   end
 end
@@ -357,7 +416,8 @@ if iSave > 0
   %}
 
   %% do_the_save_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m --> do_the_save_howard_16daytimesetps_2013_raw_griddedV2
-  do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum);
+  do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum,iQAX);
+
 end
 
 disp('since these were incorrect LatBinJJ/LonBinII .. now run loop_make_correct_timeseriesV2.m')
@@ -368,17 +428,17 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-figure(1); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
-figure(2); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
-figure(3); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc); colormap jet; title('desc hh UTC')
-figure(4); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc); colormap jet; title('desc hh UTC')
-%figure(5); scatter_coast(thesave.lon,thesave.lat_desc,50,thesave.stdhour_desc); colormap jet; title('std desc hh UTC')
-%figure(6); scatter_coast(thesave.lon,thesave.lat_desc,50,thesave.stdhour_desc); colormap jet; title('std desc hh UTC')
+figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
+figure(2); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meansolzen_asc);    colormap jet; title('asc solzen')
+figure(3); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc);   colormap jet; title('desc hh UTC')
+figure(4); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meanhour_asc);      colormap jet; title('asc hh UTC')
+%figure(5); clf; scatter_coast(thesave.lon,thesave.lat_desc,50,thesave.stdhour_desc); colormap jet; title('std desc hh UTC')
+%figure(6); clf; scatter_coast(thesave.lon,thesave.lat_asc,50,thesave.stdhour_asc); colormap jet; title('std asc hh UTC')
 
-figure(5); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.max1231_desc); colormap jet; title('max 1231')
-figure(6); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,rad2bt(1231,thesave.mean_rad_desc(:,1520))); colormap jet; title('mean 1231')
-figure(7); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.max1231_desc'-rad2bt(1231,thesave.mean_rad_desc(:,1520))); colormap jet; title('max-mean')
-figure(8); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,rad2bt(1231,thesave.rad_desc(:,16,1520))); colormap jet; title('99-100 percetile 1231')
+figure(5); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.max1231_desc); colormap jet; title('max 1231')
+figure(6); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,rad2bt(1231,thesave.mean_rad_desc(:,1520))); colormap jet; title('mean 1231')
+figure(7); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.max1231_desc'-rad2bt(1231,thesave.mean_rad_desc(:,1520))); colormap jet; title('max-mean')
+figure(8); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,rad2bt(1231,thesave.rad_desc(:,length(quants)-1,1520))); colormap jet; title('hottest percetile 1231')
 
 figure(9); oo = find(thesave.lon_desc <= -175); plot(dbt,thesave.hist_desc(oo,:))
 figure(9); oo = find(thesave.lon_desc <= -175); [Y,I] = sort(thesave.lat_desc(oo)); pcolor(thesave.lat_desc(oo(I)),dbt,log10(thesave.hist_desc(oo(I),:)'));

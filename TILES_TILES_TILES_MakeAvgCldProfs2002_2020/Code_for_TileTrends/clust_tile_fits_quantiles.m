@@ -16,7 +16,7 @@ addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
 %JOB = 2222
-JOB = 77
+%JOB = 77
 
 system_slurm_stats
 
@@ -62,7 +62,9 @@ startdate = [2002 09 01]; stopdate = [2021 06 31]; i16daysSteps = 429;          
 startdate = [2002 09 01]; stopdate = [2021 07 31]; i16daysSteps = 431;                       %% 2002/09 to 2021/07
 startdate = [2002 09 01]; stopdate = [2021 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2021/08 = 19 years, 433 steps **********
 startdate = [2002 09 01]; stopdate = [2014 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2014/09 = 273 steps, but use this extended encompassing period to do things fast
-startdate = [2002 09 01]; stopdate = [2022 08 31]; i16daysSteps = 457;                       %% 2002/09 to 2022/08 = 20 years, 457 steps **********
+
+startdate = [2002 09 01]; stopdate = [2022 08 31]; i16daysSteps = 456;                       %% 2002/09 to 2022/08 = 20 years, 457 steps **********
+startdate = [2002 09 01]; stopdate = [2022 09 07]; i16daysSteps = 457;                       %% 2002/09 to 2022/08 = 20 years, 457 steps **********
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -72,11 +74,16 @@ startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
 startdate = [2003 01 01]; stopdate = [2012 12 31];  % Joao wants 10 years
 startdate = [2002 09 01]; stopdate = [2014 08 31];  % overlap with CMIP6/AMIP6
 startdate = [2012 05 01]; stopdate = [2019 04 30];  % overlap with Suomi CrIS NSR
-startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20 years!
+
+startdate = [2002 09 01]; stopdate = [2022 08 31]; % 20 years!
+startdate = [2002 09 01]; stopdate = [2022 09 07]; % 2002/09 to 2022/08 = 20 years, 457 steps **********
+startdate = [2015 01 01]; stopdate = [2021 12 31]; % OCO2-CO2 overlap
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+r16daysStepsX =      ((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
 i16daysStepsX = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
+i16daysStepsX = round((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
 
 if i16daysStepsX < i16daysSteps
   wah = [startdate stopdate];

@@ -1,4 +1,4 @@
-function do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum);
+function do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum,iQAX);
 
 %{
 NB : right at the end I set 
@@ -81,8 +81,21 @@ for iiix = 1 : 64              %% latitude
     quicksave.solzen_quantile1231_desc = thesave.solzen_quantile1231_desc(iCntx,:);
 
     junkLat = iiix; junkLon = jjjx;
-    foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_' date_stamp '.mat'];
+    if iQAX == 1
+      foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_' date_stamp '.mat'];
+    elseif iQAX == 3
+      foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/iQAX_3_stats_data_' date_stamp '.mat'];
+    elseif iQAX == 4
+      foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/iQAX_4_stats_data_' date_stamp '.mat'];
+    else
+      error('need iQAX = 1,3,4')
+    end
     fprintf(1,'%s \n',foutXY);
-    save(foutXY,'-struct','quicksave');
+    if ~exist(foutXY)
+      fprintf(1,'saving %s \n',foutXY)
+      save(foutXY,'-struct','quicksave');
+    else
+      fprintf(1,'%s already exists, not saving\n',foutXY)
+    end
   end
 end

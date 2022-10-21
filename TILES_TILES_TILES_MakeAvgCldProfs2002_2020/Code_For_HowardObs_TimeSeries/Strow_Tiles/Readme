@@ -1,0 +1,6 @@
+copied from /home/strow/Work/Airs/Tiles
+
+[sergio@taki-usr2 Tiles]$ ls *q*.m
+concat_quantv2.m  pull_quantv2_fits.m  quantv1_get_1231_params.m  quantv1_get_1231_tseries.m  trend_10quant.m
+
+do_tile.m is the cloud forcing code.   I thought it would have a v2 in its name.

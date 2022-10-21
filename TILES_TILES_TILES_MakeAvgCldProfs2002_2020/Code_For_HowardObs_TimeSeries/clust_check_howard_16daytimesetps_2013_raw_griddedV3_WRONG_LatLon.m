@@ -26,6 +26,7 @@ disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab d
 % iQAX =  0; %% quantile and extreme
 % iQAX = -1; %% extreme
 % iQAX = +2; %% mean
+% iQAX = +3; %% mean
 % iQAX = +1; %% quantile
 
 set_iQAX
@@ -34,8 +35,12 @@ set_iQAX
 
 if iQAX ~= +2
   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+  if iQAX == +3
+    quants = [0 0.50 0.9 0.95 0.97 1.00];
+    quants = [0.50 0.80 0.90 0.95 0.97 1.00];
+  end
   lenquants = length(quants)-1;
-else
+elseif iQAX == 2
   quants = [0 1];
   lenquants = length(quants)-1;
 end

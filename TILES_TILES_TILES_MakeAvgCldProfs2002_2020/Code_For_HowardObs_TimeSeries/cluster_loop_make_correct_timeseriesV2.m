@@ -62,6 +62,8 @@ all_72lonbins.maxBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.minBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.dccBT1231 = nan(iiMax-iiMin+1,maxN);
 
+set_iQAX
+
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0
   %  fprintf(1,'+')
@@ -74,11 +76,35 @@ for ii = iiMin : iiMax
 
   x = translator_wrong2correct(JOBB);
   fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-  thedir = dir([fdirIN '/*.mat']);
+  if iQAX == 1
+    thedir = dir([fdirIN '/*.mat']);
+    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+    fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+    fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
 
-  fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-  fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
-  fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
+    fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
+    fnameoutII = [fdirOUTII '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+
+  elseif iQAX == 3
+    thedir = dir([fdirIN '/iQAX_3_*.mat']);
+    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+    fnameoutIIJJ = [fdirOUT '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+    fnameoutIIJJ = [fdirOUT '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
+
+    fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
+    fnameoutII = [fdirOUTII '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+
+  elseif iQAX == 4
+    thedir = dir([fdirIN '/iQAX_4_*.mat']);
+    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+    fnameoutIIJJ = [fdirOUT '/iQAX_4_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+    fnameoutIIJJ = [fdirOUT '/iQAX_4_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
+
+    fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
+    fnameoutII = [fdirOUTII '/iQAX_4_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+
+  end
+
   lonbin_time = struct;  
 
   fprintf(1,'reading in %3i files for %s o=100,.=10 \n',length(thedir),fdirOUT)
@@ -122,17 +148,28 @@ for ii = iiMin : iiMax
   lonbin_time = nan_lonbin_time_notfound(lonbin_time);
 
   plot(all_72lonbins.meanBT1231(ii,:)); pause(0.1);
-  save(fnameoutIIJJ,'-struct','lonbin_time');
-  fprintf(1,'saved %s \n',fnameoutIIJJ);
+  if ~exist(fnameoutIIJJ)
+    save(fnameoutIIJJ,'-struct','lonbin_time');
+    fprintf(1,'saved %s \n',fnameoutIIJJ);
+  else
+    fprintf(1,'%s already exists \n',fnameoutIIJJ);
+  end
 end
 
 %all_72lonbins.meanBT1231 = rad2bt(1231,all_72lonbins.meanBT1231);
-fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
-fnameoutII = [fdirOUTII '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
-save(fnameoutII,'-struct','all_72lonbins');
+if ~exist(fnameoutII)
+  save(fnameoutII,'-struct','all_72lonbins');
+  fprintf(1,'saved %s \n',fnameoutII);
+else
+  fprintf(1,'%s already exists \n',fnameoutII);
+end
 
 fprintf(1,'\n');
 fprintf(1,'DONE : finished all 72 lonbins for latbin %2i \n',JOB)
+fprintf(1,'now do cd ../Code_for_TileTrends/')
+fprintf(1,'now do edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps,')
+fprintf(1,'now do   ensure start/stop are [2022 08 31],[2002 09 01]')
+fprintf(1,'now do sbatch -p high_mem --array=1-4608 sergio_matlab_jobB.sbatch 1')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{

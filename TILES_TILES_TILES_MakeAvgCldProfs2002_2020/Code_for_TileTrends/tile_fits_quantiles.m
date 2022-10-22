@@ -1,4 +1,4 @@
-function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16daysStepsX)
+function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX)
 
 xnargin = nargin;
 
@@ -7,12 +7,17 @@ xnargin = nargin;
 if nargin < 5
   error('need 5 arguments loni,lati,fdirpre,fout,i16daysSteps [stopdate,startdate,i16daysStepsX] are optional')
 end
+
 if nargin == 5
+  iQAX = 1;
   startdate = [2002 09 01];
   stopdate = [];
   i16daysStepsX = i16daysSteps;
-end
-if nargin == 6
+elseif nargin == 6
+  startdate = [2002 09 01];
+  stopdate = [];
+  i16daysStepsX = i16daysSteps;
+elseif nargin == 7
   startdate = [2002 09 01];
   i16daysStepsX = i16daysSteps;
 end
@@ -70,7 +75,7 @@ if exist(fn_summary)
     error('length(d.lat_asc) < i16daysSteps')
   end
 else
-  fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  %s with %3i i16daysSteps DNE \n',lati,loni,fn_summary,i16daysSteps)
+  fprintf(1,'tile_fits_quantiles.m : lati,loni = %2i %2i  %s with %3i i16daysSteps DNE \n',lati,loni,fn_summary,i16daysSteps)
   error('stopppppp and look at eg ../Code_For_HowardObs_TimeSeries/cluster_loop_make_correct_timeseriesV3.m')
 end
 
@@ -104,7 +109,7 @@ if length(setdiff(d.timestep_notfound,iaNoData)) > 0
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
 end
 
-if xnargin > 5
+if xnargin > 6
   timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
   rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
@@ -117,12 +122,12 @@ end
 
 %k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(2015,8,28));
 %k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(2015,8,28));
-if xnargin == 5
+if xnargin == 6
   fprintf(1,'  fitting entire data set \n')
   k_desc = d.count_desc./median(d.count_desc) > 0.98; % all data
   k_asc = d.count_asc./median(d.count_asc) > 0.98;    % all data
 
-elseif xnargin == 6
+elseif xnargin == 7
   fprintf(1,'  fitting till and including %4i/%2i/%2i \n',stopdate)
   k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
   k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(stopdate(1),stopdate(2),stopdate(3)));
@@ -141,7 +146,7 @@ elseif xnargin == 6
     error('whoops 6C k_asc) ~= iaSE')
   end
 
-elseif xnargin >= 7
+elseif xnargin >= 8
   fprintf(1,'  fitting between and including both time end points %4i/%2i/%2i and %4i/%2i/%2i \n',startdate,stopdate)
   k_desc = find(d.count_desc./median(d.count_desc) > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
   k_asc  = find(d.count_asc./median(d.count_asc)   > 0.98 & (mtime >= datetime(startdate(1),startdate(2),startdate(3)) & mtime <= datetime(stopdate(1),stopdate(2),stopdate(3))));
@@ -197,51 +202,63 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-b_asc = NaN(2645,16,10);
-b_desc = NaN(2645,16,10);
-berr_asc = NaN(2645,16,10);
-berr_desc = NaN(2645,16,10);
+if iQAX == 1
+  numQuant = 16;
+elseif iQAX == 3
+  numQuant = 5;
+end
 
-dbt_asc = NaN(2645,16);
-dbt_desc = NaN(2645,16);
-dbt_err_asc = NaN(2645,16);
-dbt_err_desc = NaN(2645,16);
+b_asc = NaN(2645,numQuant,10);
+b_desc = NaN(2645,numQuant,10);
+berr_asc = NaN(2645,numQuant,10);
+berr_desc = NaN(2645,numQuant,10);
 
-resid_desc_std = NaN(2645,16);
-resid_asc_std = NaN(2645,16);
+dbt_asc = NaN(2645,numQuant);
+dbt_desc = NaN(2645,numQuant);
+dbt_err_asc = NaN(2645,numQuant);
+dbt_err_desc = NaN(2645,numQuant);
+
+resid_desc_std = NaN(2645,numQuant);
+resid_asc_std = NaN(2645,numQuant);
 
 % 6 values are:  ols_s, robust_s, mad_s, s, t(2), p(2) 
-stats_desc = NaN(2645,16,6);
-stats_asc = NaN(2645,16,6);
+stats_desc = NaN(2645,numQuant,6);
+stats_asc = NaN(2645,numQuant,6);
 
 % keyboard_nowindow
 
+if iQAX == 1
+  qi1 = 12; qi2 = 16;
+elseif iQAX == 3
+  qi1 = 3; qi2 = 5;
+end
+
 % Run off tsurf using bt1231/bt1228 regression for qi = 16;  
-for qi = 12:16
+for qi = qi1 : qi2
    r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
    r1228 = squeeze(d.rad_quantile_desc(:,1513,qi));
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    desc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_desc_tsurf(qi-11,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),desc_tsurf(k_desc),4);
-%   dbt_desc_tsurf(qi-11,2)
-   dbt_desc_tsurf_err(qi-11,2) = stats.se(2);
-%   dbt_desc_tsurf_err(qi-11,2)
+   [dbt_desc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),desc_tsurf(k_desc),4);
+   % dbt_desc_tsurf(qi- (qi1-1) ,2)
+   dbt_desc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
+   % dbt_desc_tsurf_err(qi- (qi1-1) ,2)
 
    r1231 = squeeze(d.rad_quantile_asc(:,1520,qi));
    r1228 = squeeze(d.rad_quantile_asc(:,1513,qi));
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    asc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_asc_tsurf(qi-11,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(1),asc_tsurf(k_asc),4);
-%   dbt_asc_tsurf(qi-11,2)
-   dbt_asc_tsurf_err(qi-11,2) = stats.se(2);
-%   dbt_asc_tsurf_err(qi-11,2)
+   [dbt_asc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(1),asc_tsurf(k_asc),4);
+   % dbt_asc_tsurf(qi- (qi1-1) ,2)
+   dbt_asc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
+   % dbt_asc_tsurf_err(qi- (qi1-1) ,2)
 end
 
 warning off   
-for qi = 1:16
-  fprintf(1,'qi = %2i of 16 \n',qi);
+for qi = 1:numQuant
+  fprintf(1,'qi = %2i of %2i \n',qi,numQuant);
   [ b_satzen_desc(qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),d.satzen_quantile1231_desc(k_desc,qi),1);
   berr_satzen_desc(qi,:) = stats.se;
 

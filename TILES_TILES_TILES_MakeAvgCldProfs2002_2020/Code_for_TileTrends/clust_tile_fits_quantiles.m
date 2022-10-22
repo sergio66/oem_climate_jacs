@@ -76,8 +76,8 @@ startdate = [2002 09 01]; stopdate = [2014 08 31];  % overlap with CMIP6/AMIP6
 startdate = [2012 05 01]; stopdate = [2019 04 30];  % overlap with Suomi CrIS NSR
 
 startdate = [2002 09 01]; stopdate = [2022 08 31]; % 20 years!
-startdate = [2002 09 01]; stopdate = [2022 09 07]; % 2002/09 to 2022/08 = 20 years, 457 steps **********
 startdate = [2015 01 01]; stopdate = [2021 12 31]; % OCO2-CO2 overlap
+startdate = [2002 09 01]; stopdate = [2022 09 07]; % 2002/09 to 2022/08 = 20 years, 457 steps **********
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,12 +94,26 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+set_iQAX
+
 % Create outputfile name and save
-if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-  fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
-else
-  fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'  num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+
+if iQAX == 1
+  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
+    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+  else
+    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
+    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+  end
+elseif iQAX == 3
+  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
+    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+  else
+    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
+    fnout - [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+  end
 end
+
 fnout = fullfile(fdirpre_out,fnout);
 if ~exist(fnout)
   fprintf(1,'making fnout = %s \n',fnout)
@@ -121,7 +135,7 @@ end
 % run the target script
 %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 
 % only for tests
 % fprintf(1, 'pause for the cause\n')

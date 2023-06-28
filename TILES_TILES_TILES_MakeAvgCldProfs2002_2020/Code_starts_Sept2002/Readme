@@ -15,6 +15,7 @@ or
   iQAX = -1; %% extreme
   iQAX = +1; %% quantile
   iQAX = +2; %% mean
+  iQAX = +3; %% newer quantile (integrate from Q to 1)
   kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 12  -- to make the "wrong" data   (should really end at 457)
   kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  -- to correct things          (should really end at 457)
 
@@ -39,6 +40,7 @@ sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
     iQAX =  0; %% quantile and extreme
     iQAX = -1; %% extreme
     iQAX = +2; %% mean
+    iQAX = +3; %% newer quantile (intergrate form Q to 1)
 
     loop over reading netcdf data from dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
     then save to 

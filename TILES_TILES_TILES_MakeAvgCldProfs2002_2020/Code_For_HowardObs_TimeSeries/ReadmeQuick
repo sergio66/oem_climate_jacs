@@ -1,0 +1,63 @@
+see sergio_matlab_jobB.sbatch
+
+as Howard makes more data, need to update the tiled data I make for trends/quantiles, 23 timesteps per year
+
+cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so only need relatively fast "periodic updates"
+1) run this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+   make sure you set iQAX in here, using set_iQAX.m; right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
+     iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+     iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
+   this code takes in all tiled data so far in /asl/isilon/airs/tile_test7/
+   eg 460 = 23 * 20 number of timesteps so far since 2002/09/01 to 2022/08/31 that Howard has made
+
+   input  dir = /asl/isilon/airs/tile_test7/HowardsTIlingMap, this could be corrected eg using  x = translator_wrong2correct(JOB);
+   output dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
+
+2) run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
+   input dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
+   fdirIN     = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
+
+   fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
+   fnameoutII = [fdirOUTII '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+
+   eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin09/LonBin09
+     -rw-rw-r-- 1 sergio pi_strow   6047306 Oct 22  2022 iQAX_3_fits_LonBin09_LatBin09_V1_TimeSteps457.mat
+     -rw-rw-r-- 1 sergio pi_strow  55165772 Oct 21  2022 iQAX_3_summarystats_LatBin09_LonBin09_timesetps_001_457_V1.mat
+     -rw-rw-r-- 1 sergio pi_strow  19204099 Sep 17  2022 fits_LonBin09_LatBin09_V1_201500010001_202100120031_TimeStepsX160.mat
+     -rw-rw-r-- 1 sergio pi_strow  19215047 Sep 17  2022 fits_LonBin09_LatBin09_V1_TimeSteps457.mat
+     -rw-rw-r-- 1 sergio pi_strow 160716993 Sep 17  2022 summarystats_LatBin09_LonBin09_timesetps_001_457_V1.mat
+
+   clear all; load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_457_V1.mat
+     meanBT_asc                    457x2645               4835060  single
+     meanBT_desc                   457x2645               4835060  single
+     rad_quantile_asc              457x2645x5            48350600  double
+     rad_quantile_desc             457x2645x5            48350600  double
+     plot(rad2bt(1231,squeeze(rad_quantile_asc(:,1520,:))));  hl=legend(num2str((1:5)'));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cd Code_for_TileTrends
+3) Now make spectral trends from YYYY1:MM1:DD1 to YYYY2:MM2:DD2
+   this is VERY FAST
+
+   clust_tile_fits_quantiles.m : set start/stop times eg
+      startdate = [2002 09 01]; stopdate = [2007 08 31]; % 05 years!
+
+    fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
+    fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
+    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
+    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+    fnout = fullfile(fdirpre_out,fnout);
+
+   run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
+
+   clear all; load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat
+     b_asc                   2645x5x10            1058000  double
+     b_desc                  2645x5x10            1058000  double
+     plot(fairs,squeeze(b_asc(:,:,2)))
+
+4) then finally clust_tile_fits_quantiles.m suggests
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

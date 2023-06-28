@@ -4,7 +4,8 @@ addpath /asl/matlib/aslutil/
 
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
-%JOB = 32
+JOB = 28
+JOB = 29
 
 %% indonesia = 0.78S, 113E   so latbin32,lonbin 113/180*36 + 36 = 59
 jj = 32; ii = 59;  
@@ -51,6 +52,9 @@ disp(' ' )
 all_72lonbins = struct;
 iiMin = 59; iiMax = 59;
 iiMin = 01; iiMax = 72;
+
+%  iiMin = 45; iiMax = 45; %% JOB = 28
+%  iiMin = 72; iiMax = 72; %% JOB = 29
 
 all_72lonbins.rlon = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.rlat = nan(iiMax-iiMin+1,maxN);
@@ -156,12 +160,16 @@ for ii = iiMin : iiMax
   end
 end
 
-%all_72lonbins.meanBT1231 = rad2bt(1231,all_72lonbins.meanBT1231);
-if ~exist(fnameoutII)
-  save(fnameoutII,'-struct','all_72lonbins');
-  fprintf(1,'saved %s \n',fnameoutII);
+if iiMin == 01 & iiMax == 72
+  %all_72lonbins.meanBT1231 = rad2bt(1231,all_72lonbins.meanBT1231);
+  if ~exist(fnameoutII)
+    save(fnameoutII,'-struct','all_72lonbins');
+    fprintf(1,'saved %s \n',fnameoutII);
+  else
+    fprintf(1,'%s already exists \n',fnameoutII);
+  end
 else
-  fprintf(1,'%s already exists \n',fnameoutII);
+  fprintf(1,'iMin = %2i iMax = %2i and not 01/72 so cannot do this overall summary save \n',iiMin,iiMax)
 end
 
 fprintf(1,'\n');

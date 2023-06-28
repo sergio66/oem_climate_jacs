@@ -14,14 +14,12 @@ addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
-JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
+JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over latbins 1-64
 % JOB = 2222
 % JOB = 77
 
 disp(' ')
-%for JOB=1:4608
-  lati = floor((JOB-1)/72)+1;  loni = JOB-(lati-1)*72;  fprintf(1,'JOB,lati,loni : %4i %3i %3i \n',JOB,lati,loni)
-%end
+lati = JOB; fprintf(1,'JOB = lati (loop 72 lons)  : %4i %3i \n',JOB,lati)
 disp(' ')
 
 system_slurm_stats
@@ -71,46 +69,52 @@ end
 
 set_iQAX
 
-% Create outputfile name and save
+for loni = 72 : -1 : 1
+  disp(' ')
+  fprintf(1,'lati,loni = %2i %2i \n',lati,loni)
 
-if iQAX == 1
-  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
-  else
-    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
-    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+  % Create outputfile name and save
+  
+  if iQAX == 1
+    if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
+      fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+    else
+      fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
+      fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+    end
+  elseif iQAX == 3
+    if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
+      fnout = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+    else
+      fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
+      fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+    end
   end
-elseif iQAX == 3
-  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
+  
+  fnout = fullfile(fdirpre_out,fnout);
+  if ~exist(fnout)
+    fprintf(1,'making fnout = %s \n',fnout)
   else
-    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
-    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
+    fprintf(1,'fnout = %s already exists\n',fnout)
+    disp('fnout already exists')
+    return
   end
-end
+  
+  if ~exist(fdirpre_out)
+    mkdir(fdirpre_out)
+  end
+  
+  if exist(fnout)
+    fprintf(1,'fnout = %s already exists, skipping \n',fnout)
+    return
+  end
+  
+  % run the target script
+  %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+  %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+  tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 
-fnout = fullfile(fdirpre_out,fnout);
-if ~exist(fnout)
-  fprintf(1,'making fnout = %s \n',fnout)
-else
-  fprintf(1,'fnout = %s already exists\n',fnout)
-  disp('fnout already exists')
-  return
 end
-
-if ~exist(fdirpre_out)
-  mkdir(fdirpre_out)
-end
-
-if exist(fnout)
-  fprintf(1,'fnout = %s already exists, skipping \n',fnout)
-  return
-end
-
-% run the target script
-%tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-%tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 
 % only for tests
 % fprintf(1, 'pause for the cause\n')

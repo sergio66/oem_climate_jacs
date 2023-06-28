@@ -37,10 +37,11 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 cd Code_for_TileTrends
 3) Now make spectral trends from YYYY1:MM1:DD1 to YYYY2:MM2:DD2
-   this is VERY FAST
 
-   clust_tile_fits_quantiles.m : set start/stop times eg
-      startdate = [2002 09 01]; stopdate = [2007 08 31]; % 05 years!
+     this is VERY FAST (of course, depending how many nodes you get on HPC)
+     clust_tile_fits_quantiles.m JOB=1:4608 or clust_tile_fits_quantiles_loop72lons.m JOB = 1:64
+       set start/stop times via set_start_stop_dates eg
+         startdate = [2002 09 01]; stopdate = [2007 08 31]; % 05 years!
 
     fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
     fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
@@ -49,6 +50,8 @@ cd Code_for_TileTrends
     fnout = fullfile(fdirpre_out,fnout);
 
    run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
+   run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
+   run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
 
    clear all; load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat
      b_asc                   2645x5x10            1058000  double

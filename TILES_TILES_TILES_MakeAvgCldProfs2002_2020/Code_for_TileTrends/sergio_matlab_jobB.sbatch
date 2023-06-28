@@ -4,10 +4,16 @@
 # run this with      kleenslurm; sbatch --exclude=cnode203,cnode260,cnode267 --array=1-48%128 sergio_matlab_jobB.sbatch 
 # run this with      kleenslurm; sbatch --exclude=cnode203,cnode260,cnode267 --array=1-3000%256 --output='/dev/null' sergio_matlab_jobB.sbatch
 #
-# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
-# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 2   for clust_tile_fits_extremes.m
-# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 3   for clust_tile_fits_means.m
-# run this with      kleenslurm; sbatch -p high_mem --array=1-64 sergio_matlab_jobB.sbatch 4         for clust_zonalavg_fits_quantiles.m
+##########################
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m OR
+#
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles+_loop72lons.m  AND
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles+_loop72lons_backwards.m 
+##########################
+#
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 4   for clust_tile_fits_extremes.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 5   for clust_tile_fits_means.m
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64 sergio_matlab_jobB.sbatch 6         for clust_zonalavg_fits_quantiles.m
 
 #  Name of the job:
 #SBATCH --job-name=FIT_TILE_TRENDS
@@ -57,9 +63,13 @@ elif [[ "$1" -eq "1" ]]; then
   echo "cmd line arg = 1, generic run"
   /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "2" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
 elif [[ "$1" -eq "3" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_means; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons_backwards; exit"
 elif [[ "$1" -eq "4" ]]; then
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
+elif [[ "$1" -eq "5" ]]; then
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_means; exit"
+elif [[ "$1" -eq "6" ]]; then
   /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAorOorL = -1; clust_zonalavg_fits_quantiles; exit"
 fi

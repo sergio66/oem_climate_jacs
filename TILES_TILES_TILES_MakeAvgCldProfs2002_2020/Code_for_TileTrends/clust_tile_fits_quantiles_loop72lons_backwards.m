@@ -15,8 +15,7 @@ addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over latbins 1-64
-% JOB = 2222
-% JOB = 77
+% JOB = 1
 
 disp(' ')
 lati = JOB; fprintf(1,'JOB = lati (loop 72 lons)  : %4i %3i \n',JOB,lati)
@@ -91,28 +90,19 @@ for loni = 72 : -1 : 1
     end
   end
   
-  fnout = fullfile(fdirpre_out,fnout);
-  if ~exist(fnout)
-    fprintf(1,'making fnout = %s \n',fnout)
-  else
-    fprintf(1,'fnout = %s already exists\n',fnout)
-    disp('fnout already exists')
-    return
-  end
-  
   if ~exist(fdirpre_out)
     mkdir(fdirpre_out)
   end
-  
-  if exist(fnout)
-    fprintf(1,'fnout = %s already exists, skipping \n',fnout)
-    return
+
+  fnout = fullfile(fdirpre_out,fnout);
+  if exist([fnout '.mat'])
+    fprintf(1,'fnout = %s already exists\n',fnout)
+  else  
+    % run the target script
+    %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+    %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+    tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
   end
-  
-  % run the target script
-  %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-  %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,[2021 08 31],[2002 09 01]); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
-  tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
 
 end
 

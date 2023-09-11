@@ -10,7 +10,11 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
    this code takes in all tiled data so far in /asl/isilon/airs/tile_test7/
    eg 460 = 23 * 20 number of timesteps so far since 2002/09/01 to 2022/08/31 that Howard has made
 
-   input  dir = /asl/isilon/airs/tile_test7/HowardsTIlingMap, this could be corrected eg using  x = translator_wrong2correct(JOB);
+   input  dir = /asl/isilon/airs/tile_test7/    has Howards TlingMap by 16 day intervals
+      but when I read the directories, I read it in "alphabetical order" so completely out of sequence; 
+      eg look at  /asl/isilon/airs/tile_test7/2022_s462
+
+      could be corrected eg using  x = translator_wrong2correct(JOB);
    output dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
 
 2) run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2

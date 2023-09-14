@@ -7,8 +7,8 @@
 ##########################
 # run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m OR
 #
-# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles+_loop72lons.m  AND
-# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles+_loop72lons_backwards.m 
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m  AND
+# run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m 
 ##########################
 #
 # run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 4   for clust_tile_fits_extremes.m
@@ -58,10 +58,10 @@ fi
 
 if [[ "$1" -eq "" ]]; then
   echo "cmd line arg = DNE, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -4; clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "1" ]]; then
   echo "cmd line arg = 1, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -4; clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "2" ]]; then
   /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
 elif [[ "$1" -eq "3" ]]; then

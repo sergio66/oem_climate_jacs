@@ -62,6 +62,9 @@ cd Code_for_TileTrends
      b_desc                  2645x5x10            1058000  double
      plot(fairs,squeeze(b_asc(:,:,2)))
 
+  NOTE the default is to make the annnual trends (ie use all data) but can also make seasonal trends DJF, MAM, JJA, SON
+  see variable iAllorSeason ... but you an also contro this in "sergio_matlab_jobB.sbatch"
+
 4) then finally clust_tile_fits_quantiles.m suggests
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')

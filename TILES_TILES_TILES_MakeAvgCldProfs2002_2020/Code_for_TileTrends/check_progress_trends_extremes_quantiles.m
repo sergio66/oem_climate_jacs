@@ -1,20 +1,47 @@
-iType = input('Enter (-1) for Q1-16 2002/09 to 2020/08 == orig, re-done by Sergio (2) for Q1-16 2002/09 to 2021/08 == new  (3) for extremes 2002/09 to 2021/08 == new : ');
+disp('Enter (1) for Q1-16 2002/09 to 2020/08 == orig, re-done by Sergio');
+disp('      (3) for extremes 2002/09 to 2021/08 == new')
+disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON : ')
+iType = input('enter choice : ');
+
+iNumTmeSteps = input('Enter number timesteps eg 412, 429, [default] 457 : ');
+if length(iNumTmeSteps) == 0
+  iNumTmeSteps = 457;
+end
+tstr = num2str(iNumTmeSteps);
+
+addpath /home/sergio/MATLABCODE
 
 figure(1); clf; colormap(jet);
 
 found_tile_trends_quantiles_extremes = zeros(64,72);
 clear job_notdone
 iCnt = 0;
+disp(' + for 10, . for one :: all the way to 64 latbins')
 for jj = 1 : 64
-  fprintf(1,'.');
+  if mod(jj,10) == 0
+    fprintf(1,'+');
+  else
+    fprintf(1,'.');
+  end
+
   for ii = 1 : 72
 
     if iType == 3
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/extreme_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps429.mat'];
-    elseif iType == 2
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps429.mat'];
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/extreme_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
+    elseif iType == 1
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
     elseif iType == -1
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps412.mat'];
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*DJF* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_DJF.mat'];
+    elseif iType == -2
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*MAM* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_MAM.mat'];
+    elseif iType == -3
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*JJA* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_JJA.mat'];
+    elseif iType == -4
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*SON* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_SON.mat'];
     end
 
     if exist(fname)
@@ -30,10 +57,32 @@ fprintf(1,'\n');
 fprintf(1,'looked for files ~ %s \n',fname);
 sum(found_tile_trends_quantiles_extremes(:))
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% if iCnt > 0
+%   disp('some tiles not processed .. see notdone.txt')
+%   fid = fopen('notdone.txt','w');
+%
+%   %fprintf(fid,'ii=LonBin   jj=LatBin    JOB=ii+(jj-1)*72');
+%   %fprintf(fid,'%4i %4i %4i\n',job_notdone);
+%
+%   fprintf(fid,'%4i\n',job_notdone(:,3));
+%   fclose(fid);
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if iCnt > 0
-  disp('some tiles not processed .. see notdone.txt')
-  fid = fopen('notdone.txt','w');
-  fprintf(fid,'ii=LonBin   jj=LatBin    JOB=ii+(jj-1)*72');
-  fprintf(fid,'%4i %4i %4i\n',job_notdone);
+  baddy = job_notdone(:,3);
+
+  fid = fopen('notdone_filelist.sc','w');
+  fprintf(1,'found that %4i of %4i timesteps did not finish : see notdone_filelist.sc \n',length(baddy),72*64)
+  str = ['sbatch --account=pi_strow  --exclude=cnode[204,225,267] --array='];
+  str = ['sbatch --account=pi_strow   -p cpu2021 --array='];
+  str = ['sbatch --account=pi_strow   -p high_mem --array='];
+  fprintf(fid,'%s',str);
+  iX = nice_output(fid,baddy);   %% now put in continuous strips
+  fprintf(1,'length(badanom) = %4i Num Continuous Strips = %4i \n',length(baddy),iX)
+  str = [' sergio_matlab_jobB.sbatch 1'];
+  %% going to call individual processors to do individual profiles
+  fprintf(fid,'%s \n',str);
   fclose(fid);
+  disp(' ')
 end

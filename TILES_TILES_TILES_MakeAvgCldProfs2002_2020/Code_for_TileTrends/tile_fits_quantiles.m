@@ -1,4 +1,5 @@
-function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX)
+function [] = tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX,iAllorSeason)
+%%                                  1    2     3      4       6        [ 6     7       8          9             10      ])
 
 xnargin = nargin;
 
@@ -13,13 +14,21 @@ if nargin == 5
   startdate = [2002 09 01];
   stopdate = [];
   i16daysStepsX = i16daysSteps;
+  iAllorSeason = +1;
 elseif nargin == 6
   startdate = [2002 09 01];
   stopdate = [];
   i16daysStepsX = i16daysSteps;
+  iAllorSeason = +1;
 elseif nargin == 7
   startdate = [2002 09 01];
   i16daysStepsX = i16daysSteps;
+  iAllorSeason = +1;
+elseif nargin == 8
+  i16daysStepsX = i16daysSteps;
+  iAllorSeason = +1;
+elseif nargin == 9
+  iAllorSeason = +1;
 end
 
 addpath /asl/matlib/aslutil
@@ -113,6 +122,8 @@ if length(setdiff(d.timestep_notfound,iaNoData)) > 0
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if xnargin > 6
   timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
@@ -121,8 +132,12 @@ if xnargin > 6
   if length(iaNoData) > 0
     iaSE = setdiff(iaSE,iaNoData);
   end
-  fprintf(1,'taking into account %3i missing timetieps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
+  fprintf(1,'taking into account %3i missing timesteps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %k_desc = d.count_desc./median(d.count_desc) > 0.98 & (mtime <= datetime(2015,8,28));
 %k_asc = d.count_asc./median(d.count_asc) > 0.98 & (mtime <= datetime(2015,8,28));
@@ -161,45 +176,66 @@ elseif xnargin >= 8
   k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
   k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
 
-% mtime = tai2dtime(airs2tai(d.tai93_desc)); 
-% dtime = datenum(mtime); 
-% mtime(1)
-% [d.tai93_desc(1)/1000 dtime(1)]
-% which tai2dtime 
-% which datenum 
-% which airs2tai
-% disp('2 ret to continue'); pause
-% keyboard_nowindow
+  damonth = month(dtime);
+  if iAllorSeason == -1   
+    %%% DJF
+    k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 12 | month(dtime) == 01 | month(dtime) == 02)); 
+    k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 12 | month(dtime) == 01 | month(dtime) == 02));     
+  elseif iAllorSeason == -2
+    %%% MAM
+    k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 03 | month(dtime) == 04 | month(dtime) == 05)); 
+    k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 03 | month(dtime) == 04 | month(dtime) == 05));     
+  elseif iAllorSeason == -3
+    %%% JJA
+    k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 06 | month(dtime) == 07 | month(dtime) == 08)); 
+    k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 06 | month(dtime) == 07 | month(dtime) == 08));     
+  elseif iAllorSeason == -4
+    %%% SON
+    k_desc = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 09 | month(dtime) == 10 | month(dtime) == 11)); 
+    k_asc  = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))) & (month(dtime) == 09 | month(dtime) == 10 | month(dtime) == 11));     
+  end
 
-  if length(k_desc) ~= length(iaSE)
-    fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
-    %% if off by 1 or 2, reset
-    if abs(length(k_desc) - length(iaSE)) <= iTimeStepNotFound & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
-      disp('since lengths are only off by 1 or 2 reset k_desc')
+  % mtime = tai2dtime(airs2tai(d.tai93_desc)); 
+  % dtime = datenum(mtime); 
+  % mtime(1)
+  % [d.tai93_desc(1)/1000 dtime(1)]
+  % which tai2dtime 
+  % which datenum 
+  % which airs2tai
+  % disp('2 ret to continue'); pause
+  % keyboard_nowindow
+
+  if iAllorSeason > 0
+    if length(k_desc) ~= length(iaSE) 
+      fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
+      %% if off by 1 or 2, reset
+      if abs(length(k_desc) - length(iaSE)) <= iTimeStepNotFound & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
+        disp('since lengths are only off by 1 or 2 reset k_desc')
+        k_desc = iaSE;
+      else
+        error('please check');
+      end
+    end
+    if length(k_asc) ~= length(iaSE) & iAllorSeason > 0
+      fprintf(1,'whoops 7B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
+      %% if off by 1 or 2, reset
+      if abs(length(k_asc) - length(iaSE)) <= iTimeStepNotFound & ( (k_asc(1) == iaSE(1)) | (k_asc(end) == iaSE(end)))
+        disp('since lengths are only off by 1 or 2 reset k_asc')
+        k_asc = iaSE;
+      else
+        error('please check');
+      end
+    end
+    %% passed the length test, now check the indices are the same
+  
+    if sum(reshape(k_desc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+      disp('whoops 7C k_desc) ~= iaSE, reset k_desc')
       k_desc = iaSE;
-    else
-      error('please check');
     end
-  end
-  if length(k_asc) ~= length(iaSE)
-    fprintf(1,'whoops 7B length(k_asc) ~= length(iaSE)  %3i %3i \n',length(k_asc),length(iaSE));
-    %% if off by 1 or 2, reset
-    if abs(length(k_asc) - length(iaSE)) <= iTimeStepNotFound & ( (k_asc(1) == iaSE(1)) | (k_asc(end) == iaSE(end)))
-      disp('since lengths are only off by 1 or 2 reset k_asc')
+    if sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
+      disp('whoops 7C k_asc) ~= iaSE, reset k_asc')
       k_asc = iaSE;
-    else
-      error('please check');
     end
-  end
-  %% passed the length test, now check the indices are the same
-
-  if sum(reshape(k_desc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
-    disp('whoops 7C k_desc) ~= iaSE, reset k_desc')
-    k_desc = iaSE;
-  end
-  if sum(reshape(k_asc,length(iaSE),1)-reshape(iaSE,length(iaSE),1)) ~= 0
-    disp('whoops 7C k_asc) ~= iaSE, reset k_asc')
-    k_asc = iaSE;
   end
 
 end
@@ -237,28 +273,38 @@ elseif iQAX == 3
   qi1 = 3; qi2 = 5;
 end
 
+clear damonth
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Run off tsurf using bt1231/bt1228 regression for qi = 16;  
+
 for qi = qi1 : qi2
-   r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
-   r1228 = squeeze(d.rad_quantile_desc(:,1513,qi));
+   % r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
+   % r1228 = squeeze(d.rad_quantile_desc(:,1513,qi));
+   r1231 = squeeze(d.rad_quantile_desc(k_desc,1520,qi));
+   r1228 = squeeze(d.rad_quantile_desc(k_desc,1513,qi));
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    desc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_desc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),desc_tsurf(k_desc),4);
+   [dbt_desc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),desc_tsurf,4);
    % dbt_desc_tsurf(qi- (qi1-1) ,2)
    dbt_desc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
    % dbt_desc_tsurf_err(qi- (qi1-1) ,2)
 
-   r1231 = squeeze(d.rad_quantile_asc(:,1520,qi));
-   r1228 = squeeze(d.rad_quantile_asc(:,1513,qi));
+   % r1231 = squeeze(d.rad_quantile_asc(:,1520,qi));
+   % r1228 = squeeze(d.rad_quantile_asc(:,1513,qi));
+   r1231 = squeeze(d.rad_quantile_asc(k_asc,1520,qi));
+   r1228 = squeeze(d.rad_quantile_asc(k_asc,1513,qi));
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    asc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_asc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(1),asc_tsurf(k_asc),4);
+   [dbt_asc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),asc_tsurf,4);
    % dbt_asc_tsurf(qi- (qi1-1) ,2)
    dbt_asc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
    % dbt_asc_tsurf_err(qi- (qi1-1) ,2)
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 warning off   
 for qi = 1:numQuant
@@ -273,7 +319,7 @@ for qi = 1:numQuant
     % Desc
     r = squeeze(d.rad_quantile_desc(:,ch,qi));
     % bt = rad2bt(fairs(ch),squeeze(d.rad_quantile_desc(:,ch,qi)));
-    [b_desc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),r(k_desc),4);
+    [b_desc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),4);
     berr_desc(ch,qi,:) = stats.se;
     stats_desc(ch,qi,:) = [stats.ols_s stats.robust_s stats.mad_s stats.s stats.t(2) stats.p(2)];
     l = xcorr(stats.resid,1,'coeff');
@@ -285,7 +331,7 @@ for qi = 1:numQuant
     % Asc
     r = squeeze(d.rad_quantile_asc(:,ch,qi));
     %   bt = rad2bt(fairs(ch),squeeze(d.rad_quantile_asc(:,ch,qi)));
-    [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(1),r(k_asc),4);
+    [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),r(k_asc),4);
     berr_asc(ch,qi,:) = stats.se;
     stats_asc(ch,qi,:) = [stats.ols_s stats.robust_s stats.mad_s stats.s stats.t(2) stats.p(2)];
     l = xcorr(stats.resid,1,'coeff');
@@ -332,6 +378,8 @@ if ~exist(fnout)
 else
   fprintf(1,'oops %s already exists \n',fnout)
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %   count_asc                        1x412                     3296  double                
 %   count_desc                       1x412                     3296  double                

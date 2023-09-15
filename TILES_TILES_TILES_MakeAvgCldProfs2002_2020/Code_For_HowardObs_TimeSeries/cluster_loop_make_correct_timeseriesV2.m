@@ -4,8 +4,8 @@ addpath /asl/matlib/aslutil/
 
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
-JOB = 28
-JOB = 29
+%JOB = 28
+%JOB = 29
 
 %% indonesia = 0.78S, 113E   so latbin32,lonbin 113/180*36 + 36 = 59
 jj = 32; ii = 59;  
@@ -50,11 +50,11 @@ disp(' ' )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 all_72lonbins = struct;
-iiMin = 59; iiMax = 59;
 iiMin = 01; iiMax = 72;
 
 %  iiMin = 45; iiMax = 45; %% JOB = 28
 %  iiMin = 72; iiMax = 72; %% JOB = 29
+%  iiMin = 59; iiMax = 59;
 
 all_72lonbins.rlon = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.rlat = nan(iiMax-iiMin+1,maxN);
@@ -111,7 +111,7 @@ for ii = iiMin : iiMax
 
   lonbin_time = struct;  
 
-  fprintf(1,'reading in %3i files for %s o=100,.=10 \n',length(thedir),fdirOUT)
+  fprintf(1,'reading in %3i files for %s +=100, o=10, .=1 \n',length(thedir),fdirOUT)
 
   clear ttsave
   for ttt = 1 : length(thedir)

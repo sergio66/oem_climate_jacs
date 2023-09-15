@@ -248,22 +248,29 @@ elseif iQAX == 3
   numQuant = 5;
 end
 
-b_asc = NaN(2645,numQuant,10);
-b_desc = NaN(2645,numQuant,10);
-berr_asc = NaN(2645,numQuant,10);
-berr_desc = NaN(2645,numQuant,10);
+if iAllorSeason > 0
+  b_asc          = NaN(2645,numQuant,10);
+  b_desc         = NaN(2645,numQuant,10);
+  berr_asc       = NaN(2645,numQuant,10);
+  berr_desc      = NaN(2645,numQuant,10);
+else
+  b_asc          = NaN(2645,numQuant,2);
+  b_desc         = NaN(2645,numQuant,2);
+  berr_asc       = NaN(2645,numQuant,2);
+  berr_desc      = NaN(2645,numQuant,2);
+end
 
-dbt_asc = NaN(2645,numQuant);
-dbt_desc = NaN(2645,numQuant);
-dbt_err_asc = NaN(2645,numQuant);
-dbt_err_desc = NaN(2645,numQuant);
+dbt_asc        = NaN(2645,numQuant);
+dbt_desc       = NaN(2645,numQuant);
+dbt_err_asc    = NaN(2645,numQuant);
+dbt_err_desc   = NaN(2645,numQuant);
 
 resid_desc_std = NaN(2645,numQuant);
-resid_asc_std = NaN(2645,numQuant);
+resid_asc_std  = NaN(2645,numQuant);
 
 % 6 values are:  ols_s, robust_s, mad_s, s, t(2), p(2) 
 stats_desc = NaN(2645,numQuant,6);
-stats_asc = NaN(2645,numQuant,6);
+stats_asc  = NaN(2645,numQuant,6);
 
 % keyboard_nowindow
 
@@ -278,6 +285,12 @@ clear damonth
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Run off tsurf using bt1231/bt1228 regression for qi = 16;  
 
+iNumSineCosCycles = 4;
+if iAllorSeason < 0
+  %% only DJF, MAM, JJA, SON
+  iNumSineCosCycles = 0;
+end
+
 for qi = qi1 : qi2
    % r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
    % r1228 = squeeze(d.rad_quantile_desc(:,1513,qi));
@@ -286,7 +299,7 @@ for qi = qi1 : qi2
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    desc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_desc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),desc_tsurf,4);
+   [dbt_desc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),desc_tsurf,iNumSineCosCycles);
    % dbt_desc_tsurf(qi- (qi1-1) ,2)
    dbt_desc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
    % dbt_desc_tsurf_err(qi- (qi1-1) ,2)
@@ -298,7 +311,7 @@ for qi = qi1 : qi2
    bt1231 = rad2bt(fairs(1520),r1231);
    bt1228 = rad2bt(fairs(1513),r1228);
    asc_tsurf = bt1231 + polyval(p,bt1228 - bt1231);
-   [dbt_asc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),asc_tsurf,4);
+   [dbt_asc_tsurf(qi- (qi1-1) ,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),asc_tsurf,iNumSineCosCycles);
    % dbt_asc_tsurf(qi- (qi1-1) ,2)
    dbt_asc_tsurf_err(qi- (qi1-1) ,2) = stats.se(2);
    % dbt_asc_tsurf_err(qi- (qi1-1) ,2)
@@ -309,17 +322,17 @@ end
 warning off   
 for qi = 1:numQuant
   fprintf(1,'qi = %2i of %2i \n',qi,numQuant);
-  [ b_satzen_desc(qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(1),d.satzen_quantile1231_desc(k_desc,qi),1);
+  [ b_satzen_desc(qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),d.satzen_quantile1231_desc(k_desc,qi),1);
   berr_satzen_desc(qi,:) = stats.se;
 
-  [ b_satzen_asc(qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(1),d.satzen_quantile1231_asc(k_asc,qi),1);
+  [ b_satzen_asc(qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),d.satzen_quantile1231_asc(k_asc,qi),1);
   berr_satzen_asc(qi,:) = stats.se;
 
   for ch = 1:2645
     % Desc
     r = squeeze(d.rad_quantile_desc(:,ch,qi));
     % bt = rad2bt(fairs(ch),squeeze(d.rad_quantile_desc(:,ch,qi)));
-    [b_desc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),4);
+    [b_desc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
     berr_desc(ch,qi,:) = stats.se;
     stats_desc(ch,qi,:) = [stats.ols_s stats.robust_s stats.mad_s stats.s stats.t(2) stats.p(2)];
     l = xcorr(stats.resid,1,'coeff');
@@ -331,7 +344,7 @@ for qi = 1:numQuant
     % Asc
     r = squeeze(d.rad_quantile_asc(:,ch,qi));
     %   bt = rad2bt(fairs(ch),squeeze(d.rad_quantile_asc(:,ch,qi)));
-    [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),r(k_asc),4);
+    [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),r(k_asc),iNumSineCosCycles);
     berr_asc(ch,qi,:) = stats.se;
     stats_asc(ch,qi,:) = [stats.ols_s stats.robust_s stats.mad_s stats.s stats.t(2) stats.p(2)];
     l = xcorr(stats.resid,1,'coeff');
@@ -359,6 +372,8 @@ for qi = 1:numQuant
      
 end
 warning on
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Get rid of variables I don't want to save
 quants = d.quants; % want to save these

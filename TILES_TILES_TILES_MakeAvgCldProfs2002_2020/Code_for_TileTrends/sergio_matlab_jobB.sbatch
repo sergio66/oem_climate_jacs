@@ -58,10 +58,10 @@ fi
 
 if [[ "$1" -eq "" ]]; then
   echo "cmd line arg = DNE, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -4; clust_tile_fits_quantiles; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -1; clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "1" ]]; then
   echo "cmd line arg = 1, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -4; clust_tile_fits_quantiles; exit"
+  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -1; clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "2" ]]; then
   /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
 elif [[ "$1" -eq "3" ]]; then

@@ -48,11 +48,6 @@
 ##SBATCH --time=00:59:00 
 ##SBATCH --mem-per-cpu=16000
 
-## this is for choices 10 = quantiles
-##SBATCH --qos=medium+
-##SBATCH --time=23:59:00 
-##SBATCH --mem-per-cpu=24000
-
 ## this is for choices 12 = extremes
 ##SBATCH --qos=medium+
 ##SBATCH --time=07:59:00 
@@ -62,6 +57,11 @@
 ##SBATCH --qos=medium+
 ##SBATCH --time=05:59:00 
 ##SBATCH --mem-per-cpu=12000
+
+## this is for choices 10 = quantiles
+##SBATCH --qos=medium+
+##SBATCH --time=23:59:00 
+##SBATCH --mem-per-cpu=24000
 
 ## this is for choices 3,6,11
 #SBATCH --qos=medium+

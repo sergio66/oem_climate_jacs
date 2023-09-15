@@ -76,12 +76,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('iAllorSeason')
-  iAllorSeason = -4;    %% use SON
-  iAllorSeason = -1;    %% use DJF
-  iAllorSeason = -3;    %% use JJA
-  iAllorSeason = -2;    %% use MAM
-
   iAllorSeason = +1;    %% use all data   <<<< DEFAULT
+
+  iAllorSeason = -1;    %% use DJF
+  iAllorSeason = -2;    %% use MAM
+  iAllorSeason = -3;    %% use JJA
+  iAllorSeason = -4;    %% use SON
 end
 
 fprintf(1,'clust_tile_fits_quantiles.m : iAllorSeason = %3i \n',iAllorSeason)

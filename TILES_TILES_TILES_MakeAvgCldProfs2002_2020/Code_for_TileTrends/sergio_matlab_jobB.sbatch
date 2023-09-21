@@ -6,6 +6,7 @@
 #
 ##########################
 # run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m OR
+# run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 10  for clust_tile_anomalies_quantiles.m OR
 #
 # run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m  AND
 # run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m 
@@ -36,12 +37,12 @@
 ##SBATCH --time=7:59:00 
 ##SBATCH --mem-per-cpu=8000
 
-## this is for choices 1,2
+## this is for choices 1,2,10
 #SBATCH --qos=short+
 #SBATCH --time=00:59:00 
 
 ########################################################################
-# for most things # 1,2,3
+# for most things # 1,2,3,10
 #SBATCH --mem-per-cpu=16000
 
 # for #4 clust_zonalavg_fits_quantiles since we read in a lot of stuff
@@ -57,19 +58,22 @@ fi
 ########################################################################
 
 if [[ "$1" -eq "" ]]; then
-  echo "cmd line arg = DNE, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -1; clust_tile_fits_quantiles; exit"
+  echo "cmd line arg = DNE, generic run to fit trends"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_fits_quantiles; exit"
 elif [[ "$1" -eq "1" ]]; then
-  echo "cmd line arg = 1, generic run"
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAllorSeason = -1; clust_tile_fits_quantiles; exit"
+  echo "cmd line arg = 1, generic run to fit trends"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_fits_quantiles; exit"
+elif [[ "$1" -eq "10" ]]; then
+  echo "cmd line arg = 10, anomalies"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_anomalies_quantiles; exit"
 elif [[ "$1" -eq "2" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
 elif [[ "$1" -eq "3" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons_backwards; exit"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons_backwards; exit"
 elif [[ "$1" -eq "4" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
 elif [[ "$1" -eq "5" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_means; exit"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_means; exit"
 elif [[ "$1" -eq "6" ]]; then
-  /usr/ebuild/software/MATLAB/2021a/bin/matlab -nodisplay -nosplash -r "iAorOorL = -1; clust_zonalavg_fits_quantiles; exit"
+  /usr/ebuild/software/MATLAB/2021b/bin/matlab -nodisplay -nosplash -r "iAorOorL = -1; clust_zonalavg_fits_quantiles; exit"
 fi

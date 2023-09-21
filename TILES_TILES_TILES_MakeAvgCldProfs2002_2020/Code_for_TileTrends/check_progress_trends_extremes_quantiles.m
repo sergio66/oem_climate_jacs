@@ -1,6 +1,7 @@
 disp('Enter (1) for Q1-16 2002/09 to 2020/08 == orig, re-done by Sergio');
 disp('      (3) for extremes 2002/09 to 2021/08 == new')
-disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON : ')
+disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON')
+disp('      (10) for anomalies')
 iType = input('enter choice : ');
 
 iNumTmeSteps = input('Enter number timesteps eg 412, 429, [default] 457 : ');
@@ -42,8 +43,12 @@ for jj = 1 : 64
     elseif iType == -4
       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*SON* | wc -l    
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_SON.mat'];
+    elseif iType == 10
+       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin04/LonBin54/iQAX_3_fits_LonBin54_LatBin04_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
+       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*_LatBin*_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
+      fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202200080031_Anomaly_TimeStepsX' tstr '.mat'];
     end
-
     if exist(fname)
       found_tile_trends_quantiles_extremes(jj,ii) = +1;
     else

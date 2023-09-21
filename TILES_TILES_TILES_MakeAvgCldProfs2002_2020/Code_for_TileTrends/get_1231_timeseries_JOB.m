@@ -1,4 +1,4 @@
-function [y,ySKT,iaTimeStepsFound] = get_1231_timeseries_JOB(loni,lati,iQAX,stopdate,startdate,ia16daysSteps,fdirpre,AorD);
+function [y,ySKT,iaTimeStepsFound] = get_1231_timeseries_JOB(loni,lati,iQAX,stopdate,startdate,ia16daysSteps,fdirpre,AorD,iChanID);
 
 addpath /asl/matlib/aslutil
 addpath /asl/matlib/time
@@ -188,7 +188,7 @@ end
 
 warning off   
 for qi = 1:numQuant
-  for ch = 1520 : 1520
+  for ch = iChanID : iChanID
     if AorD == 'D'
       % Desc
       r(qi,:) = squeeze(d.rad_quantile_desc(k_desc,ch,qi));

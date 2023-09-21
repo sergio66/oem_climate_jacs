@@ -1,8 +1,30 @@
 see sergio_matlab_jobB.sbatch
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Timeseries
+
+To make a time series of a channel
+cd Code_for_TileTrends
+-rw-rw-r-- 1 sergio pi_strow  5258 Sep 15 04:39 driver_bt1231_timeseries_YY0MM0DD0_YYEMMEDDE_0001_4608.m
+-rw-rw-r-- 1 sergio pi_strow  8607 Sep 15 04:37 get_1231_timeseries_JOB.m
+-rw-rw-r-- 1 sergio pi_strow  2816 Sep 15 04:24 show_bt1231_timeseries_YY0MM0DD0_YYEMMEDDE_0001_4608.m
+
+driver_bt1231_timeseries_YY0MM0DD0_YYEMMEDDE_0001_4608.m can hlp build you a time series. Take about 80 mins per channel
+You can select chanID and whether 'A' or 'D'
+
+or
+
+To make a time series of a tile,enire spectrum
+cd Code_For_HowardObs_TimeSeries,
+-rw-rw-r-- 1 sergio pi_strow  4555 Aug 22 06:49 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile_one_16dayfile.m
+-rw-rw-r-- 1 sergio pi_strow  4644 Aug 22 06:27 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile.m
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 as Howard makes more data, need to update the tiled data I make for trends/quantiles, 23 timesteps per year
 
 cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so only need relatively fast "periodic updates"
+
 1) run this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
    make sure you set iQAX in here, using set_iQAX.m; right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
      iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];

@@ -1,10 +1,10 @@
-function [B, stats, err]=Math_tsfit_lin_robust(x,y,n)
+function [B, stats, err] = Math_tsfit_lin_robust(x,y,n)
 
 warning off
 % copied from /home/strow/Matlab/Math/ 
 % NOTE he did NOT have err as third argument
 
-% function [fitc err]=Math_tsfit_lin(x,y,n)
+% function [fitc err] = Math_tsfit_lin(x,y,n)
 % x - days
 % y - ppm
 % n - 0,1,2,3,4 - number of sine functions
@@ -20,7 +20,7 @@ for i=1:nloop
    X(:,i) = f(fc,x(:));
    fc(i) = 0;
 end
-[B, stats]=robustfit(X,y(:),[],[],'off');
+[B, stats] = robustfit(X,y(:),[],[],'off');
 
 %% copied from ~/MATLABCODE/FIND_TRENDS/Math_tsfit_lin_robust.m
 if n == 6

@@ -1,6 +1,7 @@
 %% DATAObsStats_StartSept2002/LatBin32/LonBin36/stats_data_2009_s158.mat
 
 addpath /asl/matlib/aslutil/
+addpath /home/sergio/MATLABCODE/TIME
 
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
@@ -28,23 +29,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+set_iQAX              %%% <<<< CHECK THIS
+set_start_stop_dates  %%% <<<< CHECK THIS
 
-iaFound = zeros(1,600);
-for ii = 3 : length(hugedir)
-  junk = hugedir(ii).name;
-  junk = str2num(junk(end-2:end));
-  iaFound(junk) = 1;
-end
-junk = find(iaFound == 1); junk = max(junk); maxN = junk; 
-  fprintf(1,'max(iaFound) = %3i so will save "summarystats_LatBin32_LonBin36_timesetps_001_%3i_V1.mat" \n',junk,junk);
+remove_timesteps_not_found_from_finalfilename
 
-disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0)
-  iTimeStepNotFound = 0;
-  iTimeStepNotFound = length(junk);
-fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
 disp(' ' )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,8 +55,6 @@ all_72lonbins.maxBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.minBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.dccBT1231 = nan(iiMax-iiMin+1,maxN);
 
-set_iQAX
-
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0
   %  fprintf(1,'+')
@@ -80,6 +67,10 @@ for ii = iiMin : iiMax
 
   x = translator_wrong2correct(JOBB);
   fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
+
+  %% remember fnameoutIIJJ is just for your timesteps       eg 2004/09 to 2012/08
+  %% remember fnameoutII   is all           timesteps found eg 2002/09 to 2022/08
+
   if iQAX == 1
     thedir = dir([fdirIN '/*.mat']);
     fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
@@ -152,6 +143,7 @@ for ii = iiMin : iiMax
   lonbin_time = nan_lonbin_time_notfound(lonbin_time);
 
   plot(all_72lonbins.meanBT1231(ii,:)); pause(0.1);
+
   if ~exist(fnameoutIIJJ)
     save(fnameoutIIJJ,'-struct','lonbin_time');
     fprintf(1,'saved %s \n',fnameoutIIJJ);
@@ -159,6 +151,8 @@ for ii = iiMin : iiMax
     fprintf(1,'%s already exists \n',fnameoutIIJJ);
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if iiMin == 01 & iiMax == 72
   %all_72lonbins.meanBT1231 = rad2bt(1231,all_72lonbins.meanBT1231);
@@ -174,10 +168,10 @@ end
 
 fprintf(1,'\n');
 fprintf(1,'DONE : finished all 72 lonbins for latbin %2i \n',JOB)
-fprintf(1,'now do cd ../Code_for_TileTrends/')
-fprintf(1,'now do edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps,')
-fprintf(1,'now do   ensure start/stop are [2022 08 31],[2002 09 01]')
-fprintf(1,'now do sbatch -p high_mem --array=1-4608 sergio_matlab_jobB.sbatch 1')
+fprintf(1,'now do cd ../Code_for_TileTrends/ \n')
+fprintf(1,'now do edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps \n')
+fprintf(1,'now do   ensure start/stop are [2022 08 31],[2002 09 01] \n')
+fprintf(1,'now do sbatch -p high_mem --array=1-4608 sergio_matlab_jobB.sbatch 1 \n')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{

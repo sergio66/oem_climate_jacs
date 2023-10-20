@@ -56,10 +56,6 @@ disp(' ' )
 dbt = 180 : 1 : 340;
 set_iQAX
 
-if iQAX ~= 1 & iQAX ~= 3 & iQAX ~= 4
-  error('need iQAX = 1,3,4')
-end
-
 if iVers == 0
   JOB = JOB + 2 - iTimeStepNotFound;  %% because first two are '.' and '..'
 elseif iVers == 1
@@ -119,6 +115,7 @@ for jj = 1 : 64      %% latitude
     elseif iQAX == 4
       thedir = dir([fdirIN '/iQAX_4_stats_data_' date_stamp '.mat']);
     end
+
     if length(thedir) == 1
       if thedir.bytes > 0           
         numdone(ii,jj) = 1;    
@@ -137,36 +134,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
-
-if iQAX == 1
-  disp('iQAX == 1 so looking for regular quantiles   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00]')
-elseif iQAX == 3
-  disp('iQAX == 3 so looking for newer   quantiles   quants = [0.50 0.80 0.90 0.95 0.97 1.00]')
-elseif iQAX == 4
-  disp('iQAX == 4 so looking for newer   quantiles   quants = [0.50 0.80 0.90 0.95 0.97 1.00] and will do LLS Tsurf quants')
-%elseif iQAX == 0
-%  disp('iQAX == 0 so looking for quantiles and extreme')
-%elseif iQAX == -1
-%  disp('iQAX == -1 so looking for extreme')
-%elseif iQAX == 2
-%  disp('iQAX == 2 so looking for mean')
-else
-  error('iQAX')
-end
-
-if iQAX == 3
-  %% new in Oct 2022 : 6 quantile steps, do the stats so you find how robs1 has changed between Q(ii) and Q(1.00)
-  quants = [0.50 0.80 0.90 0.95 0.97 1.00];
-elseif iQAX == 4
-  %% new in Oct 2022 : 6 quantile steps, do the stats so you find how robs1 has changed between Q(ii) and Q(1.00)
-  quants = [0.50 0.80 0.90 0.95 0.97 1.00];
-elseif iQAX == 1
-  %% original till Oct 2022 : 17 quantile steps, and do the stats so you find how robs1 has changed between Q(ii) and Q(ii+1)
-  quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
-else
-  error('need iQAX = 1,3,4')
-end
-
+%% set_iQAX
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tic 
@@ -297,18 +265,8 @@ for iii = 3 : length(thedir0)
     thesave.DCC1231_asc(iCnt) = length(find(X < 220));
     thesave.hist_asc(iCnt,:) = histc(X,dbt)/length(X);
     for qq = 1 : length(quants)-1
-      if iQAX == 1
-        if qq <  length(quants)-1
-          Z = find(X >= Y(qq) & X < Y(qq+1));
-        else
-          Z = find(X >= Y(qq) & X <= Y(qq+1));
-          Z = find(X >= Y(qq));
-        end
-      elseif iQAX == 3
-        Z = find(X >= Y(qq));
-      elseif iQAX == 4
-        Z = find(X >= do_tile(Y(qq)));
-      end
+
+      select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
 
       thesave.quantile1231_asc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_asc(iCnt,qq) = length(Z);
@@ -354,18 +312,8 @@ for iii = 3 : length(thedir0)
     thesave.DCC1231_desc(iCnt) = length(find(X < 220));
     thesave.hist_desc(iCnt,:) = histc(X,dbt)/length(X);
     for qq = 1 : length(quants)-1
-      if iQAX == 1
-        if qq <  length(quants)-1
-          Z = find(X >= Y(qq) & X < Y(qq+1));
-        else
-          Z = find(X >= Y(qq) & X <= Y(qq+1));
-          Z = find(X >= Y(qq));
-        end
-      elseif iQAX == 3
-        Z = find(X >= Y(qq));
-      elseif iQAX == 4
-        Z = find(X >= do_tile(Y(qq)));
-      end
+
+      select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
 
       thesave.quantile1231_desc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_desc(iCnt,qq) = length(Z);
@@ -432,6 +380,9 @@ disp('since these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_
 
 return
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')

@@ -14,7 +14,7 @@ You can select chanID and whether 'A' or 'D'
 
 or
 
-To make a time series of a tile,enire spectrum
+To make a time series of a tile,entire spectrum
 cd Code_For_HowardObs_TimeSeries,
 -rw-rw-r-- 1 sergio pi_strow  4555 Aug 22 06:49 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile_one_16dayfile.m
 -rw-rw-r-- 1 sergio pi_strow  4644 Aug 22 06:27 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile.m
@@ -25,10 +25,13 @@ as Howard makes more data, need to update the tiled data I make for trends/quant
 
 cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so only need relatively fast "periodic updates"
 
-1) run this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+1) First make the timesteps eg till 2022, run this with 
+      sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  
+   for clust_check_howard_16daytimesetps_2013_raw_griddedV2
    make sure you set iQAX in here, using set_iQAX.m; right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
      iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
      iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
+     iQAX = +4; %% quantile   quants = [0 0.03 0.50 0.97 1.00];
    this code takes in all tiled data so far in /asl/isilon/airs/tile_test7/
    eg 460 = 23 * 20 number of timesteps so far since 2002/09/01 to 2022/08/31 that Howard has made
 
@@ -39,7 +42,9 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
       could be corrected eg using  x = translator_wrong2correct(JOB);
    output dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
 
-2) run this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
+2) Then fix the tiled directory matchups : run this with 
+     sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  
+   for cluster_loop_make_correct_timeseriesV2
    input dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
    fdirIN     = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
 
@@ -53,7 +58,8 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
      -rw-rw-r-- 1 sergio pi_strow  19215047 Sep 17  2022 fits_LonBin09_LatBin09_V1_TimeSteps457.mat
      -rw-rw-r-- 1 sergio pi_strow 160716993 Sep 17  2022 summarystats_LatBin09_LonBin09_timesetps_001_457_V1.mat
 
-   clear all; load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_457_V1.mat
+   clear all; 
+   load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_457_V1.mat
      meanBT_asc                    457x2645               4835060  single
      meanBT_desc                   457x2645               4835060  single
      rad_quantile_asc              457x2645x5            48350600  double
@@ -75,11 +81,12 @@ cd Code_for_TileTrends
     fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
     fnout = fullfile(fdirpre_out,fnout);
 
-   run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
-   run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
-   run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
+   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
+   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
+   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
 
-   clear all; load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat
+   clear all; 
+   load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat
      b_asc                   2645x5x10            1058000  double
      b_desc                  2645x5x10            1058000  double
      plot(fairs,squeeze(b_asc(:,:,2)))
@@ -87,9 +94,27 @@ cd Code_for_TileTrends
   NOTE the default is to make the annnual trends (ie use all data) but can also make seasonal trends DJF, MAM, JJA, SON
   see variable iAllorSeason ... but you an also contro this in "sergio_matlab_jobB.sbatch"
 
-4) then finally clust_tile_fits_quantiles.m suggests
+  Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
+  Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
+  Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
+
+4) finally clust_tile_fits_quantiles.m suggests
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Anomalies
+1) clust_tile_anomalies_quantiles.m 
+differs from above in that it calls "tile_fits_quantiles_anomalies" trather than "tile_fits_quantiles" and does both trends and anomalies
+    r = squeeze(d.rad_quantile_desc(:,ch,qi));
+    bt_desc(ch,qi) = nanmean(rad2bt(fairs(ch),squeeze(d.rad_quantile_desc(:,ch,qi))));
+    [b_desc(ch,qi,:)     stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
+    [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);
+
+2) finally clust_tile_anomalies_quantiles.m suggests
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')
+disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

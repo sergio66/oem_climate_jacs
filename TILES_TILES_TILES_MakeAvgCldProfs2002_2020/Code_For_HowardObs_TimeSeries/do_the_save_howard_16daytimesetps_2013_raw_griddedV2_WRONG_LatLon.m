@@ -88,7 +88,7 @@ for iiix = 1 : 64              %% latitude
     elseif iQAX == 4
       foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/iQAX_4_stats_data_' date_stamp '.mat'];
     else
-      error('need iQAX = 1,3,4')
+     error('need iQAX = 1,3,4')     
     end
     fprintf(1,'%s \n',foutXY);
     if ~exist(foutXY)

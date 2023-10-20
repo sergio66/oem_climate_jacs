@@ -1,5 +1,5 @@
-function [y g]=Math_timeseries_2(x,c);
-% function [y]=Math_timeseries(x,coef)
+function [y g] = Math_timeseries_2(x,c);
+% function [y] = Math_timeseries(x,coef)
 % 
 % Usage:
 % x=....
@@ -13,15 +13,15 @@ function [y g]=Math_timeseries_2(x,c);
 
 y = c(1)       + ...
     c(2)*x/365 ;
-for ii=1:(length(c)-2)/2
+for ii = 1:(length(c)-2)/2
   y = y + c(2*ii+1)*cos(ii*2*pi/365*x) + c(2*ii+2)*sin(ii*2*pi/365*x);
 end
 
 if(nargout>1)
-   g(:,1)=1*ones(size(x));
-   g(:,2)=x/365;
-   for ii=1:(length(c)-2)/2
-      g(:,2*ii+1)=          cos(ii*2*pi/365*x);
-      g(:,2*ii+2)=          sin(ii*2*pi/365*x);
+   g(:,1) = 1*ones(size(x));
+   g(:,2) = x/365;
+   for ii = 1:(length(c)-2)/2
+      g(:,2*ii+1) =           cos(ii*2*pi/365*x);
+      g(:,2*ii+2) =           sin(ii*2*pi/365*x);
    end
 end

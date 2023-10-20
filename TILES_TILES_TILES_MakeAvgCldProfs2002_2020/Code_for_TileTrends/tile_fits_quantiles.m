@@ -47,36 +47,48 @@ p = [-0.17 -0.15 -1.66  1.06];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(' ')
-%% see eg ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
-disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+%% %% see eg ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
+%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
+%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+%% disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+%% 
+%% fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
+%% 
+%% iaFound = zeros(1,600);
+%% for ii = 3 : length(hugedir)
+%%   junk = hugedir(ii).name;
+%%   junk = str2num(junk(end-2:end));
+%%   iaFound(junk) = 1;
+%% end
+%% junk = find(iaFound == 1); junk = max(junk); maxN = junk;
+%%   fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
 
-fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
+remove_timesteps_not_found_from_finalfilename
+iaNoData = junk;
 
-iaFound = zeros(1,600);
-for ii = 3 : length(hugedir)
-  junk = hugedir(ii).name;
-  junk = str2num(junk(end-2:end));
-  iaFound(junk) = 1;
-end
-junk = find(iaFound == 1); junk = max(junk); maxN = junk;
-  fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
-
-disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0); iaNoData = junk
-  iTimeStepNotFound = 0;             iaNoData = [];
-  iTimeStepNotFound = length(junk);  iaNoData = junk;
+%disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0); iaNoData = junk
+%  iTimeStepNotFound = 0;             iaNoData = [];
+%  iTimeStepNotFound = length(junk);  iaNoData = junk;
   
 fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
 disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
 disp(' ' )
+%keyboard_nowindow
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if iQAX == 1
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
+  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
 elseif iQAX == 3
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
+  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
+elseif iQAX == 4
+  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);  
+  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
+else
+  error('unknown iQAX')
 end
 fn_summary = fullfile(fdirpre,fn_summary);
 
@@ -246,6 +258,10 @@ if iQAX == 1
   numQuant = 16;
 elseif iQAX == 3
   numQuant = 5;
+elseif iQAX == 4
+  numQuant = 3;
+else
+  error('unknown iQAX')
 end
 
 if iAllorSeason > 0
@@ -278,6 +294,10 @@ if iQAX == 1
   qi1 = 12; qi2 = 16;
 elseif iQAX == 3
   qi1 = 3; qi2 = 5;
+elseif iQAX == 4
+  qi1 = 1; qi2 = 1;
+else
+  error('unknown iQAX')
 end
 
 clear damonth

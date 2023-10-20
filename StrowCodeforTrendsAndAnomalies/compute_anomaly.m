@@ -12,7 +12,7 @@ function [bt_anom r_anom] = compute_anomaly(k,dtime,b,f,r);
 r_anom = zeros(size(k));
 bt_anom = zeros(size(k));
 
-[y g] = Math_timeseries_2( dtime(k)-dtime(1), b );
+[y g] = Math_timeseries_2( dtime(k)-dtime(k(1)), b );
 r_anom(k) = (r(k) - y') + g(:,2)*b(2);
 
 % Convert to BT

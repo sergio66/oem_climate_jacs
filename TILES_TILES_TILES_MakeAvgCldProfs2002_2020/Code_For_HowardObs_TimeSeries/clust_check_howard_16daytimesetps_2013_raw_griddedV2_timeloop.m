@@ -99,7 +99,7 @@ thesave.count_quantile1231_desc = nan(ntime,16);
 thesave.satzen_quantile1231_desc = nan(ntime,16);
 thesave.solzen_quantile1231_desc = nan(ntime,16);
 
-quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+set_iQAX  %% set the quants
 dbt = 180 : 1 : 340;
 
 %{
@@ -237,13 +237,11 @@ for ttt = 1 : length(hugedir)-2
   thesave.min1231_desc(iCnt) = min(X);
   thesave.DCC1231_desc(iCnt) = length(find(X < 220));
   thesave.hist_desc(iCnt,:) = histc(X,dbt)/length(X);
+
   for qq = 1 : length(quants)-1
-    if qq <  length(quants)-1
-      Z = find(X >= Y(qq) & X < Y(qq+1));
-    else
-      Z = find(X >= Y(qq) & X <= Y(qq+1));
-      Z = find(X >= Y(qq));
-    end
+
+    select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
+
     thesave.quantile1231_desc(iCnt,qq) = Y(qq);
     thesave.count_quantile1231_desc(iCnt,qq) = length(Z);
     if length(Z) > 2
@@ -292,6 +290,6 @@ if iSave > 0
 
   %% obviously not needed do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum);
   
-  do_the_save_howard_16daytimesetps_2013_raw_griddedV2_alltimestep(date_stamp,thesave,dbt,quants,wnum);
+  do_the_save_howard_16daytimesetps_2013_raw_griddedV2_alltimestep(date_stamp,thesave,dbt,quants,wnum,iQAX);
 end
 

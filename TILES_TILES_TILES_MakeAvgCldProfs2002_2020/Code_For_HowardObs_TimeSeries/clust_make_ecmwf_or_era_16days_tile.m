@@ -38,18 +38,20 @@ addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS/Strow_humidity/convert_humidit
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 iAllChan = +1;  %% 2645 chans
-iAllChan = -1;  %% only one chan, 1231
+iAllChan = -1;  %% only one chan, 1231  DEFAULT
 
 iDorA = -1; %% asc
 iDorA =  0; %% all
-iDorA = +1; %% desc
+iDorA = +1; %% desc DEFAULT
 
+iTest = -1;
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
 if length(JOB) == 0
-  JOB = 32;
+  iTest = +1;
   JOB = 28;
   JOB = 10;
+  JOB = 32;
 end
 
 %% indonesia = 0.78S, 113E   so latbin32,lonbin 113/180*36 + 36 = 59
@@ -94,7 +96,10 @@ iiMin = 01; iiMax = 72;
 
 % iiMin = 45; iiMax = 45; %% JOB = 28
 % iiMin = 72; iiMax = 72; %% JOB = 29
-% iiMin = 36; iiMax = 36;
+
+if iTest > 0
+  iiMin = 36; iiMax = 36;
+end
 
 for ii = iiMin : iiMax
   jj = JOB;   %% latbin
@@ -105,7 +110,25 @@ for ii = iiMin : iiMax
     mker = ['!/bin/mkdir -p ' fdirsave];
     eval(mker)
   end
-  fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+  if iDorA == +1
+    if iAllChan == -1
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    else
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_timestep_allchans_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    end
+  elseif iDorA == -1
+    if iAllChan == -1
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_asc_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    else
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_asc_timestep_allchans_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    end
+  elseif iDorA == 0
+    if iAllChan == -1
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_all_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    else
+      fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_all_timestep_allchans_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
+    end
+  end
 
   if exist(fsave)
     fprintf(1,'JOB = latbin = %2i ii = lonbin = %2i fsave = %s already exists SKIPPING \n',JOB,ii,fsave)
@@ -204,6 +227,8 @@ for ii = iiMin : iiMax
     run_sarta.clear = +1;
     run_sarta.cloud = +1;
     run_sarta.cumsum = 9999;
+    run_sarta.cumsum = 9999;  %% larrabee likes this, puts clouds high so does well for DCC
+    run_sarta.cumsum = -1;    %% this is "closer" to MRO but since cliuds are at centroid, does not do too well with DCC
     
     codeX = 0; %% use default with A. Baran params
     codeX = 1; %% use new     with B. Baum, P. Yang params
@@ -212,7 +237,7 @@ for ii = iiMin : iiMax
     code1 = '/home/sergio/SARTA_CLOUDY/BinV201/sarta_apr08_m140x_iceGHMbaum_waterdrop_desertdust_slabcloud_hg3';
     code1 = sartaCld;
     
-    [p2] = driver_sarta_cloud_rtp(hout,ha,pout,pa);
+    [p2] = driver_sarta_cloud_rtp(hout,ha,pout,pa,run_sarta);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%
     comment = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_make_ecmwf_or_era_16days_tile.m';

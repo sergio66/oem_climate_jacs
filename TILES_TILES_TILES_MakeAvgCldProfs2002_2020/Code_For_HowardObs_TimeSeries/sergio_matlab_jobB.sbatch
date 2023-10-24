@@ -49,7 +49,7 @@
 ##SBATCH --time=15:59:00 
 ##SBATCH --mem-per-cpu=8000
 
-## this is for choices 3,6
+## this is for choices 3,6,14
 ##SBATCH --qos=short+
 ##SBATCH --time=00:59:00 
 ##SBATCH --mem-per-cpu=16000
@@ -71,10 +71,11 @@
 ##SBATCH --mem-per-cpu=24000
 #########################
 
-## this is for choices 3,6,11
+## this is for choices 3,6,11,14
 #SBATCH --qos=medium+
 #SBATCH --time=03:59:00 
-#SBATCH --mem-per-cpu=16000
+##SBATCH --mem-per-cpu=16000
+#SBATCH --mem-per-cpu=10000
 
 ########################################################################
 ### check the number of input arguments

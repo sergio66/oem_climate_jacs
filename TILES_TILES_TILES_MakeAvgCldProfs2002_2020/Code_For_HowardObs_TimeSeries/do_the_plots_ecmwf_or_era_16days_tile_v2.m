@@ -9,6 +9,22 @@ figure(4); pcolor(iaFound'); title('iaFound'); colorbar
 ylim([-90 +90])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for JOB = 1 : 64
+  wah = squeeze(hist_bt1231obs(:,JOB,:));  meanwah = mean(wah,1);
+  raw_hist_bt1231obs(JOB,:) = (meanwah);  
+  cumsum_hist_bt1231obs(JOB,:) = cumsum(meanwah);
+
+  wah = squeeze(hist_bt1231cld(:,JOB,:));  meanwah = mean(wah,1);
+  raw_hist_bt1231cld(JOB,:) = (meanwah);  
+  cumsum_hist_bt1231cld(JOB,:) = cumsum(meanwah);
+
+  wah = squeeze(hist_stemp(:,JOB,:));  meanwah = mean(wah,1);
+  raw_hist_stemp(JOB,:) = (meanwah);  
+  cumsum_hist_stemp(JOB,:) = cumsum(meanwah);
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(5); 
 plot(squeeze(nanmean(quants_bt1231obs,1)),latt,'linewidth',2); 
@@ -21,13 +37,13 @@ plot(squeeze(nanmean(quants_bt1231obs,1)),latt,'linewidth',2);
 hl = legend(num2str(quants'),'location','best','fontsize',10);
 ylim([-90 +90])
 
-dadaX = mean_bt1231cld; dadaY = medn_bt1231cld; dada0 = min_bt1231cld; dada1 = max_bt1231cld; dada = hist_bt1231cld; baba = quants_bt1231cld; str = 'BT1231 cld';
-dadaX = mean_stemp;     dadaY = medn_stemp;     dada0 = min_stemp;     dada1 = max_stemp;     dada = hist_stemp;     baba = quants_stemp;     str = 'stemp';
-dadaX = mean_bt1231obs; dadaY = medn_bt1231obs; dada0 = min_bt1231obs; dada1 = max_bt1231obs; dada = hist_bt1231obs; baba = quants_bt1231obs; str = 'BT1231 obs';
+dadaX = mean_bt1231cld; dadaY = medn_bt1231cld; dada0 = min_bt1231cld; dada1 = max_bt1231cld; dada = raw_hist_bt1231cld; dadac = cumsum_hist_bt1231cld; baba = quants_bt1231cld; str = 'BT1231 cld';
+dadaX = mean_stemp;     dadaY = medn_stemp;     dada0 = min_stemp;     dada1 = max_stemp;     dada = raw_hist_stemp;     dadac = cumsum_hist_stemp;     baba = quants_stemp;     str = 'stemp';
+dadaX = mean_bt1231obs; dadaY = medn_bt1231obs; dada0 = min_bt1231obs; dada1 = max_bt1231obs; dada = raw_hist_bt1231obs; dadac = cumsum_hist_bt1231obs; baba = quants_bt1231obs; str = 'BT1231 obs';
 
 figure(5); clf 
-pcolor(dbtt,latt,squeeze(nanmean(dada,1))); title(str); colormap(jett); colorbar; shading interp
-%imagesc(dbtt,latt,squeeze(nanmean(dada,1))); title(str); colormap(jett); colorbar; shading interp
+pcolor(dbtt,latt,dada); title(str); colormap(jett); colorbar; shading interp
+%imagesc(dbtt,latt,dada); title(str); colormap(jett); colorbar; shading interp
 hold on;
 plot(squeeze(nanmean(baba(:,:,1:4),1)),latt,'linewidth',2); 
 plot(squeeze(nanmean(baba(:,:,5),1)),latt,'k.-','linewidth',6); 
@@ -45,7 +61,7 @@ ylim([-90 +90])
 iQ = find(quants == 0.9); 
 
 figure(5); clf 
-pcolor(dbtt,latt,squeeze(nanmean(dada,1))); colormap(jett); colorbar; shading interp
+pcolor(dbtt,latt,dada); colormap(jett); colorbar; shading interp
 hold on;
 plot(nanmin(dada0),latt,'linewidth',2);
 plot(squeeze(nanmean(dadaX,1)),latt,'r','linewidth',6); 
@@ -64,7 +80,8 @@ xlabel('BT 1231 (K)'); ylabel('Latitude')
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(6); clf 
-pcolor(dbtt,latt,1-cumsum(squeeze(nanmean(dada,1)))); colormap(jett); colorbar; shading interp
+pcolor(dbtt,latt,dadac); colormap(jett); colorbar; shading interp
+pcolor(dbtt,latt,1-dadac); colormap(jett); colorbar; shading interp
 hold on;
 plot(nanmin(dada0),latt,'linewidth',2);
 plot(squeeze(nanmean(dadaX,1)),latt,'r','linewidth',6); 
@@ -79,7 +96,6 @@ hl = legend(wah,'location','west','fontsize',8);
 set(gca,'ydir','normal')
 ylim([-90 +90])
 xlabel('BT 1231 (K)'); ylabel('Latitude')
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure(7); clf %% this shows the mean is almost, but not, on top of quantile 0.5 .. while median is on top
@@ -98,7 +114,7 @@ iQ = find(quants == 1.0); plot(nanmean(dada0,1),latt,'b.-',nanmin(squeeze(baba(:
 ylim([-90 +90])
 
 figure(7); clf  %% so put it all together
-pcolor(dbtt,latt,squeeze(nanmean(dada,1))); title(str); colormap(jett); colorbar; shading interp
+pcolor(dbtt,latt,dada); title(str); colormap(jett); colorbar; shading interp
 hold on; 
 plot(nanmean(dada0,1),latt,'b.-',nanmin(squeeze(baba(:,:,1))),latt,'b',nanmean(dada1,1),latt,'r.-',nanmax(squeeze(baba(:,:,iQ))),latt,'r'); title(str)
 hold off
@@ -114,4 +130,15 @@ ylim([-90 +90])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 addpath /asl/matlib/plotutils
 % figure(5); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/histogramBT1231_obs_desc_20_years_Q50_Q80_Q90_Q95_Q97.pdf']);
+% figure(6); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/cdfhistogramBT1231_obs_desc_20_years_Q50_Q80_Q90_Q95_Q97.pdf']);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+plot_QX_vs_uniformclear_filter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+addpath /asl/matlib/plotutils
+%{
+figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_aug2012.pdf']);
+figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_aug2012.pdf']);
+figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_aug2012.pdf']);
+%}

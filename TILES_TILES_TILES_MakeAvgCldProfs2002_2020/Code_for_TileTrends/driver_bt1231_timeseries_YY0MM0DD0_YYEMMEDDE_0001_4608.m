@@ -22,8 +22,14 @@ fdirpre_out  = '/home/strow/Work/Airs/Tiles/Data/Quantv1_fits';
 fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% startdate = [2002 09 01]; stopdate = [2023 08 31];
+%% startdate = [2002 09 01]; stopdate = [2022 08 31];
 set_start_stop_dates  %%% <<<< CHECK THIS
 set_iQAX              %%% <<<< CHECK THIS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 junk = load('airs_f.mat');
 f2645 = junk.fairs;
@@ -75,9 +81,6 @@ fuse = f2645(iChanID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 se = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
-
-%startdate = [2002 09 01]; stopdate = [2023 08 31];
-%startdate = [2002 09 01]; stopdate = [2022 08 31];
 
 booS = find(se.thedateS(:,1) == startdate(1) & se.thedateS(:,2) == startdate(2) & se.thedateS(:,3) >= startdate(3),1);
 booE = find(se.thedateE(:,1) == stopdate(1)  & se.thedateE(:,2) == stopdate(2)  & se.thedateE(:,3) <= stopdate(3));    booE = max(booE);   % booE = max(booE)+1;

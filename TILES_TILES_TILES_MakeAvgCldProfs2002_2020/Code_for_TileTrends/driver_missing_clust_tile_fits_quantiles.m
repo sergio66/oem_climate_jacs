@@ -12,16 +12,22 @@ i16daysSteps = 412;   %% 2002/09 to 2020/08
 fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
 
-startdate = [2002 09 01]; stopdate = [2020 08 31]; i16daysSteps = 412;                       %% 2002/09 to 2020/08, testing that I get same results as Larrabee
-startdate = [2002 09 01]; stopdate = [2021 06 31]; i16daysSteps = 429;                       %% 2002/09 to 2021/06
-startdate = [2002 09 01]; stopdate = [2021 07 31]; i16daysSteps = 431;                       %% 2002/09 to 2021/07
-startdate = [2002 09 01]; stopdate = [2021 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2021/08  **********
-startdate = [2002 09 01]; stopdate = [2014 08 31]; i16daysSteps = 273; i16daysSteps = 433;   %% 2002/09 to 2014/09, but use this extended period
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
-startdate = [2002 09 01]; stopdate = [2021 08 31]; 
-startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
-startdate = [2003 01 01]; stopdate = [2012 12 31];  % Joao wants 10 years
-startdate = [2002 09 01]; stopdate = [2014 08 31];  % overlap with CMIP6/AMIP6
+% startdate = [2002 09 01]; stopdate = [2020 08 31]; i16daysSteps = 412;                       %% 2002/09 to 2020/08, testing that I get same results as Larrabee
+% startdate = [2002 09 01]; stopdate = [2021 06 31]; i16daysSteps = 429;                       %% 2002/09 to 2021/06
+% startdate = [2002 09 01]; stopdate = [2021 07 31]; i16daysSteps = 431;                       %% 2002/09 to 2021/07
+% startdate = [2002 09 01]; stopdate = [2021 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2021/08  **********
+% startdate = [2002 09 01]; stopdate = [2014 08 31]; i16daysSteps = 273; i16daysSteps = 433;   %% 2002/09 to 2014/09, but use this extended period
+% 
+% startdate = [2002 09 01]; stopdate = [2021 08 31]; 
+% startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+% startdate = [2003 01 01]; stopdate = [2012 12 31];  % Joao wants 10 years
+% startdate = [2002 09 01]; stopdate = [2014 08 31];  % overlap with CMIP6/AMIP6
+
+set_start_stop_dates
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 i16daysStepsX = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16);
 

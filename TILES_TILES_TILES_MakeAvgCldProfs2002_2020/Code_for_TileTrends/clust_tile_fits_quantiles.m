@@ -15,13 +15,11 @@ addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
-disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
-disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
-disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
-
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
+if length(JOB) == 0
+  JOB = 1;
+end
 % JOB = 2222
-% JOB = 77
 
 disp(' ')
 %for JOB=1:4608
@@ -59,7 +57,11 @@ fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+disp(' ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
+disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
+disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
+disp(' ')
 
 set_iQAX              %%% <<<< CHECK THIS
 set_start_stop_dates  %%% <<<< CHECK THIS
@@ -93,32 +95,7 @@ fprintf(1,'clust_tile_fits_quantiles.m : iAllorSeason = %3i \n',iAllorSeason)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Create outputfile name and save
-
-if iQAX == 1
-  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
-  else
-    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
-    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
-  end
-elseif iQAX == 3
-  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
-  else
-    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
-    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
-  end
-elseif iQAX == 4
-  if sum(startdate - [2002 09 01]) == 0 & i16daysSteps == i16daysStepsX
-    fnout = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_fits_LonBin%2$02d_LatBin%1$02d_V1_TimeSteps%3$03d.mat',lati,loni,i16daysSteps);
-  else
-    fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_4_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
-    fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
-  end
-else
-  error('unknown iQAX')
-end
+create_output_filename_clust_tile_fits_quantiles_loop72lons
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 boo = length(fnout);

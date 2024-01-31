@@ -15,8 +15,29 @@ elseif iX == 97
   clr_rlon  = clr97_rlon;
   clr_r1231 = clr97_r1231;
 end
- 
-load pclear_Aug2012.mat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% if these files DNE then run read_in_16days_clear
+%% if these files DNE then run read_in_16days_clear
+if iTimeStep == 230 
+  pclrfile = 'pclear_Aug2012.mat';
+elseif iTimeStep == 230 - 6
+  pclrfile = 'pclear_Jun2012.mat';
+elseif iTimeStep == 230 - 12
+  pclrfile = 'pclear_Feb2012.mat';
+elseif iTimeStep == 230 + 6
+  pclrfile = 'pclear_Dec2012.mat';
+end
+%% if these files DNE then run read_in_16days_clear
+%% if these files DNE then run read_in_16days_clear
+if ~exist(pclrfile)
+  fprintf(1,'in plot_QX_vs_uniformclear_filter.m : pclrfile = %s DNE : run "read_in_16days_clear" first \n',pclrfile);
+  error('pclrfile DNE')
+end
+loader = ['load ' pclrfile];
+eval(loader)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 figure(8); clf; clrfilter_map = simplemap(pclear.rlat,pclear.rlon,rad2bt(1231,pclear.r1231)); colormap jet
 figure(9); clf; qXfilter_map  = simplemap(clr_rlat,clr_rlon,clr_r1231); colormap jet
 figure(9); cx = caxis;
@@ -38,7 +59,16 @@ std_clrfilter_mapNaN  = nanstd(clrfilter_map,[],2);
 figure(13); clf; simplemap(pclear.rlat,pclear.rlon,rad2bt(1231,pclear.r1231)); colormap jet; cxU = caxis; title('Uniform clear')
 figure(14); clf; simplemap(qXfilter_mapNaN); colormap jet; caxis(cxU); title('Q90')
 figure(15); clf; junkdiff = simplemap(clrfilter_map-qXfilter_mapNaN); colormap(usa2);caxis([-1 +1]*5); title('Difference U/Clr-QX')
-figure(16); dbbb = -5 : 0.1 : +5; plot(dbbb,histc(junkdiff(:),dbbb)); plotaxis2;; title('Histogram difference'); [nanmean(junkdiff(:)) nanstd(junkdiff(:))]
+figure(16); dbbb = -5 : 0.1 : +5; plot(dbbb,histc(junkdiff(:),dbbb)); plotaxis2;; title('Histogram difference'); 
+
+[YY] = rlat180' * ones(1,360); 
+cosYY = cos(YY*pi/180);
+[mw,sw] = weighted_mean_stddev(junkdiff,cosYY);
+fprintf(1,'GLOBAL  : uniform/clear vs QX : mean,std dev and weighted mean/stddev : %8.6f +/- %8.6f K      %8.6f +/- %8.6f K \n',[nanmean(junkdiff(:)) nanstd(junkdiff(:)) mw sw])
+
+moo = find(abs(YY) > 30); cosYYT = cosYY; cosYYY(moo) = NaN; junkdiffT = junkdiff; junkdiffT(moo) = NaN;
+[mw,sw] = weighted_mean_stddev(junkdiffT,cosYYT);
+fprintf(1,'TROPICS : uniform/clear vs QX : mean,std dev and weighted mean/stddev : %8.6f +/- %8.6f K      %8.6f +/- %8.6f K \n',[nanmean(junkdiff(:)) nanstd(junkdiff(:)) mw sw])
 
 figure(11); errorbar(rlat180,mean_qXfilter_mapNaN,std_qXfilter_mapNaN,'b'); hold on; errorbar(rlat180,mean_clrfilter_mapNaN,std_clrfilter_mapNaN,'r'); hold off
 hl = legend('QX filter','clear filter','location','south');

@@ -79,8 +79,12 @@ fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNo
 disp(' ' )
 
 iTimeStep = 001;
-iTimeStep = 460; %% 23 timesteps/year * 20 years
-iTimeStep = 230; %% 10 years
+iTimeStep = 460; %% 23 timesteps/year * 20 years : here are about 6 timesteps between seasons DJF,MAM,JJA,SON
+iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012)
+iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
+
 if iTimeStep > maxN
   iTimeStep = maxN;
 end
@@ -101,7 +105,20 @@ if iTest > 0
   iiMin = 36; iiMax = 36;
 end
 
-for ii = iiMin : iiMax
+if ~exist('iForward')
+  iForward = +1;
+end
+
+if iForward == +1
+  iStempII = +1;
+else
+  iStempII = iMin;
+  iMin = iMax;
+  iMax = iStempII;
+  iStempII = -1;
+end
+
+for ii = iiMin : iStempII : iiMax
   jj = JOB;   %% latbin
   JOBB = (JOB-1)*72 + ii;
   fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];

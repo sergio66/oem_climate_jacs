@@ -1,3 +1,26 @@
+addpath /home/sergio/KCARTA/MATLAB
+addpath /home/sergio/MATLABCODE
+addpath /home/sergio/MATLABCODE/PLOTTER
+addpath /home/sergio/MATLABCODE/COLORMAP
+
+if ~exist('iTimeStep')
+  iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+  iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+  iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012)
+  iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
+
+  iTimeStep = input('Enter iTimeStep for 2012 : (DJF)218 (MAM)224 (JJA/default)230 (SON)236 : ');
+  if length(iTimeStep) == 0
+    iTimeStep = 230;
+  end
+
+  fnameOUT = ['plot_ecmwf_or_era_16days_tile_timestep' num2str(iTimeStep,'%03d') '.mat'];
+  loader = ['load ' fnameOUT];
+  eval(loader);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 jett = jet; jett(1,:) = 1;
 figure(1); pcolor(dbtt,latt,squeeze(nanmean(hist_stemp,1))); title('Stemp'); colormap(jett); colorbar; shading interp
 ylim([-90 +90])
@@ -131,6 +154,9 @@ ylim([-90 +90])
 addpath /asl/matlib/plotutils
 % figure(5); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/histogramBT1231_obs_desc_20_years_Q50_Q80_Q90_Q95_Q97.pdf']);
 % figure(6); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/cdfhistogramBT1231_obs_desc_20_years_Q50_Q80_Q90_Q95_Q97.pdf']);
+%%% should really be
+% figure(5); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/histogramBT1231_obs_desc_iTimestep_' num2str(iTimeStep,'%03d')    '_Q50_Q80_Q90_Q95_Q97.pdf']);
+% figure(6); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/cdfhistogramBT1231_obs_desc_iTimestep_' num2str(iTimeStep,'%03d') '_Q50_Q80_Q90_Q95_Q97.pdf']);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 plot_QX_vs_uniformclear_filter
@@ -138,7 +164,18 @@ plot_QX_vs_uniformclear_filter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 addpath /asl/matlib/plotutils
 %{
-figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_aug2012.pdf']);
-figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_aug2012.pdf']);
-figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_aug2012.pdf']);
+if iTimeStep == 230
+  figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_aug2012.pdf']);
+  figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_aug2012.pdf']);
+  figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_aug2012.pdf']);
+elseif iTimeStep == 230 - 6
+  figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_june2012.pdf']);
+  figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_june2012.pdf']);
+  figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_june2012.pdf']);
+elseif iTimeStep == 230 + 6
+  figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_nov2012.pdf']);
+  figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_nov2012.pdf']);
+  figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_nov2012.pdf']);
+end
+
 %}

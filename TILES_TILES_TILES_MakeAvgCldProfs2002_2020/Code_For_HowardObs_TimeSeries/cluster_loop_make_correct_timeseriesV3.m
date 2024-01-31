@@ -60,9 +60,9 @@ jj = 59; ii = 27;
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%startdate = [2002 09 01]; stopdate = [2021 08 31]; 
-%startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
-%i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
+%% startdate = [2002 09 01]; stopdate = [2021 08 31]; 
+%% startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
+%% i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -91,11 +91,15 @@ all_72lonbins = struct;
 iiMin = 59; iiMax = 59;
 iiMin = 01; iiMax = 72;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% iQAX =  0; %% quantile and extreme
 %% iQAX = -1; %% extreme
 %% iQAX = +2; %% mean
 %% iQAX = +1; %% quantile
 set_iQAX
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0

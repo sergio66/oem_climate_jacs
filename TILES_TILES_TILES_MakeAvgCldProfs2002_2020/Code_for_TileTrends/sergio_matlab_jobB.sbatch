@@ -8,6 +8,8 @@
 # run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m OR
 # run this with      kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 10  for clust_tile_anomalies_quantiles.m OR
 #
+#     OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR      OR    OR 
+#
 # run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m  AND
 # run this with      kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m 
 ##########################

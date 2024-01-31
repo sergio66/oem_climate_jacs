@@ -20,6 +20,8 @@ cd Code_For_HowardObs_TimeSeries,
 -rw-rw-r-- 1 sergio pi_strow  4644 Aug 22 06:27 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile.m
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 as Howard makes more data, need to update the tiled data I make for trends/quantiles, 23 timesteps per year
 
@@ -81,9 +83,12 @@ cd Code_for_TileTrends
     fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
     fnout = fullfile(fdirpre_out,fnout);
 
-   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
-   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
-   ** run all these 3 :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
+    set_iQAX              %%% <<<< CHECK THIS
+    set_start_stop_dates  %%% <<<< CHECK THIS
+
+   ** run this      :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
+   **   or these 2  :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
+   **               :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
 
    clear all; 
    load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat

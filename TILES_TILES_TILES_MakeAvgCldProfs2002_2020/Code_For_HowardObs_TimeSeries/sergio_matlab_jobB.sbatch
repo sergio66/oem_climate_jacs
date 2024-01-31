@@ -137,5 +137,5 @@ elif [[ "$1" -eq "13" ]]; then
 #
 elif [[ "$1" -eq "14" ]]; then
   echo "clust_make_ecmwf_or_era_16days_tile.m : to make 16day match to ERA, to check how good the quantiles"
-  matlab -nodisplay -r "clust_make_ecmwf_or_era_16days_tile; exit"
+  matlab -nodisplay -r "iForward = +1; clust_make_ecmwf_or_era_16days_tile; exit"
 fi

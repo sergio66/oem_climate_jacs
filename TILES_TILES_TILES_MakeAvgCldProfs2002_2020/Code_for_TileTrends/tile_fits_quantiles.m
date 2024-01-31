@@ -64,14 +64,16 @@ disp(' ')
 %% junk = find(iaFound == 1); junk = max(junk); maxN = junk;
 %%   fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
 
+iQuiet = +1;
 remove_timesteps_not_found_from_finalfilename
 iaNoData = junk;
+clear iQuiet
 
 %disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0); iaNoData = junk
 %  iTimeStepNotFound = 0;             iaNoData = [];
 %  iTimeStepNotFound = length(junk);  iaNoData = junk;
   
-fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+fprintf(1,'there should be %3i Sergio processed files \n',maxN - iTimeStepNotFound);
 disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
 disp(' ' )
 %keyboard_nowindow
@@ -80,23 +82,25 @@ disp(' ' )
 
 if iQAX == 1
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
-  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
+  %fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
 elseif iQAX == 3
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
-  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
+  %fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
 elseif iQAX == 4
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);  
-  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
+  %fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysStepsX);
 else
   error('unknown iQAX')
 end
 fn_summary = fullfile(fdirpre,fn_summary);
 
+%% printVariableLengthArray([i16daysSteps i16daysStepsX])
+
 if exist(fn_summary)
   fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading  << %s >> with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
   d = load(fn_summary);
   if length(d.lat_asc) < i16daysSteps-iTimeStepNotFound
-    [length(d.lat_asc) i16daysSteps]
+    fprintf(1,'[length(d.lat_asc) i16daysSteps] = %4i %4i \n',length(d.lat_asc),i16daysSteps)
     error('length(d.lat_asc) < i16daysSteps')
   end
 else
@@ -127,7 +131,7 @@ dtime = datenum(mtime);
 %% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
 
 disp(' timestep_notfound = ')
-d.timestep_notfound
+printVariableLengthArray(d.timestep_notfound)
 if length(setdiff(d.timestep_notfound,iaNoData)) > 0
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
@@ -141,10 +145,15 @@ if xnargin > 6
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
   rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
   iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);
+
+  iaSE = find((dtime >= datenum(datetime(startdate(1),startdate(2),startdate(3))) & dtime <= datenum(datetime(stopdate(1),stopdate(2),stopdate(3)))));
+
   if length(iaNoData) > 0
     iaSE = setdiff(iaSE,iaNoData);
+    fprintf(1,'taking into account %3i missing timesteps (FEW ), anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
+  else
+    fprintf(1,'taking into account %3i missing timesteps (NONE), anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
   end
-  fprintf(1,'taking into account %3i missing timesteps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -220,6 +229,10 @@ elseif xnargin >= 8
   if iAllorSeason > 0
     if length(k_desc) ~= length(iaSE) 
       fprintf(1,'whoops 7A length(k_desc) ~= length(iaSE)  %3i %3i \n',length(k_desc),length(iaSE));
+      fprintf(1,'          k_desc == uses startdate/stopdate of %4i/%02i/%02i to  %4i/%02i/%02i and \n',startdate,stopdate);
+      fprintf(1,'          iaSE   == uses startdate/stopdate of %4i/%02i/%02i to  %4i/%02i/%02i and timeSE = load(''../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat''); \n',startdate,stopdate);
+k_desc
+iaSE
       %% if off by 1 or 2, reset
       if abs(length(k_desc) - length(iaSE)) <= iTimeStepNotFound & ((k_desc(1) == iaSE(1)) | (k_desc(end) == iaSE(end)))
         disp('since lengths are only off by 1 or 2 reset k_desc')

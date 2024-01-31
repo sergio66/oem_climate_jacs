@@ -1,7 +1,12 @@
-iTimeStep = 230;
+iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012)
+iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
 
 addpath /home/sergio/KCARTA/MATLAB
 addpath /home/sergio/MATLABCODE
+addpath /home/sergio/MATLABCODE/PLOTTER
+addpath /home/sergio/MATLABCODE/COLORMAP
 
 iAllChan = -1;  %% only one chan, 1231  DEFAULT
 iAllChan = +1;  %% 2645 chans
@@ -11,6 +16,7 @@ if length(iAllChan) == 0
 end
 
 if iAllChan < 0
+  fnameOUT = ['plot_ecmwf_or_era_16days_tile_timestep' num2str(iTimeStep,'%03d') '.mat'];
   iaFound = zeros(72,64);
 
   disp('reading in 64 latbins : + at 10, . = 1')
@@ -47,6 +53,12 @@ if iAllChan < 0
   i97 = find(quants == 0.97);
 
   iRead = +1;
+  if exist(fnameOUT)
+    loader = ['load ' fnameOUT];
+    eval(loader);
+    iRead = -1;     
+  end
+
   while iRead > 0 & sum(iaFound(:)) < 4608
     for JOB = 1 : 64
       if mod(JOB,10) == 0
@@ -195,10 +207,17 @@ if iAllChan < 0
   
   dbtt = meanvaluebin(dbt);
   
-%  if sum(iaFound(:)) == 4608
-%    clear stemp
-%    save plot_ecmwf_or_era_16days_tile.mat *bt1231* *stemp* count dbtt iaFound latt dbtt dbt quants clr*_*
-%  end
+  if sum(iaFound(:)) == 4608
+    clear stemp
+    saver = ['save ' fnameOUT ' *bt1231* *stemp* count dbtt iaFound latt dbtt dbt quants clr*_*'];
+    iSave = input('found all 4608 files .. save??? (-1/+1 [default]) : ');
+    if length(iSave) == 0
+      iSave = +1;
+    end
+    if iSave > 0
+      eval(saver)     
+    end
+  end
 
   do_the_plots_ecmwf_or_era_16days_tile_generic
   disp('ret to continue to main plots'); pause

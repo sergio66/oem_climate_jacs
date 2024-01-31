@@ -35,35 +35,12 @@ figure(4); clf; plot(a.hout.vchan,ones(7,1)*wah(5,:)-wah); xlim([640 1640]); hl 
 title('Q90 - rest of QX')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('pclear_Aug2012.mat')
-  [yy,mm,dd,hh] = tai2utcSergio(a.p2.rtime);
-  %% Aug 27, 2012- Sep 11, 2012
-  days_so_far = convert2daysinyear(a.p2.rtime);
-  
-  for ii = min(days_so_far) : max(days_so_far)
-    frtp = ['/asl/rtp/airs/airs_l1c_v672/clear/2012/era_airicrad_day' num2str(ii,'%03d') '_clear.rtp'];
-    [h,ha,p,pa] = rtpread(frtp);
-    boo = find(p.solzen < 90);
-    [h,p] = subset_rtp(h,p,[],[],boo);
-    if ii == min(days_so_far)
-      pclear.rlat  = p.rlat;
-      pclear.rlon  = p.rlon;
-      pclear.rtime = p.rtime;
-      pclear.r1231 = p.robs1(1520,:);
-    else
-      pclear.rlat  = [pclear.rlat  p.rlat];
-      pclear.rlon  = [pclear.rlon  p.rlon];
-      pclear.rtime = [pclear.rtime p.rtime];
-      pclear.r1231 = [pclear.r1231 p.robs1(1520,:)];
-    end
-  end
-  commentX = 'see do_the_plots_ecmwf_or_era_16days_tile_onelatbin.m';
-  save pclear_Aug2012.mat pclear commentX
-else
-  load pclear_Aug2012.mat
-end
-figure(5); clf; simplemap(pclear.rlat,pclear.rlon,rad2bt(1231,pclear.r1231))
+read_in_16days_clear
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 disp('doing the "clear Q90 --> Q100')
 clr_rlat = [];

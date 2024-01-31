@@ -145,6 +145,9 @@ tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+disp('check if everything is done (all 64 x 72 bins) using    check_progress_trends_extremes_quantiles.m');
+disp('check if everything is done (all 64 x 72 bins) using    check_progress_trends_extremes_quantiles.m');
+disp('check if everything is done (all 64 x 72 bins) using    check_progress_trends_extremes_quantiles.m');
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')

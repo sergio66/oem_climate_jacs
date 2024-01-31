@@ -1,6 +1,8 @@
 disp('Enter (1) for Q1-16 2002/09 to 2020/08 == orig, re-done by Sergio');
 disp('      (3)  for extremes      2002/09 to 2021/08 == new')
 disp('      (13) for first 8 years 2002/09 to 2010/08 == new    183 steps')
+disp('      (14) for last  4 years 2018/09 to 2022/08 == new    091 steps')
+disp('      (15) for mid  14 years 2008/01 to 2022/12 == new    342 steps')
 disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON')
 disp('      (10) for anomalies')
 iType = input('enter choice : ');
@@ -52,9 +54,23 @@ for jj = 1 : 64
     elseif iType == 13
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
       fname = [fname '/iQAX_4_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_201000080031_TimeStepsX' tstr '.mat'];
+    elseif iType == 14
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
+      fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_201800090001_202200080031_TimeSteps_366_457_X091.mat'];
+    elseif iType == 15
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
+      fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat'];
     end
     if exist(fname)
-      found_tile_trends_quantiles_extremes(jj,ii) = +1;
+      kachunk = dir(fname);
+      found_tile_trends_quantiles_size(jj,ii) = kachunk.bytes;
+      if kachunk.bytes > 0
+        found_tile_trends_quantiles_extremes(jj,ii) = +1;
+      else
+        iCnt = iCnt + 1;
+        job_notdone(iCnt,:) = [ii jj    ii+(jj-1)*72];
+        fprintf(1,'%s size 0 bytes \n',fname);
+      end
     else
       iCnt = iCnt + 1;
       job_notdone(iCnt,:) = [ii jj    ii+(jj-1)*72];

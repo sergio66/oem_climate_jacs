@@ -238,6 +238,8 @@ for iii = 3 : length(thedir0)
 
     [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     asc = find(s.asc_flag(ianpts) == 65);  
     thesave.count_asc(iCnt) = length(asc);
     thesave.lat_asc(iCnt)  = nanmean(s.lat(asc));
@@ -284,6 +286,8 @@ for iii = 3 : length(thedir0)
         thesave.solzen_quantile1231_asc(iCnt,qq) = NaN;
       end
     end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        
     desc = find(s.asc_flag(ianpts) == 68);  
     thesave.count_desc(iCnt) = length(desc);
@@ -333,6 +337,8 @@ for iii = 3 : length(thedir0)
     end
   end
 
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
   if mod(iCnt,72) == 0
     figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
     figure(2); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meansolzen_asc);    colormap jet; title('asc solzen')
@@ -345,6 +351,8 @@ for iii = 3 : length(thedir0)
 end
 
 toc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 wnum = s.wnum;
 h2645 = load('/home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD/h2645structure.mat');

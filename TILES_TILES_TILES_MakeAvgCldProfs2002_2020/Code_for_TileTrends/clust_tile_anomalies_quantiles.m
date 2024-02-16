@@ -19,8 +19,11 @@ disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
-% JOB = 2222
-% JOB = 77
+if length(JOB) == 0
+  JOB = 2222;
+  JOB = 77;
+  JOB = 2787;   %% daytime over India
+end
 
 disp(' ')
 %for JOB=1:4608
@@ -124,6 +127,20 @@ elseif iAllorSeason == -4
 end
 
 fnout = [fnout '.mat'];
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% no need for this since both asc and desc anoms are done
+%% iNorD = +1; %% nighttime
+%% iNorD = -1; %% fayttime
+%% if iNorD < 0
+%%   boo = length(fnout);
+%%   if strcmp(fnout(boo-3:boo),'.mat')
+%%     fnout = fnout(1:boo-4);
+%%   end
+%%   fnout = [fnout '_day'];
+%%   fnout = [fnout '.mat'];
+%% end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 fnout = fullfile(fdirpre_out,fnout);

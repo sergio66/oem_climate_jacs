@@ -1,6 +1,12 @@
 see sergio_matlab_jobB.sbatch
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Individual Tile
+check_tile_land_or_ocean_hist.m
+  inut tile number, timestep .. and it reads in the particular tile/timestep. 
+  And also reads the trends for that tile, and compares the histograms
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Timeseries
 
 To make a time series of a channel
@@ -18,6 +24,40 @@ To make a time series of a tile,entire spectrum
 cd Code_For_HowardObs_TimeSeries,
 -rw-rw-r-- 1 sergio pi_strow  4555 Aug 22 06:49 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile_one_16dayfile.m
 -rw-rw-r-- 1 sergio pi_strow  4644 Aug 22 06:27 ../Code_For_HowardObs_TimeSeries/get_timeseries_one_tile.m
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cooling trends for tile 2788 over India
+
+see  /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m
+
+%% raw data in eg /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin38/LonBin52/iQAX_3_summarystats_LatBin38_LonBin52_timesetps_001_457_V1.mat
+%{
+moo = load('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin38/LonBin52/iQAX_3_summarystats_LatBin38_LonBin52_timesetps_001_457_V1.mat');
+mootime = moo.year_desc + (moo.month_desc-1)/12 + (moo.day_desc-1)/12/30;
+
+plot(mootime,moo.meanBT1231_asc+10,'b',mootime,moo.meanBT1231_desc-10,'r','linewidth',2); hl = legend('asc','desc','fontsize',10); xlim([2002.75 2022.75]); title('Mean BT1231 for Tile 2788')
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.meanBT1231_asc,4);  fprintf(1,'BT1231 trend for asc node = %8.6f K/yr \n',B(2))
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.meanBT1231_desc,4); fprintf(1,'BT1231 trend for desc node = %8.6f K/yr \n',B(2))
+
+moo.rad1231_asc  = squeeze(moo.rad_quantile_asc(:,1520,5));
+moo.rad1231_desc = squeeze(moo.rad_quantile_desc(:,1520,5));
+plot(mootime,moo.rad1231_asc+0,'b',mootime,moo.rad1231_desc-0,'r','linewidth',2); hl = legend('asc','desc','fontsize',10); xlim([2002.75 2022.75]); title('Mean BT1231 for Tile 2788, Q05')
+plot(mootime,moo.rad1231_asc+5,'b',mootime,moo.rad1231_desc-5,'r','linewidth',2); hl = legend('asc','desc','fontsize',10); xlim([2002.75 2022.75]); title('Mean BT1231 for Tile 2788, Q05')
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.rad1231_asc,4);  fprintf(1,'rad1231 trend Q05 for asc node = %8.6f K/yr \n',B(2))
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.rad1231_desc,4); fprintf(1,'rad1231 trend Q05 for desc node = %8.6f K/yr \n',B(2))
+
+moo.bt1231_asc  = rad2bt(1231,squeeze(moo.rad_quantile_asc(:,1520,5)));
+moo.bt1231_desc = rad2bt(1231,squeeze(moo.rad_quantile_desc(:,1520,5)));
+plot(mootime,moo.bt1231_asc+0,'b',mootime,moo.bt1231_desc-0,'r','linewidth',2); hl = legend('asc','desc','fontsize',10); xlim([2002.75 2022.75]); title('Mean BT1231 for Tile 2788, Q05')
+%plot(mootime,moo.bt1231_asc+5,'b',mootime,moo.bt1231_desc-5,'r','linewidth',2); hl = legend('asc','desc','fontsize',10); xlim([2002.75 2022.75]); title('Mean BT1231 for Tile 2788, Q05')
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.bt1231_asc,4);  fprintf(1,'bt1231 trend Q05 for asc node = %8.6f K/yr \n',B(2))
+B = Math_tsfit_lin_robust((mootime-2002)*365,moo.bt1231_desc,4); fprintf(1,'bt1231 trend Q05 for desc node = %8.6f K/yr \n',B(2))
+
+%}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,5 +1,10 @@
 %% ENCOMPASSING PERIOD OF DATA AVAILABLE AND SAVED
-%% so for example load in data from tile_fits_quantiles.m :lati,loni =  1  1  loading  << ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin01/iQAX_3_summarystats_LatBin01_LonBin01_timesetps_001_479_V1.mat >> with 479 i16daysSteps
+%% so for example load in data from tile_fits_quantiles.m :lati,loni =  1  1  
+%% loading  << ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin01/iQAX_3_summarystats_LatBin01_LonBin01_timesetps_001_479_V1.mat >> with 479 i16daysSteps
+
+%% eventually please look at eg /home/sergio/MATLABCODE/oem_pkg_run/FIND_NWP_MODEL_TRENDS/driver_check_WV_T_RH_ERA5_geo_and_spectral_rates2.m     which has
+%%   YMStart = [2018 09];  YMEnd = [2022 08];  %% last 4 years whose trends you want
+%%   iYS = 2002; iYE = 2022;                   %% NOTE THIS IS JUST HOW MUCH DATA YOU HAVE in ERA5 dirs
 
 startdateMaster = [2002 09 01]; stopdateMaster = [2020 08 31]; i16daysSteps = 412;                       %% 2002/09 to 2020/08, testing that I get same results as Larrabee
 startdateMaster = [2002 09 01]; stopdateMaster = [2021 06 31]; i16daysSteps = 429;                       %% 2002/09 to 2021/06
@@ -16,12 +21,6 @@ startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 47
 
 %% DEFINE PERIOD YOU ACTUALLY WANT, so can speed up things using SAVED data
 %% to make trends saved in ./DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin02/iQAX_3_fits_LonBin02_LatBin01_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat
-
-startdate = [2002 09 01]; stopdate = [2023 08 25];  % 21 years! *** THIS IS THE MASTER BLASTER
-startdate = [2002 09 01]; stopdate = [2007 08 31];  % 05 years!
-startdate = [2002 09 01]; stopdate = [2012 08 31];  % 10 years!
-startdate = [2002 09 01]; stopdate = [2017 08 31];  % 15 years!
-startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20 years! %% trends paper, and Sounder STM 2023
 
 startdate = [2002 09 01]; stopdate = [2021 08 31];  % 19 years 
 startdate = [2005 01 01]; stopdate = [2014 12 31];  % Joao wants 10 years
@@ -40,5 +39,12 @@ startdate = [2018 09 01]; stopdate = [2022 08 31];  % so now use the 4 years aft
 % sarah.safieddine@latmos.ipsl.fr, Dec 20, 2023
 % I would only need ascending/descending nodes monthly L3 grids over the study period 2008-2021 (or 2022)
 startdate = [2008 01 01]; stopdate = [2022 12 31];
+
+startdate = [2002 09 01]; stopdate = [2023 08 25];  % 21 years! *** THIS IS THE MASTER BLASTER
+startdate = [2002 09 01]; stopdate = [2007 08 31];  % 05 years! %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2012 08 31];  % 10 years! %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2017 08 31];  % 15 years! %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20 years! %% trends paper, and Sounder STM 2023
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

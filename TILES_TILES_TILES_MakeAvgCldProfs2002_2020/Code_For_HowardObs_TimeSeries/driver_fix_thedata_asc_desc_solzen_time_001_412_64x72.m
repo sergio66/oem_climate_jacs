@@ -3,10 +3,16 @@
 
 addpath /home/sergio/MATLABCODE/TIME
 
+%% iNumSteps used to be called Nmax
+iNumTimeSteps = 412;
+iNumTimeSteps = 457; 
+
 iDorA = -1; %% asc
 iDorA = +1; %% desc
 
 iDorA
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switchERAtoECM = utc2taiSergio(2019,09,01,12);  %% this is when ERA ends
 
@@ -26,8 +32,7 @@ rtimeS(1) = utc2taiSergio(yy0,mm0,dd0,12);
 thedateE(1,:) = [yy1 mm1 dd1]; 
 rtimeE(1) = utc2taiSergio(yy1,mm1,dd1,12);
 
-Nmax = 412;
-for ii = 2 : Nmax
+for ii = 2 : iNumTimeSteps
   
   yy0 = yy1; mm0 = mm1; dd0 = dd1;
 
@@ -50,7 +55,10 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72.mat');
+loadername = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72.mat'];
+loadername = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_' num2str(iNumTimeSteps) '_64x72.mat'];
+
+load(loadername)
 thedata0 = thedata;
 if iDorA > 0
   meanrtime = nanmean(squeeze(nanmean(thedata.rtime_desc,1)),1);
@@ -64,18 +72,18 @@ if length(boo) > 0
   boo
   disp('oops found some rtimeE-rtimeS < 0');
 end
-boo = meanrtime(1:Nmax)-rtimeS; boo = find(boo < 0);
+boo = meanrtime(1:iNumTimeSteps)-rtimeS; boo = find(boo < 0);
 if length(boo) > 0
   boo
-  disp('oops found some meanrtime(1:Nmax)-rtimeS < 0');
+  disp('oops found some meanrtime(1:iNumTimeSteps)-rtimeS < 0');
 end
-boo = rtimeE-meanrtime(1:Nmax); boo = find(boo < 0);
+boo = rtimeE-meanrtime(1:iNumTimeSteps); boo = find(boo < 0);
 if length(boo) > 0
   boo
-  disp('oops found some rtimeE-meanrtime(1:Nmax) < 0');
+  disp('oops found some rtimeE-meanrtime(1:iNumTimeSteps) < 0');
 end
 
-for ii = 1 : Nmax
+for ii = 1 : iNumTimeSteps
   if mod(ii,100) == 0
     fprintf(1,'+')
   elseif mod(ii,10) == 0
@@ -89,7 +97,7 @@ end
 fprintf(1,'\n');
 
 %% find the bad breaks (which are a month long, instead of 16 days long)
-thediff = nan(size(deltatime)); thediff(2:Nmax) = diff(deltatime); 
+thediff = nan(size(deltatime)); thediff(2:iNumTimeSteps) = diff(deltatime); 
 %bad = find(abs(thediff) > 3)
 %bad = find(rtime_thedata > rtimeE)
 bad = find(abs(thediff) > 3 & rtime_thedata > rtimeE)
@@ -110,6 +118,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% fix the bad days
 Nstep2002_09_to_2020_08 = 411; %% we will stop at 411
+Nstep2002_09_to_2020_08 = 457; %% we will stop at 457
 
 clear thedata
 if iDorA > 0
@@ -175,8 +184,12 @@ if iDorA > 0
     rtime_thedataX(ii) = junk;
   end
 
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72_fix_desc.mat thedata translateOld2New commentFix
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
+  %save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72_fix_desc.mat thedata translateOld2New commentFix
+  %save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09.mat  commentFix thedateS thedateE rtimeS rtimeE iNumTimeSteps switchERAtoECM bad
+  xname1 = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_' num2str(iNumTimeSteps) '_64x72_fix_desc.mat'];
+  xname2 = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09_' num2str(iNumTimeSteps) '.mat'];
+  saver = ['save ' xname1 ' thedata translateOld2New commentFix']; eval(saver)
+  saver = ['save ' xname2 ' commentFix thedateS thedateE rtimeS rtimeE iNumTimeSteps switchERAtoECM bad'];
 
 elseif iDorA < 0
   commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_412_64x72.m ... bad indices = ' num2str(bad)];
@@ -229,8 +242,13 @@ elseif iDorA < 0
     rtime_thedataX(ii) = junk;
   end
 
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72_fix_asc.mat thedata translateOld2New commentFix
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
+  %save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72_fix_asc.mat thedata translateOld2New commentFix
+  %save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09.mat  commentFix thedateS thedateE rtimeS rtimeE iNumTimeSteps switchERAtoECM bad
+  xname1 = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_' num2str(iNumTimeSteps) '_64x72_fix_asc.mat'];
+  xname2 = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09_' num2str(iNumTimeSteps) '.mat'];
+  saver = ['save ' xname1 ' thedata translateOld2New commentFix']; eval(saver)
+  saver = ['save ' xname2 ' commentFix thedateS thedateE rtimeS rtimeE iNumTimeSteps switchERAtoECM bad'];
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

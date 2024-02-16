@@ -27,10 +27,11 @@ for JOB = 1 : 4608
 end
 comment0 = 'see translator_wrong2correct.m';
 comment1 = '  so eg if you want sergioindex = 1    = latbin=01,lonbin=01, then you need howard index from correct.wrongind(0001) = 4608 = correct.name{1}    = S90p00_W180p00.nc';
-comment2 = '  so eg if you want sergioindex = 1170 = latbin=16,lonbin=18, then you need howard index from correct.wrongind(1170) = 3439 = correct.name{1170} = S44p00_W095p00.nc';
-comment3 = '  so eg if you want sergioindex = 2340 = latbin=32,lonbin=36, then you need howard index from correct.wrongind(2340) = 0090 = correct.name{2340} = N00p00_W005p00.nc';
-comment4 = '  so eg if you want sergioindex = 3510 = latbin=48,lonbin=54, then you need howard index from correct.wrongind(3510) = 0037 = correct.name{3510} = N44p00_E085p00.nc';
+comment2 = '  so eg if you want sergioindex = 1170 = latbin=17,lonbin=18, then you need howard index from correct.wrongind(1170) = 3439 = correct.name{1170} = S44p00_W095p00.nc';
+comment3 = '  so eg if you want sergioindex = 2340 = latbin=33,lonbin=36, then you need howard index from correct.wrongind(2340) = 0090 = correct.name{2340} = N00p00_W005p00.nc';
+comment4 = '  so eg if you want sergioindex = 3510 = latbin=49,lonbin=54, then you need howard index from correct.wrongind(3510) = 0037 = correct.name{3510} = N44p00_E085p00.nc';
 comment5 = '  so eg if you want sergioindex = 4608 = latbin=64,lonbin=72, then you need howard index from correct.wrongind(4608) = 2268 = correct.name{4608} = N81p75_E175p00.nc';
+comment6 = 'India : if you want sergioindex = 2788 = latbin=39,lonbin=52, then you need howard index from correct.wrongind(2788) = 0448 = correct.name{2788} = N16p50_E075p00.nc';
 save translator_wrong2correct comment* correct
 %%%%%%%%%%%%%%%%%%%%%%%%%
 so 

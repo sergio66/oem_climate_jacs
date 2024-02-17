@@ -2,7 +2,7 @@ see sergio_matlab_jobB.sbatch
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Individual Tile
-check_tile_land_or_ocean_hist.m
+driver_check_tile_land_or_ocean_hist.m
   inut tile number, timestep .. and it reads in the particular tile/timestep. 
   And also reads the trends for that tile, and compares the histograms
 

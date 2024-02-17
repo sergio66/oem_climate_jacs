@@ -269,6 +269,7 @@ for iii = 3 : length(thedir0)
     for qq = 1 : length(quants)-1
 
       select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
+      thesave.asc_Z{qq} = asc(Z);
 
       thesave.quantile1231_asc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_asc(iCnt,qq) = length(Z);
@@ -318,6 +319,7 @@ for iii = 3 : length(thedir0)
     for qq = 1 : length(quants)-1
 
       select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
+      thesave.desc_Z{qq} = desc(Z);
 
       thesave.quantile1231_desc(iCnt,qq) = Y(qq);
       thesave.count_quantile1231_desc(iCnt,qq) = length(Z);

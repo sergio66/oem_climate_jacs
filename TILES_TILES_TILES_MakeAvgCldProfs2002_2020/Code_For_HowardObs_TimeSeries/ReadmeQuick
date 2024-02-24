@@ -68,8 +68,9 @@ as Howard makes more data, need to update the tiled data I make for trends/quant
 cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so only need relatively fast "periodic updates"
 
 1) First make the timesteps eg till 2022, run this with 
-      sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  
-   for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+     initial 20 years of tiles      kleenslurm; sbatch -p high_mem --array=1-460%16   sergio_matlab_jobB.sbatch 10  
+     then add more recent tiles     kleenslurm; sbatch -p high_mem --array=460-500%8  sergio_matlab_jobB.sbatch 10
+  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
    make sure you set iQAX in here, using set_iQAX.m; right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
      iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
      iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
@@ -86,6 +87,10 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
 
 2) Then fix the tiled directory matchups : run this with 
      sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  
+
+   set_iQAX
+   set_start_stop_dates 
+
    for cluster_loop_make_correct_timeseriesV2
    input dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
    fdirIN     = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
@@ -107,6 +112,11 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
      rad_quantile_asc              457x2645x5            48350600  double
      rad_quantile_desc             457x2645x5            48350600  double
      plot(rad2bt(1231,squeeze(rad_quantile_asc(:,1520,:))));  hl=legend(num2str((1:5)'));
+
+2a) If you want to make a timeseries of 4608 tiles x 480 timesteps x 41 channels x 5 quantiles, look at eg driver_load_41selected_chans_timeseries.m
+iNumTimeSteps = 487;
+radA = nan(4608,iNumTimeSteps,41,5);
+radD = nan(4608,iNumTimeSteps,41,5);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 cd Code_for_TileTrends

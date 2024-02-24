@@ -20,9 +20,17 @@ iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/
 %% JOB = 1 * Nyears*23  :::  recall there are 23 timesteps per year, so in 2022/08/31 there should be 23 x 20 = 460 timesteps total
 %% JOB = 1 * Nyears*23  :::  recall there are 23 timesteps per year, so in 2023/08/31 there should be 23 x 21 = 483 timesteps total
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
+if length(JOB) == 0
+  JOB = 458;  %% last one done to 2022/08
+  JOB = 479;  %% last one done to 2023/07
+  JOB = 487;  %% last one done to 2023/12
+end
+
 %JOB = 6
 %JOB = 457
 %JOB = 396 %% this one had a few NaNs and was not being done, did a fix 2022/09/16, but this might cause trouble in trends
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% input  dir = /asl/isilon/airs/tile_test7/HowardsTIlingMap, this could be corrected eg using  x = translator_wrong2correct(JOB);
 %% output dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
@@ -72,7 +80,7 @@ fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% check to see if 64*72 files have been made for that date_stamp
 
-disp('looping over 64 latbins .....')
+disp('INITIAL CHECK : HAS ANYTHING BEEN MADE???? looping over 64 latbins .....')
 numdone = zeros(72,64);
 for jj = 1 : 64      %% latitude
   if mod(jj,10) == 0
@@ -109,13 +117,14 @@ for jj = 1 : 64      %% latitude
     end
 
     if iQAX == 1
-      thedir = dir([fdirIN '/stats_data_' date_stamp '.mat']);
+      QAXdir = ['/stats_data_' date_stamp '.mat'];
     elseif iQAX == 3
-      thedir = dir([fdirIN '/iQAX_3_stats_data_' date_stamp '.mat']);
+      QAXdir = ['/iQAX_3_stats_data_' date_stamp '.mat'];
     elseif iQAX == 4
-      thedir = dir([fdirIN '/iQAX_4_stats_data_' date_stamp '.mat']);
+      QAXdir = ['/iQAX_4_stats_data_' date_stamp '.mat'];
     end
 
+    thedir = dir([fdirIN QAXdir]);
     if length(thedir) == 1
       if thedir.bytes > 0           
         numdone(ii,jj) = 1;    
@@ -127,83 +136,35 @@ fprintf(1,'\n');
 fprintf(1,'sum(numdone(:)) = %8i ',sum(numdone(:)))
 
 if sum(numdone(:)) == 72*64
-  disp('have already made all 4608 files for this timestep');
+  fprintf(1,'have already made all 4608 files for this timestep %3i = %s, see eg %s  \n',JOB,date_stamp,[fdirIN QAXdir])
+  error('this timestep already done!!!')
   return
 else
   disp('humph .. files not made, the show must go on!!!')
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% set_iQAX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tic 
-thesave = struct;
-thesave.iii = nan(1,4608);
-thesave.jjj = nan(1,4608);
-
-thesave.count_asc = nan(1,4608);
-thesave.lat_asc = nan(1,4608);
-thesave.lon_asc = nan(1,4608);
-thesave.meansolzen_asc = nan(1,4608);
-thesave.stdsolzen_asc  = nan(1,4608);
-thesave.meansatzen_asc = nan(1,4608);
-thesave.stdsatzen_asc  = nan(1,4608);
-thesave.meanyear_asc = nan(1,4608);
-thesave.stdyear_asc  = nan(1,4608);
-thesave.meanmonth_asc = nan(1,4608);
-thesave.stdmonth_asc  = nan(1,4608);
-thesave.meanday_asc = nan(1,4608);
-thesave.stdday_asc  = nan(1,4608);
-thesave.meanhour_asc  = nan(1,4608);
-thesave.stdhour_asc  = nan(1,4608);
-thesave.meantai93_asc = nan(1,4608);
-thesave.stdtai93_asc  = nan(1,4608);
-thesave.meanrad_asc = nan(4608,2645);
-thesave.stdrad_asc  = nan(4608,2645);
-thesave.max1231_asc = nan(1,4608);
-thesave.min1231_asc = nan(1,4608);
-thesave.DCC1231_asc = nan(1,4608);
-%thesave.hist_asc = nan(4608,length(quants)-1);
-thesave.hist_asc = nan(4608,length(dbt));
-thesave.quantile1231_asc = nan(4608,length(quants)-1);
-thesave.rad_asc = nan(4608,length(quants)-1,2645);
-thesave.count_quantile1231_asc = nan(4608,length(quants)-1);
-thesave.satzen_quantile1231_asc = nan(4608,length(quants)-1);
-thesave.solzen_quantile1231_asc = nan(4608,length(quants)-1);
-
-thesave.count_desc = nan(1,4608);
-thesave.lat_desc = nan(1,4608);
-thesave.lon_desc = nan(1,4608);
-thesave.meansolzen_desc = nan(1,4608);
-thesave.stdsolzen_desc  = nan(1,4608);
-thesave.meansatzen_desc = nan(1,4608);
-thesave.stdsatzen_desc  = nan(1,4608);
-thesave.meanyear_desc = nan(1,4608);
-thesave.stdyear_desc  = nan(1,4608);
-thesave.meanmonth_desc = nan(1,4608);
-thesave.stdmonth_desc  = nan(1,4608);
-thesave.meanday_desc = nan(1,4608);
-thesave.stdday_desc  = nan(1,4608);
-thesave.meanhour_desc  = nan(1,4608);
-thesave.stdhour_desc  = nan(1,4608);
-thesave.meantai93_desc = nan(1,4608);
-thesave.stdtai93_desc  = nan(1,4608);
-thesave.meanrad_desc = nan(4608,2645);
-thesave.stdrad_desc  = nan(4608,2645);
-thesave.max1231_desc = nan(1,4608);
-thesave.min1231_descc = nan(1,4608);
-thesave.DCC1231_desc = nan(1,4608);
-%thesave.hist_desc = nan(4608,length(quants)-1);
-thesave.hist_desc = nan(4608,length(dbt));
-thesave.quantile1231_desc = nan(4608,length(quants)-1);
-thesave.rad_desc = nan(4608,length(quants)-1,2645);
-thesave.count_quantile1231_desc = nan(4608,length(quants)-1);
-thesave.satzen_quantile1231_desc = nan(4608,length(quants)-1);
-thesave.solzen_quantile1231_desc = nan(4608,length(quants)-1);
+%% ls /asl/isilon/airs/tile_test7/ | wc -l                 = 482 TIMESTAMPS
+%% ls /asl/isilon/airs/tile_test7/2008_s142 | wc -l        = 064 LATBINS
+%% ls /asl/isilon/airs/tile_test7/2008_s142/N52p25 | wc -l = 072 LONBINS
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+fprintf(1,'some or all files not made for timestep %3i = %s .. so reading them in SLOWLY \n',JOB,date_stamp);
+
+tic
+%% most of thesave fields = 1 x N bins eg thesave.meansolzen_asc, thesave.meanyear_asc etc        = 1 x N  
+%% some are size length(quants)-1      eg thesave.quantile1231_asc,thesave.count_quantile1231_asc = N x length(quants)-1
+%% some are size N,length(dbt))        eg thesave.hist_asc                                        = N x length(dbt)
+%%   quite big one                     eg thesave.meanrad_asc                                     = N x 2645
+%%   big one                           eg thesave.rad_asc                                         = N x length(quants)-1 x 2645
+thesave = make_blank_thesave_struct(quants,dbt,4608);
+  
 fn = ['/asl/isilon/airs/tile_test7/' date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
@@ -214,133 +175,38 @@ plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
 plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 
+%% OUTER  LOOP      450 TIMESTEPS --> 1 FIXED TIMESTEP = JOB
+%%   MIDDLE LOOP    064 LATBINS
+%%     INNER  LOOP  072 LONBINS
+
 pause(1)
+
 iCnt = 0;
-thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
-for iii = 3 : length(thedir0)
-  dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
+thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);                    %%%% 450 timesteps
+for iii = 3 : length(thedir0)                                    
+  dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];  %%%% 64 latbins
   dirx = dir([dirdirname '/*.nc']);
   for jjj = 1 : length(dirx)
-    fname = [dirdirname '/' dirx(jjj).name];
-    iCnt = iCnt + 1;
+    fname = [dirdirname '/' dirx(jjj).name];                                       %%%% 72 lonbins
+    iCnt = iCnt + 1;                                                               %%%% so iCnt == 1 -- 4608
     thesave.fname{iCnt} = fname;
 
     fprintf(1,'%4i %4i %4i %s \n',iii-2,jjj,iCnt,fname);
- 
-    [s, a] = read_netcdf_h5(fname);
-    ianpts = 1:s.total_obs;
-    %scatter(s.lon(ianpts),s.lat(ianpts),1,s.asc_flag(ianpts)); colorbar
-    %plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 
     thesave.iii(iCnt) = iii-2;  %% so this is LAT subdir                           ... I really should have called this jjj
     thesave.jjj(iCnt) = jjj;    %% and now we are reading the individual LON files ... I really should have called this iii
     thesave.fname{iCnt} = fname;
+ 
+    [s, a] = read_netcdf_h5(fname);
+  
+    ianpts = 1:s.total_obs;
+    %scatter(s.lon(ianpts),s.lat(ianpts),1,s.asc_flag(ianpts)); colorbar
+    %plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 
     [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    asc = find(s.asc_flag(ianpts) == 65);  
-    thesave.count_asc(iCnt) = length(asc);
-    thesave.lat_asc(iCnt)  = nanmean(s.lat(asc));
-    thesave.lon_asc(iCnt)  = nanmean(s.lon(asc));
-    thesave.meanyear_asc(iCnt) = nanmean(yy(asc));
-    thesave.stdyear_asc(iCnt)  = nanstd(yy(asc));
-    thesave.meanmonth_asc(iCnt) = nanmean(mm(asc));
-    thesave.stdmonth_asc(iCnt)  = nanstd(mm(asc));
-    thesave.meanday_asc(iCnt) = nanmean(dd(asc));
-    thesave.stdday_asc(iCnt)  = nanstd(dd(asc));
-    thesave.meanhour_asc(iCnt) = nanmean(hh(asc));
-    thesave.stdhour_asc(iCnt)  = nanstd(hh(asc));
-    thesave.meantai93_asc(iCnt) = nanmean(s.tai93(asc));
-    thesave.stdtai93_asc(iCnt)  = nanstd(s.tai93(asc));
-    thesave.meansolzen_asc(iCnt) = nanmean(s.sol_zen(asc));
-    thesave.stdsolzen_asc(iCnt)  = nanstd(s.sol_zen(asc));
-    thesave.meansatzen_asc(iCnt) = nanmean(s.sat_zen(asc));
-    thesave.stdsatzen_asc(iCnt)  = nanstd(s.sat_zen(asc));
-    thesave.mean_rad_asc(iCnt,:) = nanmean(s.rad(:,asc),2);
-    thesave.std_rad_asc(iCnt,:)  = nanstd(s.rad(:,asc),0,2);    
-    X = rad2bt(1231,s.rad(1520,asc)); 
-    Y = quantile(X,quants);
-    thesave.max1231_asc(iCnt) = max(X);
-    thesave.min1231_asc(iCnt) = min(X);
-    thesave.DCC1231_asc(iCnt) = length(find(X < 220));
-    thesave.hist_asc(iCnt,:) = histc(X,dbt)/length(X);
-    for qq = 1 : length(quants)-1
-
-      select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
-      thesave.asc_Z{qq} = asc(Z);
-
-      thesave.quantile1231_asc(iCnt,qq) = Y(qq);
-      thesave.count_quantile1231_asc(iCnt,qq) = length(Z);
-      if length(Z) >= 2
-        thesave.rad_asc(iCnt,qq,:) = nanmean(s.rad(:,asc(Z)),2);   
-        thesave.satzen_quantile1231_asc(iCnt,qq) = nanmean(s.sat_zen(asc(Z)));
-        thesave.solzen_quantile1231_asc(iCnt,qq) = nanmean(s.sol_zen(asc(Z)));
-      elseif length(Z) == 1
-        thesave.rad_asc(iCnt,qq,:) = s.rad(:,asc(Z));   
-        thesave.satzen_quantile1231_asc(iCnt,qq) = s.sat_zen(asc(Z));
-        thesave.solzen_quantile1231_asc(iCnt,qq) = s.sol_zen(asc(Z));
-      elseif length(Z) == 0
-        thesave.rad_asc(iCnt,qq,:) = NaN;
-        thesave.satzen_quantile1231_asc(iCnt,qq) = NaN;
-        thesave.solzen_quantile1231_asc(iCnt,qq) = NaN;
-      end
-    end
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       
-    desc = find(s.asc_flag(ianpts) == 68);  
-    thesave.count_desc(iCnt) = length(desc);
-    thesave.lat_desc(iCnt)  = nanmean(s.lat(desc));
-    thesave.lon_desc(iCnt)  = nanmean(s.lon(desc));
-    thesave.meanyear_desc(iCnt) = nanmean(yy(desc));
-    thesave.stdyear_desc(iCnt)  = nanstd(yy(desc));
-    thesave.meanmonth_desc(iCnt) = nanmean(mm(desc));
-    thesave.stdmonth_desc(iCnt)  = nanstd(mm(desc));
-    thesave.meanday_desc(iCnt) = nanmean(dd(desc));
-    thesave.stdday_desc(iCnt)  = nanstd(dd(desc));
-    thesave.meanhour_desc(iCnt) = nanmean(hh(desc));
-    thesave.stdhour_desc(iCnt)  = nanstd(hh(desc));
-    thesave.meantai93_desc(iCnt) = nanmean(s.tai93(desc));
-    thesave.stdtai93_desc(iCnt)  = nanstd(s.tai93(desc));
-    thesave.meansolzen_desc(iCnt) = nanmean(s.sol_zen(desc));
-    thesave.stdsolzen_desc(iCnt)  = nanstd(s.sol_zen(desc));
-    thesave.meansatzen_desc(iCnt) = nanmean(s.sat_zen(desc));
-    thesave.stdsatzen_desc(iCnt)  = nanstd(s.sat_zen(desc));
-    thesave.mean_rad_desc(iCnt,:) = nanmean(s.rad(:,desc),2);
-    thesave.std_rad_desc(iCnt,:)  = nanstd(s.rad(:,desc),0,2);
-    X = rad2bt(1231,s.rad(1520,desc)); 
-    Y = quantile(X,quants);
-    thesave.max1231_desc(iCnt) = max(X);
-    thesave.min1231_desc(iCnt) = min(X);
-    thesave.DCC1231_desc(iCnt) = length(find(X < 220));
-    thesave.hist_desc(iCnt,:) = histc(X,dbt)/length(X);
-    for qq = 1 : length(quants)-1
-
-      select_Zdata_based_on_iQAX_and_qq %%%% <<<<<<<<<<<<<<<<<<<<< this is the selector >>>>>>>>>>>>>>>>>>>>>>>>
-      thesave.desc_Z{qq} = desc(Z);
-
-      thesave.quantile1231_desc(iCnt,qq) = Y(qq);
-      thesave.count_quantile1231_desc(iCnt,qq) = length(Z);
-      if length(Z) >= 2
-        thesave.rad_desc(iCnt,qq,:) = nanmean(s.rad(:,desc(Z)),2);   
-        thesave.satzen_quantile1231_desc(iCnt,qq) = nanmean(s.sat_zen(desc(Z)));
-        thesave.solzen_quantile1231_desc(iCnt,qq) = nanmean(s.sol_zen(desc(Z)));
-      elseif length(Z) == 1
-        thesave.rad_desc(iCnt,qq,:) = s.rad(:,desc(Z));   
-        thesave.satzen_quantile1231_desc(iCnt,qq) = s.sat_zen(desc(Z));
-        thesave.solzen_quantile1231_desc(iCnt,qq) = s.sol_zen(desc(Z));
-      elseif length(Z) == 0
-        thesave.rad_desc(iCnt,qq,:) = NaN;
-        thesave.satzen_quantile1231_desc(iCnt,qq) = NaN;
-        thesave.solzen_quantile1231_desc(iCnt,qq) = NaN;
-      end
-    end
+    separate_s_into_sc_desc_quants
   end
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if mod(iCnt,72) == 0
     figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
     figure(2); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meansolzen_asc);    colormap jet; title('asc solzen')
@@ -354,6 +220,8 @@ end
 
 toc
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 wnum = s.wnum;
@@ -384,9 +252,63 @@ if iSave > 0
 
 end
 
-disp('since these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m')
-disp('since these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m')
-disp('since these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m')
+disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
+disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
+disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
+
+%{
+%% thesave in this code is 
+%%   most of thesave fields = 1 x 4608 bins eg thesave.meansolzen_asc, thesave.meanyear_asc etc     = 1 x 4608  
+%%   some are size length(quants)-1      eg thesave.quantile1231_asc,thesave.count_quantile1231_asc = 4608 x length(quants)-1
+%%   some are size 4608,length(dbt))     eg thesave.hist_asc                                        = 4608 x length(dbt)
+%%     quite big one                     eg thesave.meanrad_asc                                     = 4608 x 2645
+%%     big one                           eg thesave.rad_asc                                         = 4608 x length(quants)-1 x 2645
+%% but the saving routine breaks them into separate 4608 files so eg you get
+%%  ../DATAObsStats_StartSept2002/LatBin32/LonBin36/iQAX_3_stats_data_2020_s402.mat : 1x1 for lat_asc,lon_asc,mean1231_asc and then mean_rad_sc = 1x2645, hist_asc = 1x 161 and rad_quantile_asc = 2645 x 5
+%%
+%% so after cluster_loop_make_correct_timeseriesV2.m you get eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/iQAX_3_summarystats_LatBin32_LonBin_1_72_timesetps_001_455_V1.mat
+>>   load ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/iQAX_3_summarystats_LatBin32_LonBin_1_72_timesetps_001_455_V1.mat
+>>   whos
+  Name             Size              Bytes  Class     Attributes
+
+  dccBT1231       72x457            263232  double
+  dd              72x457            263232  double
+  maxBT1231       72x457            263232  double
+  meanBT1231      72x457            263232  double
+  minBT1231       72x457            263232  double
+  mm              72x457            263232  double
+  rlat            72x457            263232  double
+  rlon            72x457            263232  double
+  yy              72x457            263232  double
+
+%% and also load ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_457_V1.mat
+%% this BIG ONE BIG LEWANDOWSKI
+>> whos *asc
+  Name                           Size                   Bytes  Class     Attributes
+
+  cntDCCBT1231_asc               1x457                   3656  double
+  count_asc                      1x457                   3656  double
+  count_quantile1231_asc       457x5                    18280  double
+  day_asc                        1x457                   3656  double
+  hist1231_asc                 457x161                 588616  double
+  hour_asc                       1x457                   3656  double
+  lat_asc                        1x457                   3656  double
+  lon_asc                        1x457                   3656  double
+  maxBT1231_asc                  1x457                   3656  double
+  meanBT1231_asc                 1x457                   1828  single
+  meanBT_asc                   457x2645               4835060  single
+  minBT1231_asc                  1x457                   3656  double
+  month_asc                      1x457                   3656  double
+  quantile1231_asc             457x5                    18280  double
+  rad_quantile_asc             457x2645x5            48350600  double
+  satzen_asc                     1x457                   3656  double
+  satzen_quantile1231_asc      457x5                    18280  double
+  solzen_asc                     1x457                   3656  double
+  solzen_quantile1231_asc      457x5                    18280  double
+  tai93_asc                      1x457                   3656  double
+  year_asc                       1x457                   3656  double
+
+%}
 
 return
 

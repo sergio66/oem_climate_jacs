@@ -1,12 +1,18 @@
 %% DATAObsStats_StartSept2002/LatBin32/LonBin36/stats_data_2009_s158.mat
 
 addpath /asl/matlib/aslutil/
+addpath /home/sergio/MATLABCODE
 addpath /home/sergio/MATLABCODE/TIME
 
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
+if length(JOB) == 0
+  JOB = 32;
+end
 %JOB = 28
 %JOB = 29
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% indonesia = 0.78S, 113E   so latbin32,lonbin 113/180*36 + 36 = 59
 jj = 32; ii = 59;  
@@ -82,12 +88,13 @@ for ii = iiMin : iiMax
 
   elseif iQAX == 3
     thedir = dir([fdirIN '/iQAX_3_*.mat']);
-    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+    fdirOUT      = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
     fnameoutIIJJ = [fdirOUT '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
     fnameoutIIJJ = [fdirOUT '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(maxN,'%03i') '_V1.mat'];
 
-    fdirOUTII = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
-    fnameoutII = [fdirOUTII '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+    %% very short file
+    fdirOUTII    = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
+    fnameoutII   = [fdirOUTII '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
 
   elseif iQAX == 4
     thedir = dir([fdirIN '/iQAX_4_*.mat']);
@@ -142,7 +149,10 @@ for ii = iiMin : iiMax
   lonbin_time.timestep_notfound = notfound;
   lonbin_time = nan_lonbin_time_notfound(lonbin_time);
 
-  plot(all_72lonbins.meanBT1231(ii,:)); pause(0.1);
+  datime = all_72lonbins.yy(ii,:) + all_72lonbins.mm(ii,:)/12 + all_72lonbins.dd(ii,:)/30/12;
+  plot(datime,all_72lonbins.meanBT1231(ii,:)); 
+  xlim([min(datime) max(datime)]); plotaxis2; 
+  pause(0.1);
 
   if ~exist(fnameoutIIJJ)
     save(fnameoutIIJJ,'-struct','lonbin_time');

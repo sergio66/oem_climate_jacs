@@ -12,9 +12,10 @@ startdateMaster = [2002 09 01]; stopdateMaster = [2021 07 31]; i16daysSteps = 43
 startdateMaster = [2002 09 01]; stopdateMaster = [2021 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2021/08 = 19 years, 433 steps **********
 startdateMaster = [2002 09 01]; stopdateMaster = [2014 08 31]; i16daysSteps = 433;                       %% 2002/09 to 2014/09 = 273 steps, but use this extended encompassing period to do things fast
 
-startdateMaster = [2002 09 01]; stopdateMaster = [2022 08 31]; i16daysSteps = 456;                       %% 2002/09 to 2022/08 = 20 years, 457 steps **********
-startdateMaster = [2002 09 01]; stopdateMaster = [2022 09 07]; i16daysSteps = 457;                       %% 2002/09 to 2022/08 = 20 years, 457 steps **********
-startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 479;                       %% 2002/09 to 2023/08 = 21 years, 479 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2022 08 31]; i16daysSteps = 456;                       %% 2002/09 to 2022/08 = 20   years, 457 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2022 09 07]; i16daysSteps = 457;                       %% 2002/09 to 2022/08 = 20   years, 457 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 479;                       %% 2002/09 to 2023/08 = 21   years, 479 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2023 12 29]; i16daysSteps = 487;                       %% 2002/09 to 2023/12 = 21.3 years, 487 steps **********
 
 %% clear i16daysSteps
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,10 +42,10 @@ startdate = [2018 09 01]; stopdate = [2022 08 31];  % so now use the 4 years aft
 startdate = [2008 01 01]; stopdate = [2022 12 31];
 
 startdate = [2002 09 01]; stopdate = [2023 08 25];  % 21 years! *** THIS IS THE MASTER BLASTER
-startdate = [2002 09 01]; stopdate = [2007 08 31];  % 05 years! %% trends paper appendix
-startdate = [2002 09 01]; stopdate = [2012 08 31];  % 10 years! %% trends paper appendix
-startdate = [2002 09 01]; stopdate = [2017 08 31];  % 15 years! %% trends paper appendix
-startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20 years! %% trends paper, and Sounder STM 2023
-
+startdate = [2002 09 01]; stopdate = [2007 08 31];  % 05 years!   %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2012 08 31];  % 10 years!   %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2017 08 31];  % 15 years!   %% trends paper appendix
+startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20 years!   %% trends paper, and Sounder STM 2023
+startdate = [2002 09 01]; stopdate = [2024 01 01];  % 22.3 years! %% Joan at JPL wants this
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

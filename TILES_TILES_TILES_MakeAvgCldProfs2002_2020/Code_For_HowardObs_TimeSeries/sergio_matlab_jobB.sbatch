@@ -10,11 +10,13 @@
 #
 ########################################################################
 # NOTE 460 = 23 * 20 = number of timesteps so far since 2002/09/01 that Howard has made, so this will increase by 23 each year
-# first this with sbatch -p high_mem --array=1-460%16 sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2 -- used this for quantiles for AIRS STM May 2021 
-# first this with sbatch             --array=1-460%8  sergio_matlab_jobB.sbatch 10  for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+# first this with   sbatch -p high_mem --array=1-460%16   sergio_matlab_jobB.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2 -- used this for quantiles for AIRS STM May 2021 
+# first this with   sbatch -p high_mem --array=1-460%8    sergio_matlab_jobB.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2
+# first this with   sbatch -p high_mem --array=1-479%8    sergio_matlab_jobB.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2, 2002/09-2023/07
+# first this with   sbatch -p high_mem --array=479-490%8  sergio_matlab_jobB.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2, 2023/07-2023/12
 # NOTE 460 = 23 * 20 = number of timesteps so far since 2002/09/01 that Howard has made, so this will increase by 23 each year
-# then this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
-# then this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  for cluster_loop_make_correct_timeseriesV2
+# then this with sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11           for cluster_loop_make_correct_timeseriesV2
+# then this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11           for cluster_loop_make_correct_timeseriesV2
 ########################################################################
 #
 ########################################################################
@@ -26,6 +28,7 @@
 #
 ########################################################################
 # run this with sbatch             --array=1-64     sergio_matlab_jobB.sbatch 14  for clust_make_ecmwf_or_era_16days_tile
+# run this with sbatch             --array=1-32%8   sergio_matlab_jobB.sbatch 15  for clust_tile_3x5_TO_1x1.m, INDIA = 4 lonbis x 8 latbins -- reading in tiles so only do 8 per time
 ########################################################################
 
 #  Name of the job:
@@ -138,4 +141,7 @@ elif [[ "$1" -eq "13" ]]; then
 elif [[ "$1" -eq "14" ]]; then
   echo "clust_make_ecmwf_or_era_16days_tile.m : to make 16day match to ERA, to check how good the quantiles"
   matlab -nodisplay -r "iForward = +1; clust_make_ecmwf_or_era_16days_tile; exit"
+elif [[ "$1" -eq "15" ]]; then
+  echo "clust_tile_3x5_TO_1x1 : to make 6 subgrids per tile"
+  matlab -nodisplay -r "clust_tile_3x5_TO_1x1; exit"
 fi

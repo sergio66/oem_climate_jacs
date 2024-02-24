@@ -50,7 +50,7 @@ if iQuiet < 0
   disp(' ')
   disp('need to check timespan from set_start_stop_dates');
   disp('these timesteps are not found TOTAL : '); 
-  junk = find(iaFound(1:junk) == 0); printVariableLengthArray(junk);
+  junk = find(iaFound(1:junk) == 0); printarray(junk);
 else
   junk = find(iaFound(1:junk) == 0);
 end
@@ -60,7 +60,7 @@ iTimeStepNotFound = 0;
   junk = junk(aha);
   if length(junk) > 0 & iQuiet < 0
     disp('did not find these timesteps within Start/Stop dates: '); 
-    printVariableLengthArray(junk)
+    printarray(junk)
   end
 
 if iQuiet < 0

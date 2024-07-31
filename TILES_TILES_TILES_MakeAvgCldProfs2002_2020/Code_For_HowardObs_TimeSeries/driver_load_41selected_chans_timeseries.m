@@ -2,9 +2,11 @@ addpath /home/sergio/MATLABCODE
 addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/NANROUTINES
+addpath /home/sergio/MATLABCODE/COLORMAP
 addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
 addpath /asl/matlib/aslutil
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% see /umbc/xfs2/strow/asl/s1/sergio/home/MATLABCODE_Git/PLOTTER/plot_72x64_tiles.m
 india = [1434 2419 2491 2716 2787 2788 2859 2860 2392 3004];
 india = [2716 2787 2788 2859 2860];
@@ -47,6 +49,28 @@ hottest = 4227 : 4248;
 plot_72x64_tiles(hottest);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% DEFINE CHANS AND READ IN DATA
+%{
+disp('see Mitchell_Goldberg-Dissertation.pdf for list of chans : wget https://aosc.umd.edu/sites/default/files/dissertations-theses/Mitchell%20Goldberg-Dissertation.pdf')
+
+  disp('Fig 5.8        667.766 cm-1       1 mb')
+  disp('Fig 5.9        667.715 cm-1       2 mb')
+  disp('Fig 5.9        667.270 cm-1      15 mb')
+  disp('Fig 5.8        667.018 cm-1      25 mb')
+  disp('Fig 4.4        681.457 cm-1      90 mb')
+  disp('Fig 4.5        704.436 cm-1     350 mb')
+  disp('Fig 4.6        723.029 cm-1     700 mb')
+  disp('Fig 4.7        801.099 cm-1     850 mb')
+  disp(' ')
+  disp('Fig 4.8        1519.07 cm-1     315 mb')
+  disp('Fig 4.9        1598.49 cm-1     490 mb  MidTropWV')
+  disp('Fig 5.10       1519.07 cm-1     315 mb  UTWV')
+  disp('Fig 5.1        1520.87 cm-1     315 mb???')
+  disp(' ')
+  disp('Fig 5.4        1040.03 cm-1     80 mb???')
+  disp(' ')
+%}
+
 load h2645structure.mat
 
 chans38 = [        41          54         181         273         317         359         445         449 ...
@@ -64,6 +88,7 @@ disp('---------------------------')
 printarray(arr')
 disp('---------------------------')
 
+%% READ IN DATA
 if ~exist('radA')
   iNumTimeSteps = 487;
   radA = nan(4608,iNumTimeSteps,41,5);
@@ -106,6 +131,7 @@ thetime = a.year_desc + (a.month_desc-1)/12 + (a.day_desc-1)/12/30;
 
 [yyjunk,mmjunk,ddjunk] = tai2utcSergio(a.tai93_desc+offset1958_to_1993);
 d2002junk = change2days(yyjunk,mmjunk,ddjunk,2002);
+daysSince2002 = change2days(a.year_desc,a.month_desc,a.day_desc,2002);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
@@ -118,12 +144,22 @@ set_iQAX
 comment1 = 'chans41L1B = L1B indices = sarta ICHAN eg 1291 = 1231 cm-1;   inds41L1C = L1C indices eg 1520 - Ch!D 1291 = 1231 cm-1 ; freqs41L1C = AIRS L1C channel center freqs; rest is self explanatory';
 comment2 = '4608 tiles x 480 timesteps x 41 channels x 5 quantiles -- D and A; tai_A/D = seconds_since_1993; thetime = simple conversions to yy + mm/12 + dd/12/30';
 comment3 = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/driver_load_41selected_chans_timeseries.m';
-saver = ['save -v7.3 ' fdir0 '/chans41_timeseries.mat radA radD chans41L1B inds41L1C freqs41L1C tai_asc tai_desc iNumTimeSteps fname_example thetime Xlon Ylat comment* iQAX quants'];
+saver = ['save -v7.3 ' fdir0 '/chans41_timeseries.mat radA radD chans41L1B inds41L1C freqs41L1C tai_asc tai_desc iNumTimeSteps fname_example thetime Xlon Ylat comment* iQAX quants daysSince2002'];
 disp('in other window type      watch "ls -lth /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon//chans41_timeseries.mat" ')
 eval(saver)
+
+ix = find(freqs41 >= 1231,1); strix = num2str(round(freqs41(ix)),'%04d');
+ix = find(freqs41 >= 2616,1); strix = num2str(round(freqs41(ix)),'%04d');
+ix = find(freqs41 >= 0727,1); strix = num2str(round(freqs41(ix)),'%04d');
+radAsmall = squeeze(radA(:,:,ix,3));
+radDsmall = squeeze(radD(:,:,ix,3));
+saver = ['save -v7.3 ' fdir0 '/chan_' num2str(ix) '_' strix '_timeseries.mat radAsmall radDsmall tai_asc tai_desc iNumTimeSteps fname_example thetime Xlon Ylat comment* iQAX quants daysSince2002'];
+eval(saver)
+
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% make the plots
 iQPlot = 3; %% Q03
 iQPlot = 5; %% Q05
 iNumYearSmooth = 4;
@@ -131,7 +167,13 @@ iNumYearSmooth = 2;
 
 iNumYearSmooth = 1; iQPlot = 3; %% Q03
 
-daysSince2002 = change2days(a.year_desc,a.month_desc,a.day_desc,2002);
+if ~exist('freqs41')
+  freqs41 = freqs41L1C;
+  iCnt = 4608;
+  do_XX_YY_from_X_Y
+  [a.year_desc,a.month_desc,a.day_desc] = tai2utcSergio(tai_desc+offset1958_to_1993);
+  d2002junk = daysSince2002;
+end
 
 ix = find(freqs41 >= 1419,1); strix = num2str(round(freqs41(ix)),'%04d');
 ix = find(freqs41 >= 2616,1); strix = num2str(round(freqs41(ix)),'%04d');

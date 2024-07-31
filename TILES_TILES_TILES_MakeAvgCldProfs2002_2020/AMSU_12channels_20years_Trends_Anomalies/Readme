@@ -1,0 +1,22 @@
+wwget https://www.star.nesdis.noaa.gov/data/smcd1/class_xfer/data/AMSU_A_only/
+
+a = read_netcdf_lls('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/AMSU_12channels_20years/NOAA-STAR_TCDR_AMSUA_Ch5_Monthly_S199811-E202406_V2.0.nc');
+
+%% May 2021 : gave AIRS_STM presentation on anomaly time series retrievals for (TWP) tile lat = 35, lon = 66
+%% (35-1)*72 + 66 == 2514;      plot_72x64tles(2514,4608)
+lat = find(a.latitude_bounds(1,:) >= 5.5 &  a.latitude_bounds(2,:) <= 8.25);
+lat = find(a.latitude_bounds(1,:) >= 5.0 &  a.latitude_bounds(2,:) <= 8.25);
+lon = find(a.longitude_bounds(1,:) >= 145 &  a.longitude_bounds(2,:) <= 150);
+
+doh = squeeze(a.T_SNO(lon(1),lat(1),:));
+ix = (1:309)-1; ix = 1998 + ix/12;
+plot(ix,doh); grid; xlim([2002.75 2024.75-2-2])
+
+so data since Oct 1998
+[change2days(1998,10,15,1978) a.time(1)]
+[change2days(2024,07,15,1978) a.time(end)]
+
+see channel and noise info eg 
+  https://en.wikipedia.org/wiki/Advanced_microwave_sounding_unit
+  https://space.oscar.wmo.int/instruments/view/amsu_a
+CH 4-14 are tropospheric and stratospheric temperatures, with Ch 4 being "surface" and Ch 14 being "upper strat"

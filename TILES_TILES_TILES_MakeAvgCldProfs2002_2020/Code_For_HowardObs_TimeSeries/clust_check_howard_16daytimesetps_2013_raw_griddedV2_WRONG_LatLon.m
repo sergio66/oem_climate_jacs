@@ -22,8 +22,12 @@ iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
 if length(JOB) == 0
   JOB = 458;  %% last one done to 2022/08
+
   JOB = 479;  %% last one done to 2023/07
   JOB = 487;  %% last one done to 2023/12
+
+  JOB = 498;  %% last one done to 2024/06
+  JOB = 504;  %% last one done to 2024/08
 end
 
 %JOB = 6

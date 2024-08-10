@@ -18,6 +18,15 @@ pa = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+iAMSUorAIRS = -1; %% TO TEST
+iAMSUorAIRS = +1; %% DEFAULT
+
+if iAMSUorAIRS > 0
+  sarta = '/home/sergio/SARTA_CLOUDY_RTP_KLAYERS_NLEVELS/SARTA_MW/mrta_rtp201/BinV201/mwsarta_amsua';
+else
+  sarta = '/home/sergio/SARTA_CLOUDY_RTP_KLAYERS_NLEVELS/JACvers/bin/airs_l1c_2834_cloudy_may19_prod_debug';
+end
+
 numtimes = 101;  
 numtimes = (profxx0.nlevs-1) + 1;
 fprintf(1,'G1 : replicating %3i profiles for p.nlevs = %3i \n',numtimes,profxx0.nlevs);
@@ -34,20 +43,33 @@ if gas > 0
   end
   fprintf(1,'gas multiplier = %8.6f \n',rMult);
   for ii = 1 : (profxx0.nlevs-1)
-    str = ['profyy.gas_' num2str(gas) '(' num2str(ii) ',' num2str(ii) ') = profyy.gas_' num2str(gas) '(' num2str(ii) ',' num2str(ii) ')*' num2str(rMult) ';'];
+    str = ['profyy.gas_' num2str(gas) '(' num2str(ii) ',' num2str(ii) ') = profyy.gas_' num2str(gas) '(' num2str(ii) ',' num2str(ii) ') * ' num2str(rMult) ';'];
     eval(str);
   end 
 
   headyy.nchan = 13;   %%% 13 AMSU chans 
+  if iAMSUorAIRS < 0
+    headyy.nchan = 2378;
+    headyy.ichan = (1:2378)';
+    profyy.robs1 = zeros(2378,numtimes);
+    profyy.rcalc = zeros(2378,numtimes);
+    profyy.nemis = ones(size(profyy.stemp)) * 2;
+    profyy.efreq = [0600 3000]' * ones(size(profyy.stemp));
+    profyy.emis  = [0.99 0.99]' * ones(size(profyy.stemp));
+  end
   rtpwrite(fop,headyy,ha,profyy,pa);
 
-  sarta = '/home/sergio/SARTA_CLOUDY_RTP_KLAYERS_NLEVELS/SARTA_MW/mrta_rtp201/BinV201/mwsarta_amsua';
   amsuer = ['!time ' sarta ' fin=' fop ' fout=' frp ' >& ugh'];
   eval(amsuer);
-
+  
   [hh,hha,pp,ppa] = rtpread(frp);
   tout = pp.rcalc;
-  tout0 = tout(:,profxx.nlevs);
+  tout0 = tout(:,profxx0.nlevs);
+end
+
+if iAMSUorAIRS < 0
+  keyboard_nowindow
+  error('why AIRS?')
 end
 
 
@@ -70,13 +92,12 @@ if gas == -1
   headyy.nchan = 13;   %%% 13 AMSU chans 
   rtpwrite(fop,headyy,ha,profyy,pa);
 
-  sarta = '/home/sergio/SARTA_CLOUDY_RTP_KLAYERS_NLEVELS/SARTA_MW/mrta_rtp201/BinV201/mwsarta_amsua';
   amsuer = ['!time ' sarta ' fin=' fop ' fout=' frp ' >& ugh'];
   eval(amsuer);
 
   [hh,hha,pp,ppa] = rtpread(frp);
   toutT = pp.rcalc;
-  tout0T = toutT(:,profxx.nlevs+1);
+  tout0T = toutT(:,profxx0.nlevs+1);
   %% sum(tout0T-tout0)
 end
 

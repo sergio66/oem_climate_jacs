@@ -17,7 +17,7 @@ addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
 if length(JOB) == 0
-  JOB = 1;
+  JOB = 2000;
 end
 % JOB = 2222
 
@@ -143,6 +143,7 @@ tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate
 % fprintf(1, 'pause for the cause\n')
 % pause(5)
 
+disp('check progress using check_progress_trends_extremes_OR_anomalies.m')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 disp('check if everything is done (all 64 x 72 bins) using    check_progress_trends_extremes_quantiles.m');

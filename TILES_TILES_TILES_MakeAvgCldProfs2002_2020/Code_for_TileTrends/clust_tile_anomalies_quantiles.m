@@ -23,6 +23,8 @@ if length(JOB) == 0
   JOB = 2222;
   JOB = 77;
   JOB = 2787;   %% daytime over India
+  JOB = 719;
+  fprintf(1,'JOB did not exist, setting to %4i \n',JOB)
 end
 
 disp(' ')
@@ -163,6 +165,7 @@ tile_fits_quantiles_anomalies(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate
 % fprintf(1, 'pause for the cause\n')
 % pause(5)
 
+disp('check progress using check_progress_trends_extremes_OR_anomalies.m')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')

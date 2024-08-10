@@ -61,6 +61,13 @@ all_72lonbins.maxBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.minBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.dccBT1231 = nan(iiMax-iiMin+1,maxN);
 
+
+disp(' ')
+disp('WARNING : this reads in ALL files ie essentially does startdateMaster of set_start_stop_dates.m')
+fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)
+disp('WARNING : this reads in ALL files ie essentially does startdateMaster of set_start_stop_dates.m')
+disp(' ')
+
 for ii = iiMin : iiMax
   %if mod(ii,10) == 0
   %  fprintf(1,'+')
@@ -95,6 +102,8 @@ for ii = iiMin : iiMax
     %% very short file
     fdirOUTII    = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/'];
     fnameoutII   = [fdirOUTII '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin_1_72_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
+
+%% ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin18/LonBin01/iQAX_3_summarystats_LatBin18_LonBin01_timesetps_001_091_V1.mat
 
   elseif iQAX == 4
     thedir = dir([fdirIN '/iQAX_4_*.mat']);
@@ -160,6 +169,7 @@ for ii = iiMin : iiMax
   else
     fprintf(1,'%s already exists \n',fnameoutIIJJ);
   end
+  disp(' ')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%

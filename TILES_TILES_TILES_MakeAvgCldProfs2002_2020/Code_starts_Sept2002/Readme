@@ -5,11 +5,32 @@ more Readme
 
 #########################
 MAKE SURE clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m is running off steps and not a list (iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/');
+
+do this for trends paper stuff
+  Check   hugedir = dir('/asl/isilon/airs/tile_test7/');                               %% 480 timesteps till Sep 2023, 2024_s499 = 499 steps till June 2024
+  Check   ls -ltr ../DATAObsStats_StartSept2002/LatBin32/LonBin36/iQAX_3_stats_data_*  %% iQAX_3_stats_data_2024_s499.mat is the last one 
+                                            %% made by clust_check_howard_16daytimesetps_2013_raw_griddedV2.m -> clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
+                                            %% option 10 of sergio_matlab_jobB.sbatch
+  Check   ls -ltr ls -ltr ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3*  %% iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_498_V1.mat is the last one, 
+                                            %% made by cluster_loop_make_correct_timeseriesV2.m 
+                                            %% option 11 of sergio_matlab_jobB.sbatch
+
   ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m clust_check_howard_16daytimesetps_2013_raw_griddedV2.m
   kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 457)
-  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 457)
+  kleenslurm; sbatch             --array=460-499  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 501)
 
-or
+  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 501), edit set_start_stop_dates, 
+                                                                                      this code only does startdateMaster ***
+                                                                                      you need Code_for_TileTrends/clust_tile_fits_quantiles.m to refine the start/stop dates ***
+
+Note : make sure you run        driver_loop_get_asc_desc_solzen_time : makes asc_desc_solzen_time_457_64x72.mat        (or 498 etc), which is needed by 
+       /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA5/get_dates_loop_make_monthly2m_tile_center_asc_or_desc.m
+
+%%%%%%%%%% 
+%%%%%%%%%% 
+%%%%%%%%%% 
+
+or can do this (smaller sets, newer definitions)
   ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
   iQAX =  0; %% quantile and extreme
   iQAX = -1; %% extreme

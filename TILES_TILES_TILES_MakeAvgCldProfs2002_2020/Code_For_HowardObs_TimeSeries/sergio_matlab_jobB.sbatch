@@ -128,6 +128,9 @@ elif [[ "$1" -eq "10" ]]; then
 elif [[ "$1" -eq "11" ]]; then
   echo "cluster_loop_make_correct_timeseriesV2 : FIX Quantile, All or eXtremes"
   matlab -nodisplay -r "cluster_loop_make_correct_timeseriesV2; exit"
+######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
+######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
+######## NOV 2020 : gather howards stats and put them into files, need mucho memory and 4 hours, 400 timesteps -- then read all files and concat the timesteps together
 ##
 ## sbatch -p high_mem --array=1-400%16 sergio_matlab_jobB.sbatch 12
 elif [[ "$1" -eq "12" ]]; then

@@ -94,7 +94,7 @@ else
 end
 fn_summary = fullfile(fdirpre,fn_summary);
 
-%% printVariableLengthArray([i16daysSteps i16daysStepsX])
+%% printarray([i16daysSteps i16daysStepsX])
 
 if exist(fn_summary)
   fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading  << %s >> with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
@@ -131,7 +131,7 @@ dtime = datenum(mtime);
 %% see ../Code_For_HowardObs_TimeSeries/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m -- which makes timestepsStartEnd_2002_09_to_2024_09.mat
 
 disp(' timestep_notfound = ')
-printVariableLengthArray(d.timestep_notfound)
+printarray(d.timestep_notfound)
 if length(setdiff(d.timestep_notfound,iaNoData)) > 0
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')
   disp('>>>>>>>>>>>> oops length(setdiff(d.timestep_notfound,iaNoData)) > 0')

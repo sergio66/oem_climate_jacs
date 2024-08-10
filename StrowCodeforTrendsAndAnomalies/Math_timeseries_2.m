@@ -1,15 +1,16 @@
 function [y g] = Math_timeseries_2(x,c);
+
 % function [y] = Math_timeseries(x,coef)
 % 
 % Usage:
-% x=....
-% y=....
-% fitc=fminsearch(@(c) Math_timeseries_err(x,y,c),[370;1;1;1;1;1;1;1;1;1]);
-% plot(x,y,'b'); hold; plot(x,Math_timeseries(x,fitc),'r');
+%   x = time in days
+%   y = datasignal y(x)
+%   fitc = fminsearch(@(c) Math_timeseries_err(x,y,c),[370;1;1;1;1;1;1;1;1;1]);
+%   plot(x,y,'b'); hold; plot(x,Math_timeseries(x,fitc),'r');
 %
 % OR
 %
-% fitc=fminunc(@(c) Math_timeseries_err(x,y,c),[370;1;1;1;1;1;1;1;1;1]);
+% fitc = fminunc(@(c) Math_timeseries_err(x,y,c),[370;1;1;1;1;1;1;1;1;1]);
 
 y = c(1)       + ...
     c(2)*x/365 ;

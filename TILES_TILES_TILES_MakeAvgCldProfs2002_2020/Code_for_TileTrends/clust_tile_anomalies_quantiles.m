@@ -18,6 +18,7 @@ disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 
+%% kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 10  for clust_tile_anomalies_quantiles.m
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
 if length(JOB) == 0
   JOB = 2222;
@@ -151,7 +152,7 @@ if ~exist(fnout)
 else
   fprintf(1,'fnout = %s already exists\n',fnout)
   disp('fnout already exists')
-  % return
+  return
 end
 
 if ~exist(fdirpre_out)

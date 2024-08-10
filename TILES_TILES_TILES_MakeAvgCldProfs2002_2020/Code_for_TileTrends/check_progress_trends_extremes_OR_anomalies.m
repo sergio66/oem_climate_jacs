@@ -113,9 +113,10 @@ if iCnt > 0
   fprintf(fid,'%s',str);
   iX = nice_output(fid,baddy);   %% now put in continuous strips
   fprintf(1,'length(badanom) = %4i Num Continuous Strips = %4i \n',length(baddy),iX)
-  str = [' sergio_matlab_jobB.sbatch 1'];
+  str = [' sergio_matlab_jobB.sbatchX Y'];
   %% going to call individual processors to do individual profiles
   fprintf(fid,'%s \n',str);
   fclose(fid);
   disp(' ')
+  disp('now check notdone_filelist.sc and change "sergio_matlab_jobB.sbatchX Y" to eg "sergio_matlab_jobB.sbatch 10"  ')
 end

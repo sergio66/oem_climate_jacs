@@ -38,13 +38,13 @@ B(1)   = s(1);    %% offset
 B(2)   = s(2);    %% trend
 B(3:4) = s(3:4);  %% sine/cosine wave amplitude, fundamental
 B(5:6) = s(5:6);  %% sine/cosine wave amplitude, harmonic 2
-sanom = s; sanom(2) = 0; anomaly = fit(sanom);
+sanom = s; sanom(2) = 0; anomaly = y-fit(sanom);
 
 if iDebug > 0
   %xp = linspace(min(x),max(x));
   %figure(1); plot(x,y,'b',  xp,fit(s,xp), 'r'); grid
   figure(1); plot(x,y,'b',  x, fit(s), 'r'); grid
-  figure(2); plot(x,y - anomaly,'b',x,y - fit(s), 'r'); grid
+  figure(2); plot(x,anomaly,'b',x,y - fit(s), 'r'); grid
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

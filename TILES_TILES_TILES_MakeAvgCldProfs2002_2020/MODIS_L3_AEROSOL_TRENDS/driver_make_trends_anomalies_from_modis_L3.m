@@ -1,7 +1,9 @@
+addpath /home/sergio/MATLABCODE
 addpath /home/sergio/MATLABCODE/MODIS_CLOUD
 addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/COLORMAP
+addpath /home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD
 addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
 
 fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/DATA/2024/MYD08_M3.A2024153.061.2024187025207.hdf';
@@ -46,7 +48,7 @@ end
 %    [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);
 
 for jj = 1 : 64
-  fprintf(1,'latbin %2i of 64 \n',jj)
+  fprintf(1,'Math_tsfit_lin_robust latbin %2i of 64 \n',jj)
   for ii = 1 : 72
     data = squeeze(aod(:,ii,jj));
     boo = find(isfinite(data));
@@ -103,16 +105,110 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+for jj = 1 : 64
+  fprintf(1,'Math_sincosfit_wrapper.m latbin %2i of 64 \n',jj)
+  for ii = 1 : 72
+    data = squeeze(aod(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+      scanom_od(ii,jj,:)     = Anom;
+      sctrend_aod(ii,jj)     = B(2);
+      sctrend_aod_unc(ii,jj) = se(2);
+      scavg_aod(ii,jj)       = B(1);
+      scavg_aod_unc(ii,jj)   = se(1);
+    else
+      scanom_od(ii,jj,:)     = NaN;
+      sctrend_aod(ii,jj)     = NaN;
+      sctrend_aod_unc(ii,jj) = NaN;
+      scavg_aod(ii,jj)       = NaN;
+      scavg_aod_unc(ii,jj)   = NaN;
+    end
+
+    data = squeeze(dblue(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+      scanom_deepblue(ii,jj,:)    = Anom;
+      sctrend_deepblue(ii,jj)     = B(2);
+      sctrend_deepblue_unc(ii,jj) = se(2);
+      scavg_deepblue(ii,jj)       = B(1);
+      scavg_deepblue_unc(ii,jj)   = se(1);
+    else
+      scanom_deepblue(ii,jj,:)    = NaN;
+      sctrend_deepblue(ii,jj)     = NaN;
+      sctrend_deepblue_unc(ii,jj) = NaN;
+      scavg_deepblue(ii,jj)       = NaN;
+      scavg_deepblue_unc(ii,jj)   = NaN;
+    end
+
+    data = squeeze(colwv(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+      scanom_colwv(ii,jj,:)    = Anom;
+      sctrend_colwv(ii,jj)     = B(2);
+      sctrend_colwv_unc(ii,jj) = se(2);
+      scavg_colwv(ii,jj)       = B(1);
+      scavg_colwv_unc(ii,jj)   = se(1);
+    else
+      scanom_colwv(ii,jj,:)    = NaN;
+      sctrend_colwv(ii,jj)     = NaN;
+      sctrend_colwv_unc(ii,jj) = NaN;
+      scavg_colwv(ii,jj)       = NaN;
+      scavg_colwv_unc(ii,jj)   = NaN;
+    end
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 doy2002 = doy;
 comment = 'see driver_make_trends_from_modis_L3.m';
 fout = ['modis_L3_aerosol_trends_' num2str(timeS(1),'%04d') '_' num2str(timeS(2),'%04d') '_' num2str(timeE(1),'%04d') '_' num2str(timeE(2),'%04d') '.mat'];
-saver = ['save ' fout ' trend* avg* anom* comment doy2002'];
+saver = ['save ' fout ' trend* avg* anom* sctrend* scavg* scanom* comment doy2002'];
 eval(saver)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 do_XX_YY_from_X_Y
 
+[lenT,lenX,lenY] = size(aod);
+junkcos = ones(lenT,1) * cos(YY*pi/180); junkcos = reshape(junkcos,lenT,72,64);  junkcos = permute(junkcos,[2 3 1]); pcolor(X,Y,squeeze(junkcos(:,:,1))); colormap jet; colorbar
+junkyymm = 2002.75 + ((1:lenT)-1)/12;
+
 jett = jet(128); jett(1,:) = 1;
 jett = jet(2048); jett(1,:) = 1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+for ii = 1 : lenT
+  junk1 = squeeze(anom_od(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  avg_anom_od(ii) = nansum(junk1)/nansum(junk2);
+
+  junk1 = squeeze(scanom_od(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  scavg_anom_od(ii) = nansum(junk1)/nansum(junk2);
+
+  junk1 = squeeze(aod(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
+  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  avg_od_time(ii) = nansum(junk1)/nansum(junk2);
+end
+
+figure(10); clf; plot(junkyymm,avg_od_time)
+
+[B, stats, err] = Math_tsfit_lin_robust(doy(boo),avg_od_time(boo),4);
+  Anom = compute_anomaly(boo,doy,B,[],avg_od_time',-1);
+[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_od_time(boo),4);
+
+printarray([B scB' stats.se se'])
+figure(11); clf; plot(junkyymm,avg_anom_od,'b',junkyymm,Anom,'c',junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
+figure(12); clf; plot(junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1); clf; aslmapSergio(rlat65,rlon73,smoothn(avg_colwv',1),   [-90 +90],[-180 +180]); caxis([0 +1]*60); title('Annual Average : Column Water 72x64'); colormap(jett); colorbar
 figure(2); clf; aslmapSergio(rlat65,rlon73,smoothn(avg_aod',1),     [-90 +90],[-180 +180]); caxis([0 +1]*10); title('Annual Average : AOD 72x64');          colormap(jett); colorbar
@@ -122,12 +218,16 @@ figure(4); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_colwv',1),   [-90 +90],
 figure(5); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : AOD 72x64');          colormap(usa2); colorbar
 figure(6); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
+figure(7); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_colwv',1),   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
+figure(8); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
+figure(9); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
+
 frac_colwv = trend_colwv./(avg_colwv + eps);
 frac_aod = trend_aod./(avg_aod + eps);
 frac_deepblue = trend_deepblue./(avg_deepblue + eps);
-figure(7); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_colwv',1),   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Fractional Trends : Column Water 72x64'); colormap(usa2); colorbar
-figure(8); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : AOD 72x64');          colormap(usa2); colorbar
-figure(9); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : DeepBlue 72x64');     colormap(usa2); colorbar
+figure(10); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_colwv',1),   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Fractional Trends : Column Water 72x64'); colormap(usa2); colorbar
+figure(11); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : AOD 72x64');          colormap(usa2); colorbar
+figure(12); clf; aslmapSergio(rlat65,rlon73,smoothn(frac_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -139,10 +239,15 @@ figure(4); clf; aslmapSergio(rlat65,rlon73,trend_colwv',   [-90 +90],[-180 +180]
 figure(5); clf; aslmapSergio(rlat65,rlon73,trend_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : AOD 72x64');          colormap(usa2); colorbar
 figure(6); clf; aslmapSergio(rlat65,rlon73,trend_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
+figure(7); clf; aslmapSergio(rlat65,rlon73,sctrend_colwv',   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
+figure(8); clf; aslmapSergio(rlat65,rlon73,sctrend_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
+figure(9); clf; aslmapSergio(rlat65,rlon73,sctrend_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
+
 frac_colwv = trend_colwv./(avg_colwv + eps);
 frac_aod = trend_aod./(avg_aod + eps);
 frac_deepblue = trend_deepblue./(avg_deepblue + eps);
-figure(7); clf; aslmapSergio(rlat65,rlon73,frac_colwv',   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Fractional Trends : Column Water 72x64'); colormap(usa2); colorbar
-figure(8); clf; aslmapSergio(rlat65,rlon73,frac_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : AOD 72x64');          colormap(usa2); colorbar
-figure(9); clf; aslmapSergio(rlat65,rlon73,frac_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : DeepBlue 72x64');     colormap(usa2); colorbar
+figure(10); clf; aslmapSergio(rlat65,rlon73,frac_colwv',   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Fractional Trends : Column Water 72x64'); colormap(usa2); colorbar
+figure(11); clf; aslmapSergio(rlat65,rlon73,frac_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : AOD 72x64');          colormap(usa2); colorbar
+figure(12); clf; aslmapSergio(rlat65,rlon73,frac_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Fractional Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
+%%%%%%%%%%%%%%%%%%%%%%%%%

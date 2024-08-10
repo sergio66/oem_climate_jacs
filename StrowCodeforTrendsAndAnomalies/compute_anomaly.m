@@ -33,9 +33,10 @@ end
 r_anom = zeros(size(k));
 bt_anom = zeros(size(k));
 
-[y g] = Math_timeseries_2( dtime(k)-dtime(k(1)), B );   %% y = B(1) + B(2)*dtime + sum_j=1^4 B(j)cos(n*dtime*2*pi) + C(j)sin(n*dtime*2*pi)  = fitted signal
-r_anom(k) = (radiance(k) - y') + g(:,2)*B(2);           %% anomaly = (raw signal - fitted signal) + B(2)*dtime
-%% r_anom(k) = (radiance(k) - y') + 0*g(:,2)*B(2);           %% anomaly = (raw signal - fitted signal) + B(2)*dtime
+%% [y g] = Math_timeseries_2( dtime(k)-1*dtime(k(1)), B );   %% y = B(1) + B(2)*dtime + sum_j=1^4 B(j)cos(n*dtime*2*pi) + C(j)sin(n*dtime*2*pi)  = fitted signal   OLD WRONG SINCE 2018
+%% r_anom(k) = (radiance(k) - y') + 0*g(:,2)*B(2);           %% anomaly = (raw signal - fitted signal) + B(2)*dtime                                                TESTING SOME RUBBISH
+[y g] = Math_timeseries_2( dtime(k)-0*dtime(k(1)), B );      %% y = B(1) + B(2)*dtime + sum_j=1^4 B(j)cos(n*dtime*2*pi) + C(j)sin(n*dtime*2*pi)  = fitted signal   FIXED AUGUSTR 2024
+r_anom(k) = (radiance(k) - y') + g(:,2)*B(2);                %% anomaly = (raw signal - fitted signal) + B(2)*dtime
 
 if iConvertToBT > 0
   % Convert to BT

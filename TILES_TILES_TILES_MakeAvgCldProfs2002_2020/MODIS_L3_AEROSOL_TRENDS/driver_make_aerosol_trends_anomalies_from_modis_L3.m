@@ -3,7 +3,7 @@ addpath /home/sergio/MATLABCODE/MODIS_CLOUD
 addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/COLORMAP
-addpath /home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD
+%% addpath /home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD
 addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
 
 fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/DATA/2024/MYD08_M3.A2024153.061.2024187025207.hdf';
@@ -105,58 +105,80 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for jj = 1 : 64
-  fprintf(1,'Math_sincosfit_wrapper.m latbin %2i of 64 \n',jj)
-  for ii = 1 : 72
-    data = squeeze(aod(:,ii,jj));
-    boo = find(isfinite(data));
-    if length(boo) > 20
-      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
-      scanom_od(ii,jj,:)     = Anom;
-      sctrend_aod(ii,jj)     = B(2);
-      sctrend_aod_unc(ii,jj) = se(2);
-      scavg_aod(ii,jj)       = B(1);
-      scavg_aod_unc(ii,jj)   = se(1);
-    else
-      scanom_od(ii,jj,:)     = NaN;
-      sctrend_aod(ii,jj)     = NaN;
-      sctrend_aod_unc(ii,jj) = NaN;
-      scavg_aod(ii,jj)       = NaN;
-      scavg_aod_unc(ii,jj)   = NaN;
-    end
+scanom_od       = [];
+sctrend_aod     = [];
+sctrend_aod_unc = [];
+scavg_aod       = [];
+scavg_aod_unc   = [];
 
-    data = squeeze(dblue(:,ii,jj));
-    boo = find(isfinite(data));
-    if length(boo) > 20
-      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
-      scanom_deepblue(ii,jj,:)    = Anom;
-      sctrend_deepblue(ii,jj)     = B(2);
-      sctrend_deepblue_unc(ii,jj) = se(2);
-      scavg_deepblue(ii,jj)       = B(1);
-      scavg_deepblue_unc(ii,jj)   = se(1);
-    else
-      scanom_deepblue(ii,jj,:)    = NaN;
-      sctrend_deepblue(ii,jj)     = NaN;
-      sctrend_deepblue_unc(ii,jj) = NaN;
-      scavg_deepblue(ii,jj)       = NaN;
-      scavg_deepblue_unc(ii,jj)   = NaN;
-    end
+scanom_deepblue      = [];
+sctrend_deepblue     = [];
+sctrend_deepblue_unc = [];
+scavg_deepblue       = [];
+scavg_deepblue_unc   = [];
 
-    data = squeeze(colwv(:,ii,jj));
-    boo = find(isfinite(data));
-    if length(boo) > 20
-      [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
-      scanom_colwv(ii,jj,:)    = Anom;
-      sctrend_colwv(ii,jj)     = B(2);
-      sctrend_colwv_unc(ii,jj) = se(2);
-      scavg_colwv(ii,jj)       = B(1);
-      scavg_colwv_unc(ii,jj)   = se(1);
-    else
-      scanom_colwv(ii,jj,:)    = NaN;
-      sctrend_colwv(ii,jj)     = NaN;
-      sctrend_colwv_unc(ii,jj) = NaN;
-      scavg_colwv(ii,jj)       = NaN;
-      scavg_colwv_unc(ii,jj)   = NaN;
+scanom_colwv      = [];
+sctrend_colwv     = [];
+sctrend_colwv_unc = [];
+scavg_colwv       = [];
+scavg_colwv_unc   = [];
+
+iDo_sincosfit = +1; %% TO COMPARE AGAINST ROBUST FIT
+iDo_sincosfit = -1; %% DEFAULT
+if iDo_sincosfit > 0
+  for jj = 1 : 64
+    fprintf(1,'Math_sincosfit_wrapper.m latbin %2i of 64 \n',jj)
+    for ii = 1 : 72
+      data = squeeze(aod(:,ii,jj));
+      boo = find(isfinite(data));
+      if length(boo) > 20
+        [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+        scanom_od(ii,jj,:)     = Anom;
+        sctrend_aod(ii,jj)     = B(2);
+        sctrend_aod_unc(ii,jj) = se(2);
+        scavg_aod(ii,jj)       = B(1);
+        scavg_aod_unc(ii,jj)   = se(1);
+      else
+        scanom_od(ii,jj,:)     = NaN;
+        sctrend_aod(ii,jj)     = NaN;
+        sctrend_aod_unc(ii,jj) = NaN;
+        scavg_aod(ii,jj)       = NaN;
+        scavg_aod_unc(ii,jj)   = NaN;
+      end
+  
+      data = squeeze(dblue(:,ii,jj));
+      boo = find(isfinite(data));
+      if length(boo) > 20
+        [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+        scanom_deepblue(ii,jj,:)    = Anom;
+        sctrend_deepblue(ii,jj)     = B(2);
+        sctrend_deepblue_unc(ii,jj) = se(2);
+        scavg_deepblue(ii,jj)       = B(1);
+        scavg_deepblue_unc(ii,jj)   = se(1);
+      else
+        scanom_deepblue(ii,jj,:)    = NaN;
+        sctrend_deepblue(ii,jj)     = NaN;
+        sctrend_deepblue_unc(ii,jj) = NaN;
+        scavg_deepblue(ii,jj)       = NaN;
+        scavg_deepblue_unc(ii,jj)   = NaN;
+      end
+  
+      data = squeeze(colwv(:,ii,jj));
+      boo = find(isfinite(data));
+      if length(boo) > 20
+        [B, se, Anom] = Math_sincosfit_wrapper(doy(boo),data(boo),4);
+        scanom_colwv(ii,jj,:)    = Anom;
+        sctrend_colwv(ii,jj)     = B(2);
+        sctrend_colwv_unc(ii,jj) = se(2);
+        scavg_colwv(ii,jj)       = B(1);
+        scavg_colwv_unc(ii,jj)   = se(1);
+      else
+        scanom_colwv(ii,jj,:)    = NaN;
+        sctrend_colwv(ii,jj)     = NaN;
+        sctrend_colwv_unc(ii,jj) = NaN;
+        scavg_colwv(ii,jj)       = NaN;
+        scavg_colwv_unc(ii,jj)   = NaN;
+      end
     end
   end
 end
@@ -218,10 +240,12 @@ figure(4); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_colwv',1),   [-90 +90],
 figure(5); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : AOD 72x64');          colormap(usa2); colorbar
 figure(6); clf; aslmapSergio(rlat65,rlon73,smoothn(trend_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
-figure(7); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_colwv',1),   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
-figure(8); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
-figure(9); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
-
+if iDo_sincosfit > 0
+  figure(7); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_colwv',1),   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
+  figure(8); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_aod',1),     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
+  figure(9); clf; aslmapSergio(rlat65,rlon73,smoothn(sctrend_deepblue',1),[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
+end
+  
 frac_colwv = trend_colwv./(avg_colwv + eps);
 frac_aod = trend_aod./(avg_aod + eps);
 frac_deepblue = trend_deepblue./(avg_deepblue + eps);
@@ -239,9 +263,11 @@ figure(4); clf; aslmapSergio(rlat65,rlon73,trend_colwv',   [-90 +90],[-180 +180]
 figure(5); clf; aslmapSergio(rlat65,rlon73,trend_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : AOD 72x64');          colormap(usa2); colorbar
 figure(6); clf; aslmapSergio(rlat65,rlon73,trend_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends : DeepBlue 72x64');     colormap(usa2); colorbar
 
-figure(7); clf; aslmapSergio(rlat65,rlon73,sctrend_colwv',   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
-figure(8); clf; aslmapSergio(rlat65,rlon73,sctrend_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
-figure(9); clf; aslmapSergio(rlat65,rlon73,sctrend_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
+if iDo_sincosfit > 0
+  figure(7); clf; aslmapSergio(rlat65,rlon73,sctrend_colwv',   [-90 +90],[-180 +180]); caxis([-1 +1]*0.5); title('Annual Trends New : Column Water 72x64'); colormap(usa2); colorbar
+  figure(8); clf; aslmapSergio(rlat65,rlon73,sctrend_aod',     [-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : AOD 72x64');          colormap(usa2); colorbar
+  figure(9); clf; aslmapSergio(rlat65,rlon73,sctrend_deepblue',[-90 +90],[-180 +180]); caxis([-1 +1]*0.1); title('Annual Trends New : DeepBlue 72x64');     colormap(usa2); colorbar
+end
 
 frac_colwv = trend_colwv./(avg_colwv + eps);
 frac_aod = trend_aod./(avg_aod + eps);

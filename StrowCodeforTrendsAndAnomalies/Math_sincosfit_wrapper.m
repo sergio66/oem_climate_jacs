@@ -1,12 +1,13 @@
 function [B,se,anomaly] = Math_sincosfit_wrapper(x,y,N,iDebug)
 
 %% input
-%%   x = days
-%%   y = data
-%%   N = number of sines/cosines
+%%   x       = days
+%%   y       = data
+%%   N       = number of sines/cosines
+%%   iDebug  = [optional -1] do not print/print some stuff, plot some stuff
 %% output
-%%   B(1) = costaant, B(2) = trend, B(3:N+2) = sin/cos amplitues
-%%   se   = unc
+%%   B(1)    = costaant, B(2) = trend, B(3:N+2) = sin/cos amplitues
+%%   se      = unc
 %%   anomaly = y - f(const + sum over sines.cosines) ... the trend is kept in there
 
 x0 = x;
@@ -36,6 +37,8 @@ moo = union(moo1,moo2);
 x = x(moo);
 y = y(moo);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if length(x) > 20
   if N == 1
     [B,se,anomaly] = Math_sincosfit1(x,y,iDebug);
@@ -55,7 +58,7 @@ else
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% B(2),se(2) = trend, error in trend, in /day  --> /year
+%% B(2),se(2) = trend, error in trend, change from /day  --> /year
 B(2)  = B(2) * 365;
 se(2) = se(2) * 365;
 

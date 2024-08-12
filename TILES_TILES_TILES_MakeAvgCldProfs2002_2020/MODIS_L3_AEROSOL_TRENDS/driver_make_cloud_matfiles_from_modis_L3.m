@@ -1,5 +1,6 @@
 addpath /home/sergio/MATLABCODE/MODIS_CLOUD
 
+%% see /home/sergio/MATLABCODE_Git/MODIS_CLOUD/modis_l3_fieldnames.mat which is symbolically linked here
 fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/DATA/2024/MYD08_M3.A2024153.061.2024187025207.hdf';
 
 for yy = 2002 : 2024
@@ -23,11 +24,16 @@ for yy = 2002 : 2024
     else
       junk = dir([dir0 fname '*.hdf']);
       thefile = [dir0 junk.name];
-      summary = driver_read_modis_aerosol_monthly_L3(thefile);
-      savematname = ['/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/SUMMARY_MAT/modisL3aerosol_' num2str(yy) '_' num2str(mm,'%02d') '.mat'];
+      summary = driver_read_modis_cloud_monthly_L3(thefile);
+      savematname = ['/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/SUMMARY_MAT/modisL3cloud_' num2str(yy) '_' num2str(mm,'%02d') '.mat'];
       dd = days(mm);
-      saver = ['save ' savematname ' summary yy mm dd'];
-      eval(saver)
+      if ~exist(savematname)
+        fprintf(1,'saving %s \n',savematname)
+        saver = ['save ' savematname ' summary yy mm dd'];
+        eval(saver)
+      else
+        fprintf(1,'not saving %s as it already exists\n',savematname)
+      end
     end
   end
 end

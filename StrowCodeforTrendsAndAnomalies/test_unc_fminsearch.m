@@ -88,8 +88,8 @@ printarray([ab0; abfinal; se]','True value    RetrValue    Unc')
 % 
 % You can find my optimization tips and tricks document at:
 % 
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?
-% objectId=8553&objectType=FILE
+%%%% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.doobjectId=8553&objectType=FILE
+% < https://www.mathworks.com/matlabcentral/fileexchange/8553-optimization-tips-and-tricks > downloaded into TIPS
 % 
 % (Beware, the newsreader tends to wrap these URLs. Paste
 % in BOTH lines!)

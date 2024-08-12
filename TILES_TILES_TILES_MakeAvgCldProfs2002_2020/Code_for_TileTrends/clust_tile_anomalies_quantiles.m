@@ -13,6 +13,12 @@ addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+%% addpath ../Code_For_HowardObs_TimeSeries/Strow_Tiles
+addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
+
+addpath /asl/matlib/aslutil
+addpath /asl/matlib/time
+%addpath /home/strow/Matlab/Math
 
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
@@ -160,7 +166,8 @@ if ~exist(fdirpre_out)
 end
 
 % run the target script
-tile_fits_quantiles_anomalies(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX,iAllorSeason); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+%% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments
+tile_fits_quantiles_anomalies(loni,lati,fdirpre,fnout,i16daysSteps,iQAX,stopdate,startdate,i16daysStepsX,iAllorSeason); 
 
 % only for tests
 % fprintf(1, 'pause for the cause\n')

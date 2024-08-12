@@ -5,8 +5,22 @@ xnargin = nargin;
 
 %% copied from /home/strow/Work/Airs/Tiles/tile_fits.m
 
-addpath ../Code_For_HowardObs_TimeSeries/Strow_Tiles
-%% [bt_anom r_anom] = compute_anomaly(k,dtime,b,f,r);
+%% Method 1 : wrong
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime,b,f,r);
+%% Method 1A : wrong
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime-dtime(1),b,f,r);
+%%
+%% Method 2 : correct
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k)-dtime(k(1)),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime-dtime(1),b,f,r);
+%% Method 3 : correct
+%%   k = find(isfinite(r));
+%%   [b stats bt_anom r_anom] = compute_anomaly_wrapper(dtime(k)-dtime(k(1)),r(k),4,+1,-1);
 
 if nargin < 5
   error('need 5 arguments loni,lati,fdirpre,fout,i16daysSteps [stopdate,startdate,i16daysStepsX] are optional')
@@ -33,10 +47,6 @@ elseif nargin == 8
 elseif nargin == 9
   iAllorSeason = +1;
 end
-
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/time
-addpath /home/strow/Matlab/Math
 
 load_fairs
 
@@ -274,6 +284,9 @@ if iAllorSeason < 0
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+iRightOrWrong = -1; %% orig, since 2018
+iRightOrWrong = +1; %% new, since 2024
+
 warning off   
 for qi = 1:numQuant
   fprintf(1,'qi = %2i of %2i \n',qi,numQuant);
@@ -287,20 +300,52 @@ for qi = 1:numQuant
     % Desc
     r = squeeze(d.rad_quantile_desc(:,ch,qi));
     bt_desc(ch,qi) = nanmean(rad2bt(fairs(ch),squeeze(d.rad_quantile_desc(:,ch,qi))));
-    [b_desc(ch,qi,:)     stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
-    [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);      
-    %[boo roo] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);
-    %plot(dtime(k_desc),roo,dtime(k_desc),r(k_desc)-mean(r(k_desc)))
+    if iRightOrWrong < 0
+      [b_desc(ch,qi,:)     stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
+      berr_desc(ch,qi,:)  = stats.se;
+      %% [bt_anom r_anom] = compute_anomaly(k,dtime,B,f,radiance,iConvertToBT);
+      [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly0(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);      
+    else
+      %% [B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(k,x0,y0,N,f,iRad_or_OD,iDebug)
+      [junkB junkstats junkbtanom junkradanom] = compute_anomaly_wrapper(k_desc,dtime,r,iNumSineCosCycles,fairs(ch),+1,-1);
+      b_desc(ch,qi,:)        = junkB;
+      berr_desc(ch,qi,:)     = junkstats.se;
+      bt_anom_desc(qi,ch,:)  = junkbtanom(k_desc); 
+      rad_anom_desc(qi,ch,:) = junkradanom(k_desc); 
+    end
 
     % Asc
     r = squeeze(d.rad_quantile_asc(:,ch,qi));
     bt_asc(ch,qi) = nanmean(rad2bt(fairs(ch),squeeze(d.rad_quantile_asc(:,ch,qi))));
-    [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),r(k_asc),iNumSineCosCycles);
-    [bt_anom_asc(qi,ch,:) rad_anom_asc(qi,ch,:)] = compute_anomaly(k_asc,dtime,squeeze(b_asc(ch,qi,:)),fairs(ch),r);      
-    %[boo roo] = compute_anomaly(k_asc,dtime,squeeze(b_asc(ch,qi,:)),fairs(ch),r);
-    %plot(dtime(k_asc),roo,dtime(k_asc),r(k_asc)-mean(r(k_asc)))
+    if iRightOrWrong < 0
+      [b_asc(ch,qi,:) stats] = Math_tsfit_lin_robust(dtime(k_asc)-dtime(k_asc(1)),r(k_asc),iNumSineCosCycles);
+      berr_asc(ch,qi,:)   = stats.se;
+      %% [bt_anom r_anom] = compute_anomaly(k,dtime,B,f,radiance,iConvertToBT);
+      [bt_anom_asc(qi,ch,:) rad_anom_asc(qi,ch,:)] = compute_anomaly0(k_asc,dtime,squeeze(b_asc(ch,qi,:)),fairs(ch),r);      
+    else
+      %% [B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(k,x0,y0,N,f,iRad_or_OD,iDebug)
+      [junkB junkstats junkbtanom junkradanom] = compute_anomaly_wrapper(k_asc,dtime,r,iNumSineCosCycles,fairs(ch),+1,-1);
+      b_asc(ch,qi,:)         = junkB;
+      berr_asc(ch,qi,:)      = junkstats.se;
+      bt_anom_asc(qi,ch,:)   = junkbtanom(k_asc); 
+      %rad_anom_asc(qi,ch,:) = junkradanom(k_asc); 
+    end
   end
   fprintf(1,'\n');
+
+  % Convert b_trends and uncertainties to BT units
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>
+  %      b_asc(iLon,iLat,:) = x.dbt_asc(:,iQuantile);
+  %      b_desc(iLon,iLat,:) = x.dbt_desc(:,iQuantile);
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>
+
+  deriv = drdbt(fairs,rad2bt(fairs,squeeze(b_desc(:,qi,1))));
+  dbt_desc(:,qi)     = b_desc(:,qi,2)./deriv;
+  dbt_err_desc(:,qi) = berr_desc(:,qi,2)./deriv;
+  deriv = drdbt(fairs,rad2bt(fairs,squeeze(b_asc(:,qi,1))));
+  dbt_asc(:,qi)     = b_asc(:,qi,2)./deriv;
+  dbt_err_asc(:,qi) = berr_asc(:,qi,2)./deriv;
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>
 
 end
 warning on
@@ -328,15 +373,15 @@ rtime_desc = rtime(k_desc);
 [yy_asc mm_asc dd_asc hh_asc] = tai2utcSergio(rtime(k_asc));
 
 if ~exist(fnout)
-  fprintf(1,'saving to %s \n',fnout);
-  saver = ['save -v7.3 ' fnout ' bt_anom* rad_anom* rtime* yy_* mm_* dd_* hh_* bt_desc bt_asc b_desc b_asc'];
-  eval(saver);
+  fprintf(1,'tile_fits_quantiles_anomalies.m : saving to %s \n',fnout);
 else
-  fprintf(1,'oops %s already exists \n',fnout)
-  fprintf(1,'saving to %s \n',fnout);
-  saver = ['save -v7.3 ' fnout ' bt_anom* rad_anom* rtime* yy_* mm_* dd_* hh_* bt_desc bt_asc b_desc b_asc'];
-  eval(saver);
+  fprintf(1,'tile_fits_quantiles_anomalies.m : oops %s already exists \n',fnout)
+  error('not saving');
 end
+
+saver = ['save -v7.3 ' fnout ' bt_anom* rad_anom* rtime* yy_* mm_* dd_* hh_* bt_desc bt_asc b_desc b_asc'];
+saver = ['save -v7.3 ' fnout ' bt_anom* rad_anom* rtime* yy_* mm_* dd_* hh_* bt_desc bt_asc b_desc b_asc dbt_desc dbt_err_desc dbt_asc dbt_err_asc'];
+eval(saver);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{

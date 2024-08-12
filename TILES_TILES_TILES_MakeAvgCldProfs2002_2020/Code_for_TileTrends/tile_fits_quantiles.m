@@ -388,13 +388,17 @@ for qi = 1:numQuant
   end
 
   % Convert b_trends and uncertainties to BT units
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>
+  %      b_asc(iLon,iLat,:) = x.dbt_asc(:,iQuantile);
+  %      b_desc(iLon,iLat,:) = x.dbt_desc(:,iQuantile);
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>
   deriv = drdbt(fairs,rad2bt(fairs,squeeze(b_desc(:,qi,1))));
   dbt_desc(:,qi)     = b_desc(:,qi,2)./deriv;
   dbt_err_desc(:,qi) = berr_desc(:,qi,2)./deriv;
-     
   deriv = drdbt(fairs,rad2bt(fairs,squeeze(b_asc(:,qi,1))));
   dbt_asc(:,qi)     = b_asc(:,qi,2)./deriv;
   dbt_err_asc(:,qi) = berr_asc(:,qi,2)./deriv;
+  % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>     
      
   % Correct dbt_ for lag-1 correlations (note b*(:,2) values NOT corrected for lag-1)
   lagc = sqrt( ( 1 + lag_desc(:,qi) ) ./ ( 1 - lag_desc(:,qi) ) ) ;

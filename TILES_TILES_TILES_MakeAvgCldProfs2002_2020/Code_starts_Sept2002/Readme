@@ -16,12 +16,21 @@ do this for trends paper stuff
                                             %% option 11 of sergio_matlab_jobB.sbatch
 
   ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m clust_check_howard_16daytimesetps_2013_raw_griddedV2.m
-  kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 457)
-  kleenslurm; sbatch             --array=460-499  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 501)
+  kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 457)  2002/09-2022/08
+  kleenslurm; sbatch             --array=460-499  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 502)  2002/09-2024/08
 
-  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 501), edit set_start_stop_dates, 
-                                                                                      this code only does startdateMaster ***
-                                                                                      you need Code_for_TileTrends/clust_tile_fits_quantiles.m to refine the start/stop dates ***
+  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 502), edit set_start_stop_dates.m, 
+                 startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 22.95 years, 501 steps **********
+                                                                                      *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
+                                                                                      *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
+                                                                                      *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
+                                                                                      *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
+                                                                                      *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
+                                                                                      *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
+
+Note driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m  makes  
+     Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM
+which all all StartTime[YY/MM/DD] and StopTime[YY/MM/DD] from 2002/09/01 as a sequence of steps
 
 Note : make sure you run        driver_loop_get_asc_desc_solzen_time : makes asc_desc_solzen_time_457_64x72.mat        (or 498 etc), which is needed by 
        /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA5/get_dates_loop_make_monthly2m_tile_center_asc_or_desc.m

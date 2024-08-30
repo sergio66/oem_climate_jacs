@@ -64,8 +64,15 @@ y = y(good);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[B, stats]             = Math_tsfit_lin_robust(x-x(1),y,4);
-[btanomaly,radanomaly] = compute_anomaly(1:length(x),x-x(1),B,f,y,iRad_or_OD);
+if length(x) > 2 + N*2
+  [B, stats]             = Math_tsfit_lin_robust(x-x(1),y,N);
+  [btanomaly,radanomaly] = compute_anomaly(1:length(x),x-x(1),B,f,y,iRad_or_OD);
+else
+  B = nan(1,2 + N*2);
+  stats.se = nan(1,2 + N*2);
+  btanomaly = nan(size(x));
+  radanomaly = nan(size(x));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

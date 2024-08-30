@@ -1,0 +1,42 @@
+https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/science-domain/cloud/
+
+The MODIS Cloud Properties products combine infrared and visible data
+observations to determine both physical and radiative cloud
+properties. This suite offers daily global Level-2 data
+products. Cloud-particle phase (ice vs. water, clouds vs. snow),
+effective cloud-particle radius, and cloud optical thickness are
+derived using the MODIS visible and near-infrared channel
+radiances. An indication of cloud shadows affecting the scene is also
+provided. Cloud-top temperature, height, effective emissivity, phase
+(ice vs. water, opaque vs. non-opaque), and cloud fraction are
+produced by the infrared retrieval methods for both day and night at
+5x5 1-km-pixel resolution. Finally, this MODIS product includes cirrus
+reflectance at visible wavelength at 1-km-pixel resolution, which is
+useful for removing cirrus scattering effects from the land-surface
+reflectance product. This suite contains two MODIS Cloud products:
+MOD06_L2, containing data collected from the Terra platform, and
+MYD06_L2, containing data collected from the Aqua platform.
+
+Another set of daily (MCD06COSP_D3_MODIS) and monthly
+(MCD06COSP_M3_MODIS) products is the Level-3 Cloud Feedback Model
+Intercomparison Project (CFMIP) Observation Simulator Package, which
+is a combined Aqua and Terra MODIS product that is designed to
+facilitate climate scientists to compare models and observations by
+producing synthetic MODIS observations from climate model
+integrations.
+
+Product Information
+Cloud Optical Properties: Steve Platnick
+Cloud Top Properties: Steve Ackerman
+Cloud Properties: Robert Pincus
+Validation 
+Cloud Product Home Page 
+Documentation, Guides, ATBD 
+Data Issues & Quality Statements 
+Digital Object Identifier (DOI) Reference 
+Product Details
+Product Name	Terra	Aqua
+Clouds 5-Min L2 Swath 1km and 5km		
+Product Name Combined Aqua+Terra
+Cloud Properties Level 3 daily, 1x1 degree grid	
+Cloud Properties Level 3 monthly, 1x1 degree grid	

@@ -13,6 +13,8 @@ function [x_anom b stats] = generic_compute_anomaly(dtime,r,k,iWhich,iNterms);
 %
 % x_anom is the output anomaly
 
+% error('use compute_anomaly_wrapper instead')
+
 boo = find(isfinite(r));
 if length(boo) < 10
   x_anom = nan(size(r));

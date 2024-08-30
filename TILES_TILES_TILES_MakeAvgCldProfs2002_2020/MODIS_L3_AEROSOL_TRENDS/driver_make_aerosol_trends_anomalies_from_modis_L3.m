@@ -9,9 +9,9 @@ addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAnd
 fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/DATA/2024/MYD08_M3.A2024153.061.2024187025207.hdf';
 
 timeS = [2019 01]; timeE = [2021 12];  %% COVID
-timeS = [2020 07]; timeE = [2024 06];  %% last 4 years
 timeS = [2002 09]; timeE = [2022 08];  %% 20 years
 timeS = [2002 09]; timeE = [2024 06];  %% 22.5 years
+timeS = [2020 07]; timeE = [2024 06];  %% last 4 years
 
 iCnt = 0;
 for yy = timeS(1) : timeE(1)
@@ -30,9 +30,15 @@ for yy = timeS(1) : timeE(1)
     savematname = ['/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/SUMMARY_MAT/modisL3aerosol_' num2str(yy) '_' num2str(mm,'%02d') '.mat'];
     a = load(savematname);
     iCnt = iCnt + 1;
+
     aod(iCnt,:,:)   = a.summary.AOD_72x64;
     dblue(iCnt,:,:) = a.summary.DeepBlue_72x64;
     colwv(iCnt,:,:) = a.summary.ColumnWV_72x64;
+
+    aodALL(iCnt,:,:)   = a.summary.AOD;
+    dblueALL(iCnt,:,:) = a.summary.DeepBlue;
+    colwvALL(iCnt,:,:) = a.summary.ColumnWV;
+
     yyseries(iCnt) = yy;
     mmseries(iCnt) = mm;
     ddseries(iCnt) = a.dd;
@@ -40,12 +46,41 @@ for yy = timeS(1) : timeE(1)
   end
 end
 
+figure(3); pcolor(squeeze(nanmean(aodALL,1))'); shading interp; colormap(jet); colorbar; title('Avg CldFrac 360 x 180');
+figure(4); pcolor(squeeze(nanmean(aod,1))');    shading interp; colormap(jet); colorbar; title('Avg CldFrac 72 x 64');
+
+pause(1)
+%disp('ret to continue'); pause
+
+yymm = yyseries + (mmseries-1)/12;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% see ../Code_for_TileTrends/tile_fits_quantiles_anomalies.m
 
 %    [b_desc(ch,qi,:)     stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
 %    [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);
+%    [b_desc(ch,qi,:)  stats bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly_wrapper(k_desc,dtime,r,4,fairs(ch),+1,-1;
+
+coslat    = cos(meanvaluebin(a.summary.LatitudeBins)*pi/180);
+coslatAll = cos(meanvaluebin(a.summary.LatitudeBins'         )*pi/180) * ones(1,iCnt);
+
+for ii = 1 : 180
+  junk = squeeze(aodALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_aod(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+figure(3); clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_aod); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.25)
+figure(3); clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_aod); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.25)
+title('Aerosol Frac Anomaly')
+
+for ii = 1 : 360
+  junk = squeeze(aodALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_aod(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+figure(4); clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_aod); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.25)
+title('Aerosol Frac Anomaly Meridional')
+
+%%%%%
 
 for jj = 1 : 64
   fprintf(1,'Math_tsfit_lin_robust latbin %2i of 64 \n',jj)
@@ -188,7 +223,7 @@ end
 doy2002 = doy;
 comment = 'see driver_make_trends_from_modis_L3.m';
 fout = ['modis_L3_aerosol_trends_' num2str(timeS(1),'%04d') '_' num2str(timeS(2),'%04d') '_' num2str(timeE(1),'%04d') '_' num2str(timeE(2),'%04d') '.mat'];
-saver = ['save ' fout ' trend* avg* anom* sctrend* scavg* scanom* comment doy2002'];
+saver = ['save ' fout ' trend* avg* anom* sctrend* scavg* scanom* comment doy2002 yyseries mmseries ddseries yymm'];
 eval(saver)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -211,9 +246,9 @@ for ii = 1 : lenT
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
   avg_anom_od(ii) = nansum(junk1)/nansum(junk2);
 
-  junk1 = squeeze(scanom_od(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
-  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  scavg_anom_od(ii) = nansum(junk1)/nansum(junk2);
+  %junk1 = squeeze(scanom_od(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  %junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  %scavg_anom_od(ii) = nansum(junk1)/nansum(junk2);
 
   junk1 = squeeze(aod(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
@@ -227,8 +262,8 @@ figure(10); clf; plot(junkyymm,avg_od_time)
 [scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_od_time(boo),4);
 
 printarray([B scB' stats.se se'])
-figure(11); clf; plot(junkyymm,avg_anom_od,'b',junkyymm,Anom,'c',junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
-figure(12); clf; plot(junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
+%figure(11); clf; plot(junkyymm,avg_anom_od,'b',junkyymm,Anom,'c',junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
+%figure(12); clf; plot(junkyymm,scavg_anom_od,'r',junkyymm,scAnom,'m')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 

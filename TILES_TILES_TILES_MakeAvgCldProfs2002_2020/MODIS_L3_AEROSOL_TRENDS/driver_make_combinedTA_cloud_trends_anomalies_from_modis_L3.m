@@ -15,7 +15,7 @@ Huan Liu, Ilan Koren, Orit Altaratz, and Mickaël D. Chekroun
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/DATA/2024/MYD08_M3.A2024153.061.2024187025207.hdf';
+fname =  '/asl/s1/sergio/MODIS_MONTHLY_L3/CombinedTerraAqua/DATA/2002/MCD06COSP_M3_MODIS.A2002213.062.2022168173309.nc';
 
 addpath /home/sergio/MATLABCODE/COLORMAP/COLORBREWER/cbrewer/cbrewer
 blues = flipud(cbrewer('seq', 'Blues', 256));
@@ -40,7 +40,7 @@ if ~exist('od_liq')
     end
     for mm = mmS : mmE
       fprintf(1,'%4i/%2i \n',yy,mm)
-      savematname = ['/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/SUMMARY_MAT/modisL3cloud_' num2str(yy) '_' num2str(mm,'%02d') '.mat'];
+      savematname = ['/asl/s1/sergio/MODIS_MONTHLY_L3/AEROSOL/SUMMARY_MAT/modisL3_combinedTA_cloud_' num2str(yy) '_' num2str(mm,'%02d') '.mat'];
       a = load(savematname);
       iCnt = iCnt + 1;
       
@@ -52,10 +52,16 @@ if ~exist('od_liq')
       dme_ice(iCnt,:,:)  = a.summary.CloudDME_Ice_72x64;
       cldtop(iCnt,:,:)   = a.summary.CloudTopP_72x64;
       cldfrac(iCnt,:,:)  = a.summary.CloudFrac_72x64;
-      cldtopD(iCnt,:,:)   = a.summary.CloudTopP_Day_72x64;
-      cldfracD(iCnt,:,:)  = a.summary.CloudFrac_Day_72x64;
-      cldtopN(iCnt,:,:)   = a.summary.CloudTopP_Night_72x64;
-      cldfracN(iCnt,:,:)  = a.summary.CloudFrac_Night_72x64;
+      cldfracLo(iCnt,:,:)  = a.summary.CloudFracLo_72x64;
+      cldfracMid(iCnt,:,:) = a.summary.CloudFracMid_72x64;
+      cldfracHi(iCnt,:,:)  = a.summary.CloudFracHi_72x64;
+      %cldtopD(iCnt,:,:)   = a.summary.CloudTopP_Day_72x64;
+      %cldfracD(iCnt,:,:)  = a.summary.CloudFrac_Day_72x64;
+      %cldtopN(iCnt,:,:)   = a.summary.CloudTopP_Night_72x64;
+      %cldfracN(iCnt,:,:)  = a.summary.CloudFrac_Night_72x64;
+      cldfracRetr(iCnt,:,:)     = a.summary.CloudRetrFrac_72x64;
+      cldfracRetr_ice(iCnt,:,:) = a.summary.CloudRetrFrac_Ice_72x64;;
+      cldfracRetr_liq(iCnt,:,:) = a.summary.CloudRetrFrac_Liq_72x64;;
 
       od_liqALL(iCnt,:,:)   = a.summary.CloudOD_Liq;
       od_iceALL(iCnt,:,:)   = a.summary.CloudOD_Ice;
@@ -65,10 +71,16 @@ if ~exist('od_liq')
       dme_iceALL(iCnt,:,:)  = a.summary.CloudDME_Ice;
       cldtopALL(iCnt,:,:)   = a.summary.CloudTopP;
       cldfracALL(iCnt,:,:)  = a.summary.CloudFrac;
-      cldtopALLD(iCnt,:,:)   = a.summary.CloudTopP_Day;
-      cldfracALLD(iCnt,:,:)  = a.summary.CloudFrac_Day;
-      cldtopALLN(iCnt,:,:)   = a.summary.CloudTopP_Night;
-      cldfracALLN(iCnt,:,:)  = a.summary.CloudFrac_Night;
+      cldfracLoALL(iCnt,:,:)  = a.summary.CloudFracLo;
+      cldfracMidALL(iCnt,:,:) = a.summary.CloudFracMid;
+      cldfracHiALL(iCnt,:,:)  = a.summary.CloudFracHi;
+      %cldtopALLD(iCnt,:,:)   = a.summary.CloudTopP_Day;
+      %cldfracALLD(iCnt,:,:)  = a.summary.CloudFrac_Day;
+      %cldtopALLN(iCnt,:,:)   = a.summary.CloudTopP_Night;
+      %cldfracALLN(iCnt,:,:)  = a.summary.CloudFrac_Night;
+      cldfracRetrALL(iCnt,:,:)     = a.summary.CloudRetrFrac;
+      cldfracRetr_iceALL(iCnt,:,:) = a.summary.CloudRetrFrac_Ice;
+      cldfracRetr_liqALL(iCnt,:,:) = a.summary.CloudRetrFrac_Liq;
 
       yyseries(iCnt) = yy;
       mmseries(iCnt) = mm;
@@ -78,12 +90,18 @@ if ~exist('od_liq')
   end
 end
 
-figure(1); clf; pcolor(squeeze(nanmean(cldfracALL,1))');  shading interp; colormap(blues); colorbar; title('Avg CldFracA 360 x 180');
-figure(2); clf; pcolor(squeeze(nanmean(cldfracALLD,1))'); shading interp; colormap(blues); colorbar; title('Avg CldFracD 360 x 180');
-figure(3); clf; pcolor(squeeze(nanmean(cldfracALLN,1))'); shading interp; colormap(blues); colorbar; title('Avg CldFracN 360 x 180');
-figure(4); clf; pcolor(squeeze(nanmean(cldfrac,1))');     shading interp; colormap(blues); colorbar; title('Avg CldFracA 72 x 64');
-figure(5); clf; pcolor(squeeze(nanmean(cldfracD,1))');    shading interp; colormap(blues); colorbar; title('Avg CldFracD 72 x 64');
-figure(6); clf; pcolor(squeeze(nanmean(cldfracN,1))');    shading interp; colormap(blues); colorbar; title('Avg CldFracN 72 x 64');
+figure(1); clf; pcolor(squeeze(nanmean(cldfracALL,1))');    shading interp; colormap(blues); colorbar; title('Avg CldFracAll 360 x 180');
+figure(2); clf; pcolor(squeeze(nanmean(cldfracLoALL,1))');  shading interp; colormap(blues); colorbar; title('Avg CldFracLo 360 x 180');
+figure(3); clf; pcolor(squeeze(nanmean(cldfracMidALL,1))'); shading interp; colormap(blues); colorbar; title('Avg CldFracMid 360 x 180');
+figure(4); clf; pcolor(squeeze(nanmean(cldfracHiALL,1))');  shading interp; colormap(blues); colorbar; title('Avg CldFracHi 360 x 180');
+figure(5); clf; pcolor(squeeze(nanmean(cldfrac,1))');       shading interp; colormap(blues); colorbar; title('Avg CldFracAll 72 x 64');
+figure(6); clf; pcolor(squeeze(nanmean(cldfracLo,1))');     shading interp; colormap(blues); colorbar; title('Avg CldFracLo 72 x 64');
+figure(7); clf; pcolor(squeeze(nanmean(cldfracMid,1))');    shading interp; colormap(blues); colorbar; title('Avg CldFracMid 72 x 64');
+figure(8); clf; pcolor(squeeze(nanmean(cldfracHi,1))');     shading interp; colormap(blues); colorbar; title('Avg CldFracHi 72 x 64');
+
+figure(9); clf; pcolor(squeeze(nanmean(cldfracRetr,1))');       shading interp; colormap(blues); colorbar; title('Avg CldFracRetr 72 x 64');
+figure(10); clf; pcolor(squeeze(nanmean(cldfracRetr_ice,1))');  shading interp; colormap(blues); colorbar; title('Avg CldFracRetrIce 72 x 64');
+figure(11); clf; pcolor(squeeze(nanmean(cldfracRetr_liq,1))');  shading interp; colormap(blues); colorbar; title('Avg CldFracRetrLiq 72 x 64');
 
 pause(1)
 disp('ret to continue'); pause
@@ -112,20 +130,54 @@ clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfrac); shading in
 title('Cld Frac Anomaly')
 
 for ii = 1 : 180
-  junk = squeeze(cldfracALLD(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_zonal_anom_cldfracD(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+  junk = squeeze(cldfracLoALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracLo(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
 end
-clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracD); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracD); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-title('Cld Frac D Anomaly')
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracLo); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracLo); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Lo Anomaly')
 
 for ii = 1 : 180
-  junk = squeeze(cldfracALLN(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_zonal_anom_cldfracN(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+  junk = squeeze(cldfracMidALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracMid(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
 end
-clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracN); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracN); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-title('Cld Frac N Anomaly')
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracMid); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracMid); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Mid Anomaly')
+
+for ii = 1 : 180
+  junk = squeeze(cldfracHiALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracHi(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracHi); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracHi); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Hi Anomaly')
+
+for ii = 1 : 180
+  junk = squeeze(cldfracRetrALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracRetr(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracRetr); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracRetr); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Anomaly')
+
+for ii = 1 : 180
+  junk = squeeze(cldfracRetr_iceALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracRetr_ice(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracRetr_ice); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracRetr_ice); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Ice Anomaly')
+
+for ii = 1 : 180
+  junk = squeeze(cldfracRetr_liqALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_cldfracRetr_liq(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldfracRetr_liq); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldfracRetr_liq); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Liq Anomaly')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for ii = 1 : 360
   junk = squeeze(cldfracALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
@@ -135,18 +187,49 @@ clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfrac); shading interp; 
 title('Cld Frac Anomaly Meridional')
 
 for ii = 1 : 360
-  junk = squeeze(cldfracALLD(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_meridional_anom_cldfracD(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+  junk = squeeze(cldfracLoALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracLo(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
 end
-clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracD); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-title('Cld Frac D Anomaly Meridional')
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracLo); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Lo Anomaly Meridional')
 
 for ii = 1 : 360
-  junk = squeeze(cldfracALLN(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_meridional_anom_cldfracN(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+  junk = squeeze(cldfracMidALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracMid(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
 end
-clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracN); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
-title('Cld Frac N Anomaly Meridional')
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracMid); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Mid Anomaly Meridional')
+
+for ii = 1 : 360
+  junk = squeeze(cldfracHiALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracHi(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracHi); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Hi Anomaly Meridional')
+
+
+
+
+for ii = 1 : 360
+  junk = squeeze(cldfracRetrALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracRetr(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracRetr); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Anomaly Meridional')
+
+for ii = 1 : 360
+  junk = squeeze(cldfracRetr_iceALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracRetrIce(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracRetrIce); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Ice Anomaly Meridional')
+
+for ii = 1 : 360
+  junk = squeeze(cldfracRetr_liqALL(:,ii,:)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_meridional_anom_cldfracRetrLiq(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+end
+clf; pcolor(yymm,-179.5:1:+179.5,xavg_meridional_anom_cldfracRetrLiq); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*0.15)
+title('Cld Frac Retr Liq Anomaly Meridional')
 
 %%%%%
 
@@ -157,22 +240,6 @@ end
 clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldtop); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
 clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldtop); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
 title('Cld Top Anomaly')
-
-for ii = 1 : 180
-  junk = squeeze(cldtopALLD(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_zonal_anom_cldtopD(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
-end
-clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldtopD); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
-clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldtopD); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
-title('Cld Top D Anomaly')
-
-for ii = 1 : 180
-  junk = squeeze(cldtopALLN(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_zonal_anom_cldtopN(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
-end
-clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_cldtopN); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
-clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_cldtopN); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*50.0)
-title('Cld Top N Anomaly')
 
 %%%%%
 
@@ -209,17 +276,22 @@ for ii = 1 : iCnt; junk = nanmean(squeeze(od_liqALL(ii,:,:)),1); boo = find(isfi
 
 for ii = 1 : iCnt; junk = nanmean(squeeze(cldtopALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
   [B,err,xavg_anom_cldtop] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
-for ii = 1 : iCnt; junk = nanmean(squeeze(cldtopALLD(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
-  [B,err,xavg_anom_cldtopD] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
-for ii = 1 : iCnt; junk = nanmean(squeeze(cldtopALLN(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
-  [B,err,xavg_anom_cldtopN] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
 
 for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
   [B,err,xavg_anom_cldfrac] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
-for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracALLD(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
-  [B,err,xavg_anom_cldfracD] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
-for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracALLN(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
-  [B,err,xavg_anom_cldfracN] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracLoALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracLo] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracMidALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracMid] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracHiALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracHi] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracRetrALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracRetr] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracRetr_iceALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracRetr_Ice] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
+for ii = 1 : iCnt; junk = nanmean(squeeze(cldfracRetr_liqALL(ii,:,:)),1); boo = find(isfinite(junk)); data(ii) = nansum(junk(boo).*coslat(boo))/sum(coslat(boo)); end
+  [B,err,xavg_anom_cldfracRetr_Liq] = compute_anomaly_wrapper(1:iCnt,doy,data,4,-1,-1);
 
 figure(22); clf;
 plot(yymm,(xavg_anom_od_ice+xavg_anom_od_liq)*1,'r',yymm,xavg_anom_cldfrac*50,'b',yymm,xavg_anom_cldtop/10,'k','linewidth',2);
@@ -353,40 +425,6 @@ for jj = 1 : 64
       avg_cldtop_unc(ii,jj)   = nan;
     end
 
-    data = squeeze(cldtopD(:,ii,jj));
-    boo = find(isfinite(data));
-    if length(boo) > 20
-      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
-      anom_cldtopD(ii,jj,:)    = junkanom;
-      trend_cldtopD(ii,jj)     = B(2);
-      trend_cldtopD_unc(ii,jj) = stats.se(2);
-      avg_cldtopD(ii,jj)       = B(1);
-      avg_cldtopD_unc(ii,jj)   = stats.se(1);
-    else
-      anom_cldtopD(ii,jj,:)    = nan(1,length(data));
-      trend_cldtopD(ii,jj)     = nan;
-      trend_cldtopD_unc(ii,jj) = nan;
-      avg_cldtopD(ii,jj)       = nan;
-      avg_cldtopD_unc(ii,jj)   = nan;
-    end
-
-    data = squeeze(cldtopN(:,ii,jj));
-    boo = find(isfinite(data));
-    if length(boo) > 20
-      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
-      anom_cldtopN(ii,jj,:)    = junkanom;
-      trend_cldtopN(ii,jj)     = B(2);
-      trend_cldtopN_unc(ii,jj) = stats.se(2);
-      avg_cldtopN(ii,jj)       = B(1);
-      avg_cldtopN_unc(ii,jj)   = stats.se(1);
-    else
-      anom_cldtopN(ii,jj,:)    = nan(1,length(data));
-      trend_cldtopN(ii,jj)     = nan;
-      trend_cldtopN_unc(ii,jj) = nan;
-      avg_cldtopN(ii,jj)       = nan;
-      avg_cldtopN_unc(ii,jj)   = nan;
-    end
-
     %%%%%
 
     data = squeeze(cldfrac(:,ii,jj));
@@ -406,40 +444,112 @@ for jj = 1 : 64
       avg_cldfrac_unc(ii,jj)   = nan;
     end
 
-    data = squeeze(cldfracD(:,ii,jj));
+    data = squeeze(cldfracLo(:,ii,jj));
     boo = find(isfinite(data));
     if length(boo) > 20
       [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
-      anom_cldfracD(ii,jj,:)    = junkanom;
-      trend_cldfracD(ii,jj)     = B(2);
-      trend_cldfracD_unc(ii,jj) = stats.se(2);
-      avg_cldfracD(ii,jj)       = B(1);
-      avg_cldfracD_unc(ii,jj)   = stats.se(1);
+      anom_cldfracLo(ii,jj,:)    = junkanom;
+      trend_cldfracLo(ii,jj)     = B(2);
+      trend_cldfracLo_unc(ii,jj) = stats.se(2);
+      avg_cldfracLo(ii,jj)       = B(1);
+      avg_cldfracLo_unc(ii,jj)   = stats.se(1);
     else
-      anom_cldfracD(ii,jj,:)    = nan(1,length(data));
-      trend_cldfracD(ii,jj)     = nan;
-      trend_cldfracD_unc(ii,jj) = nan;
-      avg_cldfracD(ii,jj)       = nan;
-      avg_cldfracD_unc(ii,jj)   = nan;
+      anom_cldfracLo(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracLo(ii,jj)     = nan;
+      trend_cldfracLo_unc(ii,jj) = nan;
+      avg_cldfracLo(ii,jj)       = nan;
+      avg_cldfracLo_unc(ii,jj)   = nan;
     end
 
-    data = squeeze(cldfracN(:,ii,jj));
+    data = squeeze(cldfracMid(:,ii,jj));
     boo = find(isfinite(data));
     if length(boo) > 20
       [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
-      anom_cldfracN(ii,jj,:)    = junkanom;
-      trend_cldfracN(ii,jj)     = B(2);
-      trend_cldfracN_unc(ii,jj) = stats.se(2);
-      avg_cldfracN(ii,jj)       = B(1);
-      avg_cldfracN_unc(ii,jj)   = stats.se(1);
+      anom_cldfracMid(ii,jj,:)    = junkanom;
+      trend_cldfracMid(ii,jj)     = B(2);
+      trend_cldfracMid_unc(ii,jj) = stats.se(2);
+      avg_cldfracMid(ii,jj)       = B(1);
+      avg_cldfracMid_unc(ii,jj)   = stats.se(1);
     else
-      anom_cldfracN(ii,jj,:)    = nan(1,length(data));
-      trend_cldfracN(ii,jj)     = nan;
-      trend_cldfracN_unc(ii,jj) = nan;
-      avg_cldfracN(ii,jj)       = nan;
-      avg_cldfracN_unc(ii,jj)   = nan;
+      anom_cldfracMid(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracMid(ii,jj)     = nan;
+      trend_cldfracMid_unc(ii,jj) = nan;
+      avg_cldfracMid(ii,jj)       = nan;
+      avg_cldfracMid_unc(ii,jj)   = nan;
     end
 
+    data = squeeze(cldfracHi(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
+      anom_cldfracHi(ii,jj,:)    = junkanom;
+      trend_cldfracHi(ii,jj)     = B(2);
+      trend_cldfracHi_unc(ii,jj) = stats.se(2);
+      avg_cldfracHi(ii,jj)       = B(1);
+      avg_cldfracHi_unc(ii,jj)   = stats.se(1);
+    else
+      anom_cldfracHi(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracHi(ii,jj)     = nan;
+      trend_cldfracHi_unc(ii,jj) = nan;
+      avg_cldfracHi(ii,jj)       = nan;
+      avg_cldfracHi_unc(ii,jj)   = nan;
+    end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+
+    data = squeeze(cldfracRetr(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
+      anom_cldfracRetr(ii,jj,:)    = junkanom;
+      trend_cldfracRetr(ii,jj)     = B(2);
+      trend_cldfracRetr_unc(ii,jj) = stats.se(2);
+      avg_cldfracRetr(ii,jj)       = B(1);
+      avg_cldfracRetr_unc(ii,jj)   = stats.se(1);
+    else
+      anom_cldfracRetr(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracRetr(ii,jj)     = nan;
+      trend_cldfracRetr_unc(ii,jj) = nan;
+      avg_cldfracRetr(ii,jj)       = nan;
+      avg_cldfracRetr_unc(ii,jj)   = nan;
+    end
+
+    data = squeeze(cldfracRetr_ice(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
+      anom_cldfracRetr_ice(ii,jj,:)    = junkanom;
+      trend_cldfracRetr_ice(ii,jj)     = B(2);
+      trend_cldfracRetr_ice_unc(ii,jj) = stats.se(2);
+      avg_cldfracRetr_ice(ii,jj)       = B(1);
+      avg_cldfracRetr_ice_unc(ii,jj)   = stats.se(1);
+    else
+      anom_cldfracRetr_ice(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracRetr_ice(ii,jj)     = nan;
+      trend_cldfracRetr_ice_unc(ii,jj) = nan;
+      avg_cldfracRetr_ice(ii,jj)       = nan;
+      avg_cldfracRetr_ice_unc(ii,jj)   = nan;
+    end
+
+    data = squeeze(cldfracRetr_liq(:,ii,jj));
+    boo = find(isfinite(data));
+    if length(boo) > 20
+      [B, stats, junkanom] = compute_anomaly_wrapper(boo,doy,data,4,[],-1,-1);
+      anom_cldfracRetr_liq(ii,jj,:)    = junkanom;
+      trend_cldfracRetr_liq(ii,jj)     = B(2);
+      trend_cldfracRetr_liq_unc(ii,jj) = stats.se(2);
+      avg_cldfracRetr_liq(ii,jj)       = B(1);
+      avg_cldfracRetr_liq_unc(ii,jj)   = stats.se(1);
+    else
+      anom_cldfracRetr_liq(ii,jj,:)    = nan(1,length(data));
+      trend_cldfracRetr_liq(ii,jj)     = nan;
+      trend_cldfracRetr_liq_unc(ii,jj) = nan;
+      avg_cldfracRetr_liq(ii,jj)       = nan;
+      avg_cldfracRetr_liq_unc(ii,jj)   = nan;
+    end
+
+    %%%%%%%%%%%%%%%%%%%
+    
   end
 end
 
@@ -455,7 +565,7 @@ iDo_sincosfit = -1; %% DEFAULT
 
 doy2002 = doy;
 comment = 'see driver_make_cloud_trends_from_modis_L3.m';
-fout = ['modis_L3_cloud_trends_' num2str(timeS(1),'%04d') '_' num2str(timeS(2),'%04d') '_' num2str(timeE(1),'%04d') '_' num2str(timeE(2),'%04d') '.mat'];
+fout = ['modis_L3_combinedTA_cloud_trends_' num2str(timeS(1),'%04d') '_' num2str(timeS(2),'%04d') '_' num2str(timeE(1),'%04d') '_' num2str(timeE(2),'%04d') '.mat'];
 saver = ['save ' fout ' trend* xavg_anom* avg* anom* sctrend* scavg* scanom* comment doy2002 yyseries mmseries ddseries yymm'];
 eval(saver)
 
@@ -582,50 +692,6 @@ figure(20); clf; plot(yymm,avg_cldtop_time)
 printarray([B scB' stats.se se'])
 figure(21); clf; plot(yymm,avg_anom_cldtop,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
 
-%%%%%
-
-for ii = 1 : lenT
-  junk1 = squeeze(anom_cldtopD(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
-  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_anom_cldtopD(ii) = nansum(junk1)/nansum(junk2);
-
-  junk1 = squeeze(cldtopD(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
-  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_cldtopD_time(ii) = nansum(junk1)/nansum(junk2);
-end
-
-figure(20); clf; plot(yymm,avg_cldtopD_time)
-
-%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldtopD_time(boo),4);
-%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldtopD_time',-1);
-[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldtopD_time,4,[],-1,-1);
-[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldtopD_time(boo),4);
-
-printarray([B scB' stats.se se'])
-figure(21); clf; plot(yymm,avg_anom_cldtopD,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
-
-%%%%%
-
-for ii = 1 : lenT
-  junk1 = squeeze(anom_cldtopN(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
-  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_anom_cldtopN(ii) = nansum(junk1)/nansum(junk2);
-
-  junk1 = squeeze(cldtopN(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
-  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_cldtopN_time(ii) = nansum(junk1)/nansum(junk2);
-end
-
-figure(20); clf; plot(yymm,avg_cldtopN_time)
-
-%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldtopN_time(boo),4);
-%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldtopN_time',-1);
-[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldtopN_time,4,[],-1,-1);
-[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldtopN_time(boo),4);
-
-printarray([B scB' stats.se se'])
-figure(21); clf; plot(yymm,avg_anom_cldtopN,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
-
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 for ii = 1 : lenT
@@ -651,46 +717,70 @@ figure(21); clf; plot(yymm,avg_anom_cldfrac,'b',yymm,Anom,'c'); plotaxis2; xlim(
 %%%%%
 
 for ii = 1 : lenT
-  junk1 = squeeze(anom_cldfracD(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  junk1 = squeeze(anom_cldfracLo(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_anom_cldfracD(ii) = nansum(junk1)/nansum(junk2);
+  avg_anom_cldfracLo(ii) = nansum(junk1)/nansum(junk2);
 
-  junk1 = squeeze(cldfracD(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
+  junk1 = squeeze(cldfracLo(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_cldfracD_time(ii) = nansum(junk1)/nansum(junk2);
+  avg_cldfracLo_time(ii) = nansum(junk1)/nansum(junk2);
 end
 
-figure(20); clf; plot(yymm,avg_cldfracD_time)
+figure(20); clf; plot(yymm,avg_cldfracLo_time)
 
-%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracD_time(boo),4);
-%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracD_time',-1);
-[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldfracD_time,4,[],-1,-1);
-[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldfracD_time(boo),4);
+%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracLo_time(boo),4);
+%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracLo_time',-1);
+[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldfracLo_time,4,[],-1,-1);
+[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldfracLo_time(boo),4);
 
 printarray([B scB' stats.se se'])
-figure(21); clf; plot(yymm,avg_anom_cldfracD,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
+figure(21); clf; plot(yymm,avg_anom_cldfracLo,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
 
 %%%%%
 
 for ii = 1 : lenT
-  junk1 = squeeze(anom_cldfracN(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  junk1 = squeeze(anom_cldfracMid(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_anom_cldfracN(ii) = nansum(junk1)/nansum(junk2);
+  avg_anom_cldfracMid(ii) = nansum(junk1)/nansum(junk2);
 
-  junk1 = squeeze(cldfracN(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
+  junk1 = squeeze(cldfracMid(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
   junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
-  avg_cldfracN_time(ii) = nansum(junk1)/nansum(junk2);
+  avg_cldfracMid_time(ii) = nansum(junk1)/nansum(junk2);
 end
 
-figure(20); clf; plot(yymm,avg_cldfracN_time)
+figure(20); clf; plot(yymm,avg_cldfracD_time)
 
-%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracN_time(boo),4);
-%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracN_time',-1);
-[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldfracN_time,4,[],-1,-1);
-[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldfracN_time(boo),4);
+%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracMid_time(boo),4);
+%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracMid_time',-1);
+[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldfracMid_time,4,[],-1,-1);
+[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldfracMid_time(boo),4);
 
 printarray([B scB' stats.se se'])
-figure(21); clf; plot(yymm,avg_anom_cldfracN,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
+figure(21); clf; plot(yymm,avg_anom_cldfracMid,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
+
+%%%%%
+
+for ii = 1 : lenT
+  junk1 = squeeze(anom_cldfracHi(:,:,ii)); junk1 = junk1(:); %junk1(junk1 < 0) = NaN;
+  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  avg_anom_cldfracHi(ii) = nansum(junk1)/nansum(junk2);
+
+  junk1 = squeeze(cldfracHi(ii,:,:)); junk1 = junk1(:); junk1(junk1 < 0) = NaN;
+  junk2 = squeeze(junkcos(:,:,ii)); junk2 = junk2(:);
+  avg_cldfracHi_time(ii) = nansum(junk1)/nansum(junk2);
+end
+
+figure(20); clf; plot(yymm,avg_cldfracD_time)
+
+%[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracHi_time(boo),4);
+%  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracHi_time',-1);
+[B, stats, Anom] = compute_anomaly_wrapper(boo,doy,avg_cldfracHi_time,4,[],-1,-1);
+[scB,se,scAnom] = Math_sincosfit_wrapper(doy(boo),avg_cldfracHi_time(boo),4);
+
+printarray([B scB' stats.se se'])
+figure(21); clf; plot(yymm,avg_anom_cldfracHi,'b',yymm,Anom,'c'); plotaxis2; xlim([2020 2025])
+
+%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-do_cloud_anom_plots
+do_combinedTA_cloud_anom_plots

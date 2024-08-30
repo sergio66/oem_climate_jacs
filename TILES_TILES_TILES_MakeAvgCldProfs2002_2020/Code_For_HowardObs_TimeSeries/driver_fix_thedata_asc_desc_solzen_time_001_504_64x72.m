@@ -30,6 +30,8 @@ rtimeE(1) = utc2taiSergio(yy1,mm1,dd1,12);
 
 Nmax = 412;
 Nmax = 504;
+Nmax = 600;
+
 for ii = 2 : Nmax
   
   yy0 = yy1; mm0 = mm1; dd0 = dd1;
@@ -52,7 +54,15 @@ for ii = 2 : Nmax
 end  
 
 commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m'];
-save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM
+fileout = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
+fileout = [fileout '/timestepsStartEnd_2002_09_to_' num2str(thedateE(Nmax,1),'%04d') '_' num2str(thedateE(Nmax,2),'%04d') '.mat'];
+saver = ['save ' fileout ' commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM'];
+if ~exist(fileout)
+  fprintf(1,'saving %s  \n',fileout);
+  eval(saver)
+else
+  fprintf(1,'%s exists, not saving \n',fileout);
+end
 return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

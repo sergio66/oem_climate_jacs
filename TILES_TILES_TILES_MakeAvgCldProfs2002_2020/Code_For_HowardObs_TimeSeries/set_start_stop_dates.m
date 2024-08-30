@@ -17,7 +17,8 @@ startdateMaster = [2002 09 01]; stopdateMaster = [2022 09 07]; i16daysSteps = 45
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 479;                       %% 2002/09 to 2023/08 = 21   years, 479 steps **********
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 12 29]; i16daysSteps = 487;                       %% 2002/09 to 2023/12 = 21.3 years, 487 steps **********
 
-startdateMaster = [2002 09 01]; stopdateMaster = [2024 06 24]; i16daysSteps = 498;                       %% 2002/09 to 2024/06 = 22.5 years, 498 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 06 24]; i16daysSteps = 498;                       %% 2002/09 to 2024/06 = 22.75 years, 498 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 22.95 years, 501 steps **********
 
 disp(' ')
 fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)

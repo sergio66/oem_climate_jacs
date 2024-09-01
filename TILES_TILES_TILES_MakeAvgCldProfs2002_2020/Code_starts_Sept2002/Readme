@@ -1,10 +1,16 @@
-0) so for example quick updates in Dec 2021 (to complete the Sept 2002-Aug2021 19 year time series
+so for example quick updates in Dec 2021 (to complete the Sept 2002-Aug2021 19 year time series
 
-cd Code_For_HowardObs_TimeSeries/
+A) cd Code_For_HowardObs_TimeSeries/
+=====================================
 more Readme
 
 #########################
-MAKE SURE clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m is running off steps and not a list (iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/');
+(0) MAKE SURE clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m is running off steps and not a list (iVers = 0;  %% use JOB together with hugedir = dir('/asl/isilon/airs/tile_test7/');
+
+These codes use set-iQAX.m which does
+  iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+  iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
+  iQAX = +4; %% quantile   quants = [0 0.03 0.50 0.97 1.00];       %%% new quants, cold, median, hot
 
 do this for trends paper stuff
   Check   hugedir = dir('/asl/isilon/airs/tile_test7/');                               %% 480 timesteps till Sep 2023, 2024_s499 = 499 steps till June 2024
@@ -20,14 +26,23 @@ do this for trends paper stuff
   kleenslurm; sbatch             --array=460-499  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 502)  2002/09-2024/08
 
   kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 502), edit set_start_stop_dates.m, 
-                 startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 22.95 years, 501 steps **********
+                 startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 21.95 years, 501 steps **********
+                 startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 27]; i16daysSteps = 502;                       %% 2002/09 to 2024/07 = 22    years, 502 steps **********
                                                                                       *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
                                                                                       *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
                                                                                       *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
                                                                                       *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
                                                                                       *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
                                                                                       *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
+      which uses "cluster_loop_make_correct_timeseriesV2" to make eg
+        [sergio@taki-usr2 Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28/LonBin72//iQAX_3_summarystats_LatBin28_LonBin72_timesetps_001_502_V1.mat
+        -rw-rw-r-- 1 sergio pi_strow 57M Sep  1 02:20 ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28/LonBin72//iQAX_3_summarystats_LatBin28_LonBin72_timesetps_001_502_V1.mat
+            which has all that you want!!! Especially rad_quantile_asc,rad_quantile_desc and eg salzens,solzens
 
+        [sergio@taki-usr2 Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28//iQAX_3_summarystats_LatBin28_LonBin_1_72_timesetps_001_500_V1.mat
+        -rw-rw-r-- 1 sergio pi_strow 1.1M Sep  1 02:20 ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28//iQAX_3_summarystats_LatBin28_LonBin_1_72_timesetps_001_500_V1.mat
+            which really has 72 x (500+2) summary of dccBT1231,maxBT1231,meanBT1231,minBT1231
+      
 Note driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m  makes  
      Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM
 which all all StartTime[YY/MM/DD] and StopTime[YY/MM/DD] from 2002/09/01 as a sequence of steps
@@ -40,26 +55,44 @@ Note : make sure you run        driver_loop_get_asc_desc_solzen_time : makes asc
 %%%%%%%%%% 
 
 or can do this (smaller sets, newer definitions)
-  ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
+  ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m    are symbolic links with    clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
+
+clust_check_howard_16daytimesetps_2013_raw_griddedV3.m  uses set_iQAX.m but then OVERRIDES with this
+if iQAX ~= +2
+  quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+  if iQAX == +3
+    quants = [0 0.50 0.9 0.95 0.97 1.00];
+    quants = [0.50 0.80 0.90 0.95 0.97 1.00];
+  end
+  lenquants = length(quants)-1;
+elseif iQAX == 2
+  quants = [0 1];
+  lenquants = length(quants)-1;
+end
+
   iQAX =  0; %% quantile and extreme
   iQAX = -1; %% extreme
   iQAX = +1; %% quantile
   iQAX = +2; %% mean
-  iQAX = +3; %% newer quantile (integrate from Q to 1)
+  iQAX = +3; %% newer quantile (integrate from Q to 1)  <<<<DEFAULT>>>>
   kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 12  -- to make the "wrong" data   (should really end at 457)
   kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  -- to correct things          (should really end at 457)
 
 #########################
 
-cd ../Code_for_TileTrends/
+B) cd ../Code_for_TileTrends/
+===============================
+
 edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps,
   ensure start/stop are [2021 08 31],[2002 09 01]
 sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
 
-1) Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m
-   Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3.m 
+(1) These are similar yet sifferent as described above
+    Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m    symbolically linked to
+    Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2.m 
 
-  are SYMBOLICALLY linked to each other
+    Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3_WRONG_LatLon.m    symbolically linked to
+    Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV3.m 
 
   does the gridding making of files that we use for stats
   eg  /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/../DATAObsStats_StartSept2002/LatBin03/LonBin01/stats_data_YYYY_sTTT.mat
@@ -94,9 +127,13 @@ sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
 
 3a) Then do the trends using Code_for_TileTrends
 [sergio@taki-usr2 Code_for_TileTrends]$ ls -lt clust_tile_fits_*
--rw-r--r-- 1 sergio pi_strow 2633 Sep  4 21:52 clust_tile_fits_means.m
--rw-r--r-- 1 sergio pi_strow 2633 Aug 13 16:49 clust_tile_fits_quantiles.m
--rw-rw-r-- 1 sergio pi_strow 2123 Aug 13 13:16 clust_tile_fits_extremes.m
+-rw-r--r-- 1 sergio pi_strow 7233 Aug  7 17:11 clust_tile_fits_quantiles.m            kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
+-rw-rw-r-- 1 sergio pi_strow 8242 Aug 11 19:42 clust_tile_anomalies_quantiles.m       kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 10
+and
+-rw-rw-r-- 1 sergio pi_strow 6799 Jan 31  2024 clust_tile_fits_quantiles_loop72lons_backwards.m
+-rw-rw-r-- 1 sergio pi_strow 6798 Jan 31  2024 clust_tile_fits_quantiles_loop72lons.m
+-rw-r--r-- 1 sergio pi_strow 2796 Sep  6  2021 clust_tile_fits_means.m
+-rw-r--r-- 1 sergio pi_strow 2274 Sep  6  2021 clust_tile_fits_extremes.m
 3b) New : Larrabee wants zonally averaged BTs
    this loads in the 72 lonbins, averages, then for each of the 16 quantiles it finds the BT trends
 -rw-rw-r-- 1 sergio pi_strow 1710 Oct 22 16:57 clust_zonalavg_fits_quantiles.m
@@ -104,7 +141,6 @@ sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 NOTE : For AIRS_STM_OCt02 : we started data Jan 1, 20XY each time .. this is code in Code_For_AIRS_STM_Oct2020_allstarts_Jan20XY/ and is primarily Code_For_AIRS_STM_Oct2020_allstarts_Jan20XY/*V2.m
 After that we decided to start from Sept 1, 2002 and go from there  .. this is primarily clust_gather_pall_howardV3_startSept2002.m or *V3.m

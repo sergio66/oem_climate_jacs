@@ -1,16 +1,16 @@
-disp('Enter (1) for Q1-16 2002/09 to 202X/08 == orig, re-done by Sergio');
-disp('      (3)  for extremes      2002/09 to 202X/08 == new')
+disp('Enter (1) for Q1-16 TRENDS   2002/09 to 202X/08 == orig, re-done by Sergio');
+disp('      (3)  for extremes      2002/09 to 202X/08 == new    ')
 disp('      (13) for first 8 years 2002/09 to 2010/08 == new    183 steps')
 disp('      (14) for last  4 years 2018/09 to 2022/08 == new    091 steps')
 disp('      (15) for mid  14 years 2008/01 to 2022/12 == new    342 steps')
 disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON for 2002/09 to 2022/08')
 disp('    ')
-disp('      (10) for anomalies')
+disp('      (10) for anomalies     2002/09 to 202X/08 ')
 iType = input('enter choice : ');
 
-iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 498 : ');
+iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502 : ');
 if length(iNumTmeSteps) == 0
-  iNumTmeSteps = 498;
+  iNumTmeSteps = 502;
 end
 tstr = num2str(iNumTmeSteps);
 
@@ -21,7 +21,7 @@ figure(1); clf; colormap(jet);
 found_tile_trends_quantiles_extremes = zeros(64,72);
 clear job_notdone
 iCnt = 0;
-disp(' + for 10, . for one :: all the way to 64 latbins')
+disp(' + for 10, . for one :: all the way to 64 latbins ... this loops though 72 lonbins as well ')
 for jj = 1 : 64
   if mod(jj,10) == 0
     fprintf(1,'+');
@@ -34,7 +34,9 @@ for jj = 1 : 64
     if iType == 3
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/extreme_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
     elseif iType == 1
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')        '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
+
     elseif iType == -1
       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*DJF* | wc -l    
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_DJF.mat'];
@@ -47,6 +49,7 @@ for jj = 1 : 64
     elseif iType == -4
       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*SON* | wc -l    
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_SON.mat'];
+
     elseif iType == 10
        %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin04/LonBin54/iQAX_3_fits_LonBin54_LatBin04_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
        %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*_LatBin*_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
@@ -58,7 +61,12 @@ for jj = 1 : 64
         % 2002/09 to 2024/06
         %fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
         fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
+      elseif iNumTmeSteps == 502
+        % 2002/09 to 2024/08
+        %fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
+        fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
       end
+
     elseif iType == 13
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
       fname = [fname '/iQAX_4_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_201000080031_TimeStepsX' tstr '.mat'];
@@ -69,6 +77,7 @@ for jj = 1 : 64
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
       fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat'];
     end
+
     if exist(fname)
       kachunk = dir(fname);
       found_tile_trends_quantiles_size(jj,ii) = kachunk.bytes;

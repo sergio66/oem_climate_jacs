@@ -252,12 +252,12 @@ clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_od_ice); shading int
 title('Cld Ice OD Anomaly')
 
 for ii = 1 : 180
-  junk = squeeze(od_iceALL(:,:,ii)) + squeeze(od_liqALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
-  [B,err,xavg_zonal_anom_od_ice(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
+  junk = squeeze(od_liqALL(:,:,ii)); junk = nanmean(junk,2); boo = find(isfinite(junk)); 
+  [B,err,xavg_zonal_anom_od_water(ii,:)] = compute_anomaly_wrapper(boo,doy,junk,4,-1,-1);
 end
-clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_od_ice); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*5.00)
-clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_od_ice); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*5.00)
-title('Cld Ice+Water OD Anomaly')
+clf; pcolor(yymm,-89.5:1:+89.5,xavg_zonal_anom_od_water); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*5.00)
+clf; pcolor(yymm,-89.5:1:+89.5,coslatAll .* xavg_zonal_anom_od_water); shading interp; colormap(usa2); colorbar; caxis([-1 +1]*5.00)
+title('Cld Water OD Anomaly')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -748,7 +748,7 @@ for ii = 1 : lenT
   avg_cldfracMid_time(ii) = nansum(junk1)/nansum(junk2);
 end
 
-figure(20); clf; plot(yymm,avg_cldfracD_time)
+figure(20); clf; plot(yymm,avg_cldfracMid_time)
 
 %[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracMid_time(boo),4);
 %  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracMid_time',-1);
@@ -770,7 +770,7 @@ for ii = 1 : lenT
   avg_cldfracHi_time(ii) = nansum(junk1)/nansum(junk2);
 end
 
-figure(20); clf; plot(yymm,avg_cldfracD_time)
+figure(20); clf; plot(yymm,avg_cldfracHi_time)
 
 %[B, stats, err] = Math_tsfit_lin_robust(doy(boo)-doy(boo(1)),avg_cldfracHi_time(boo),4);
 %  Anom = compute_anomaly(boo,doy-doy(1),B,[],avg_cldfracHi_time',-1);
@@ -783,4 +783,9 @@ figure(21); clf; plot(yymm,avg_anom_cldfracHi,'b',yymm,Anom,'c'); plotaxis2; xli
 %%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+do_combinedTA_cloud_anom_slopes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 do_combinedTA_cloud_anom_plots

@@ -328,7 +328,7 @@ for qi = 1:numQuant
       b_asc(ch,qi,:)         = junkB;
       berr_asc(ch,qi,:)      = junkstats.se;
       bt_anom_asc(qi,ch,:)   = junkbtanom(k_asc); 
-      %rad_anom_asc(qi,ch,:) = junkradanom(k_asc); 
+      rad_anom_asc(qi,ch,:)  = junkradanom(k_asc); 
     end
   end
   fprintf(1,'\n');

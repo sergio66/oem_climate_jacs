@@ -1,4 +1,8 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ENCOMPASSING PERIOD OF DATA AVAILABLE AND SAVED
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% so for example load in data from tile_fits_quantiles.m :lati,loni =  1  1  
 %% loading  << ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin01/iQAX_3_summarystats_LatBin01_LonBin01_timesetps_001_479_V1.mat >> with 479 i16daysSteps
 
@@ -17,19 +21,24 @@ startdateMaster = [2002 09 01]; stopdateMaster = [2022 09 07]; i16daysSteps = 45
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 479;                       %% 2002/09 to 2023/08 = 21   years, 479 steps **********
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 12 29]; i16daysSteps = 487;                       %% 2002/09 to 2023/12 = 21.3 years, 487 steps **********
 
-startdateMaster = [2002 09 01]; stopdateMaster = [2024 06 24]; i16daysSteps = 498;                       %% 2002/09 to 2024/06 = 22.75 years, 498 steps **********
-startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 22.95 years, 501 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 06 24]; i16daysSteps = 498;                       %% 2002/09 to 2024/06 = 21.75 years, 498 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 21.95 years, 501 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 27]; i16daysSteps = 502;                       %% 2002/09 to 2024/07 = 22.00 years, 502 steps **********
 
 disp(' ')
-fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)
-fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)
-fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)
+fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i ... i16daysSteps = %3i \n',startdateMaster,stopdateMaster,i16daysSteps)
+fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i ... i16daysSteps = %3i \n',startdateMaster,stopdateMaster,i16daysSteps)
+fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i ... i16daysSteps = %3i \n',startdateMaster,stopdateMaster,i16daysSteps)
 disp(' ')
 
 %% clear i16daysSteps
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DEFINE PERIOD YOU ACTUALLY WANT, so can speed up things using SAVED data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% to make trends saved in ./DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin02/iQAX_3_fits_LonBin02_LatBin01_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat
 
 startdate = [2002 09 01]; stopdate = [2021 08 31];  % 19 years! *** THIS IS THE MASTER BLASTER
@@ -55,7 +64,8 @@ startdate = [2008 01 01]; stopdate = [2022 12 31];  % sarah.safieddine@latmos.ip
 startdate = [2002 09 01]; stopdate = [2024 01 01];  % 22.3 years! %% Joao at JPL wants this
 
 startdate = [2020 07 01]; stopdate = [2024 06 30];  % 4 hot years
-startdate = [2002 09 01]; stopdate = [2024 06 30];  % 22.5 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
+startdate = [2002 09 01]; stopdate = [2024 06 30];  % 21.5 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
+startdate = [2002 09 01]; stopdate = [2024 08 27];  % 22.0 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
 
 disp(' ')
 fprintf(1,'Code_for_TileTrends/clust_tile_fits_quantiles.m : set_start_stop_dates.m : REFINED SUBSET start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdate,stopdate)

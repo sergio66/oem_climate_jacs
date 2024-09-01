@@ -557,6 +557,10 @@ if iExist < 0
   ceres_trend.fnameB           = ceres_fnameB;
 end
 
+find_ceres_trends_from_anom_slopes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% zonal
 %{
 ceres_trend.trend_lw         = trend_ceres.lw;

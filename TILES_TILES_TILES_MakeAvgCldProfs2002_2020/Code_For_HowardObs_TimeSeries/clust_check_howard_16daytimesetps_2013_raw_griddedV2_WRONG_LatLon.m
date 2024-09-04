@@ -10,6 +10,10 @@ ls -lt /asl/isilon/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_* | wc -l    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV2.m .. use that name in Matlab')
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV2.m .. use that name in Matlab')
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV2.m .. use that name in Matlab')
+disp(' ')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
@@ -27,7 +31,10 @@ if length(JOB) == 0
   JOB = 487;  %% last one done to 2023/12
 
   JOB = 498;  %% last one done to 2024/06
-  JOB = 504;  %% last one done to 2024/08
+  JOB = 500;  %% last one done to 2024/08
+
+  JOB = 300; %% having problems with clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m, files not foound
+  JOB = 202;
 end
 
 %JOB = 6
@@ -84,21 +91,38 @@ fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% check to see if 64*72 files have been made for that date_stamp
 
+iTestQuantiles = +1;
+iTestQuantiles = -1;
+
+jj0 = 1; jjE = 64;
+ii0 = 1; iiE = 72;
+
+if iTestQuantiles == +1
+  %% /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/Readme_Anomaly_TWP_lat35_lon66  
+  jj0 = 35; jjE = 35;
+  ii0 = 66; iiE = 66;
+  x = translator_wrong2correct((jj0-1)*72+ii0,1)
+  jj0 = x.wrong2correct_I_J_lon_lat(2); jjE = x.wrong2correct_I_J_lon_lat(2);
+  ii0 = x.wrong2correct_I_J_lon_lat(1); iiE = x.wrong2correct_I_J_lon_lat(1);
+  mapWRONGindex = x.usethis2map_wrong2correct;
+end
+
 disp('INITIAL CHECK : HAS ANYTHING BEEN MADE???? looping over 64 latbins .....')
 numdone = zeros(72,64);
-for jj = 1 : 64      %% latitude
+for jj = jj0 : jjE      %% latitude  01 : 64 unless test
   if mod(jj,10) == 0
     fprintf(1,'+')
   else
     fprintf(1,'.');
   end
 
-  for ii = 1 : 72    %% longitude
-    JOB = (jj-1)*72 + ii;
+  for ii = ii0 : iiE    %% longitude   01 : 72 unless test
+    xJOBx = (jj-1)*72 + ii;
 
-    %% x = translator_wrong2correct(JOB);  don't need this since we are not translating
+    %% x = translator_wrong2correct(xJOBx);  don't need this since we are not translating
     fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%
     iDebug = -1;
     if iDebug > 0
       thedirjunk = dir([fdirIN '/*.mat']);
@@ -119,9 +143,11 @@ for jj = 1 : 64      %% latitude
       str = ['LatBin ' num2str(jj,'%02i') ' LonBin ' num2str(ii,'%02i') ' expects ' num2str(X,'%03i') ' files and found ' num2str(Y,'%03i') ' files'];
       fprintf(1,'%s \n',str);
     end
+    %%%%%%%%%%%%%%%%%%%%%%%%%
 
     if iQAX == 1
       QAXdir = ['/stats_data_' date_stamp '.mat'];
+      QAXdir = ['/iQAX_1_stats_data_' date_stamp '.mat'];
     elseif iQAX == 3
       QAXdir = ['/iQAX_3_stats_data_' date_stamp '.mat'];
     elseif iQAX == 4
@@ -140,11 +166,13 @@ fprintf(1,'\n');
 fprintf(1,'sum(numdone(:)) = %8i ',sum(numdone(:)))
 
 if sum(numdone(:)) == 72*64
-  fprintf(1,'have already made all 4608 files for this timestep %3i = %s, see eg %s  \n',JOB,date_stamp,[fdirIN QAXdir])
+  fprintf(1,'have already made %4i of 4608 files for timestep %3i = %s, see eg %s  \n',sum(numdone(:)),JOB,date_stamp,[fdirIN QAXdir])
   error('this timestep already done!!!')
   return
 else
+  fprintf(1,'have only made %4i of 4608 files for timestep %3i = %s, see eg %s  \n',sum(numdone(:)),JOB,date_stamp,[fdirIN QAXdir])
   disp('humph .. files not made, the show must go on!!!')
+  fprintf(1,'some or no files not made for timestep %3i = %s .. so reading them in SLOWLY \n',JOB,date_stamp);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,8 +186,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-fprintf(1,'some or all files not made for timestep %3i = %s .. so reading them in SLOWLY \n',JOB,date_stamp);
 
 tic
 %% most of thesave fields = 1 x N bins eg thesave.meansolzen_asc, thesave.meanyear_asc etc        = 1 x N  
@@ -179,18 +205,38 @@ plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
 plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 
+pause(1)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+iCnt = 0;
+thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);                    %%%% 450 timesteps
+
+iii0 = 3; iiiE = length(thedir0);
+jjj0 = 1; jjjE = 72; 
+if iTestQuantiles == +1
+  iii0 = ii0; iiiE = iiE;
+  jjj0 = jj0; jjjE = jjE;
+end
+
 %% OUTER  LOOP      450 TIMESTEPS --> 1 FIXED TIMESTEP = JOB
 %%   MIDDLE LOOP    064 LATBINS
 %%     INNER  LOOP  072 LONBINS
 
-pause(1)
+tt = JOB - 2;
+are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
+if sum(numdone(:)) == 4608
+  lser = ['ls -lt ' fileIN]; eval(lser)
+  error('all 4608 files like this alreay done for this timestep, exiting')
+else
+  fprintf(1,'timestep %03i found %4i of 4608 files ... need to do this timestep \n',tt,sum(numdone(:)))
+end
 
-iCnt = 0;
-thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);                    %%%% 450 timesteps
-for iii = 3 : length(thedir0)                                    
+for iii = iii0 : iiiE     %% default 64 latbins << 3 : length(thedir0) >>
   dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];  %%%% 64 latbins
   dirx = dir([dirdirname '/*.nc']);
-  for jjj = 1 : length(dirx)
+  for jjj = jjj0 : jjjE   %% default 72 lonbins << 1 : 72 >>
     fname = [dirdirname '/' dirx(jjj).name];                                       %%%% 72 lonbins
     iCnt = iCnt + 1;                                                               %%%% so iCnt == 1 -- 4608
     thesave.fname{iCnt} = fname;
@@ -208,7 +254,15 @@ for iii = 3 : length(thedir0)
     %plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 
     [yy,mm,dd,hh] = tai2utcSergio(s.tai93(ianpts)+offset1958_to_1993);
-    separate_s_into_sc_desc_quants
+    separate_s_into_asc_desc_quants   %%% heavy duty worker for thesave, together with select_Zdata_based_on_iQAX_and_qq
+
+    if iTestQuantiles == +1
+      printarray([min(X) max(X)],'[min(BT1231) max(BT1231)]')
+      printarray([min(s.lon(1:s.total_obs)) max(s.lon(1:s.total_obs))  min(s.lat(1:s.total_obs)) max(s.lat(1:s.total_obs))],'[min(lon) max(lon) min(lat) max(lat)]')
+      printarray([quants; Y]','[quants; BT(quants)]')
+      keyboard_nowindow
+    end
+
   end
   
   if mod(iCnt,72) == 0

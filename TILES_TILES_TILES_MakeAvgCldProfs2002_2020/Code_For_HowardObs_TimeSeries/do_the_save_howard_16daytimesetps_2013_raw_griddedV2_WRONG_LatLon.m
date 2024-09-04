@@ -84,6 +84,7 @@ for iiix = 1 : 64              %% latitude
     junkLat = iiix; junkLon = jjjx;
     if iQAX == 1
       foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/stats_data_' date_stamp '.mat'];
+      foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/iQAX_1_stats_data_' date_stamp '.mat'];
     elseif iQAX == 3
       foutXY = ['../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/LonBin' num2str(junkLon,'%02d') '/iQAX_3_stats_data_' date_stamp '.mat'];
     elseif iQAX == 4

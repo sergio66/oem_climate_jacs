@@ -1,14 +1,17 @@
-% iQAX =  0; %% quantile and extreme     RETIRED
-% iQAX = -1; %% extreme                  RETIRED
-% iQAX = +2; %% mean                     RETIRED
+%% clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
+iQAX =  0; %% quantile and extreme     RETIRED, but reused in clust_check_howard_16daytimesetps_2013_raw_griddedV3
+%%% iQAX = -1; %% extreme                  RETIRED
+iQAX = +2; %% mean                     RETIRED, but reused in clust_check_howard_16daytimesetps_2013_raw_griddedV3
 
+%% clust_check_howard_16daytimesetps_2013_raw_griddedV3.m
 iQAX = +1; %% quantile                 quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
-iQAX = +3; %% quantile                 quants = [0 0.50 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
-iQAX = +4; %% quantile                 quants = [0 0.03 0.50 0.97 1.00];       %%% new quants, cold, median, hot
+iQAX = +3; %% quantile                 quants = [0.50 0.8 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
+iQAX = +4; %% quantile                 quants = [0 0.03 0.50 0.97 1.00];         %%% new quants : 0 = allsky, 0.03 = cold, 0.7 = hot
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
+iQAX = +3; %% quantile   quants = [0.5 0.8 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
+iQAX = +4; %% quantile                 quants = [0 0.03 0.50 0.97 1.00];       %%% new quants : cold, median, hot
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -9,8 +9,12 @@ more Readme
 
 These codes use set-iQAX.m which does
   iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
-  iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
-  iQAX = +4; %% quantile   quants = [0 0.03 0.50 0.97 1.00];       %%% new quants, cold, median, hot
+  iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT : bewteen Q(ii) and Q(1)  --- allsky, median, [hot,paper] [hotter] [hottest]
+  iQAX = +4; %% quantile   quants = [0 0.03 0.50 0.97 1.00];       %%% new quants : cold, median, hot
+see select_Zdata_based_on_iQAX_and_qq.m
+  iQAX = 1   find data between quantile Q(ii) and quantile Q(ii+1)
+  iQAX = 3   find data between quantile Q(ii) and quantile 1.0       %%% TRENDS PAPER DEFAULT
+  iQAX = 4   find data between (a) quants 0 and 1 (b) from 0 to Y(qq) and (c) Y(qq) to 1
 
 do this for trends paper stuff
   Check   hugedir = dir('/asl/isilon/airs/tile_test7/');                               %% 480 timesteps till Sep 2023, 2024_s499 = 499 steps till June 2024
@@ -35,11 +39,11 @@ do this for trends paper stuff
                                                                                       *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
                                                                                       *** Code_for_TileTrends/clust_tile_fits_quantiles.m then refines the start/stop dates ***
       which uses "cluster_loop_make_correct_timeseriesV2" to make eg
-        [sergio@taki-usr2 Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28/LonBin72//iQAX_3_summarystats_LatBin28_LonBin72_timesetps_001_502_V1.mat
+        [Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28/LonBin72//iQAX_3_summarystats_LatBin28_LonBin72_timesetps_001_502_V1.mat
         -rw-rw-r-- 1 sergio pi_strow 57M Sep  1 02:20 ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28/LonBin72//iQAX_3_summarystats_LatBin28_LonBin72_timesetps_001_502_V1.mat
             which has all that you want!!! Especially rad_quantile_asc,rad_quantile_desc and eg salzens,solzens
 
-        [sergio@taki-usr2 Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28//iQAX_3_summarystats_LatBin28_LonBin_1_72_timesetps_001_500_V1.mat
+        [Code_For_HowardObs_TimeSeries]$ ls -lth ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28//iQAX_3_summarystats_LatBin28_LonBin_1_72_timesetps_001_500_V1.mat
         -rw-rw-r-- 1 sergio pi_strow 1.1M Sep  1 02:20 ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin28//iQAX_3_summarystats_LatBin28_LonBin_1_72_timesetps_001_500_V1.mat
             which really has 72 x (500+2) summary of dccBT1231,maxBT1231,meanBT1231,minBT1231
       
@@ -75,6 +79,7 @@ end
   iQAX = +1; %% quantile
   iQAX = +2; %% mean
   iQAX = +3; %% newer quantile (integrate from Q to 1)  <<<<DEFAULT>>>>
+
   kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 12  -- to make the "wrong" data   (should really end at 457)
   kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  -- to correct things          (should really end at 457)
 

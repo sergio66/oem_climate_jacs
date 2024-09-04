@@ -8,6 +8,8 @@ ls -lt /asl/isilon/airs/tile_test7/2002_s008/                        | wc -l    
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_* | wc -l      72 files in each subdir
 %}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %{
 load stats_howard_16daytimesetps_2013_s237_raw_gridded.mat  %% from check_howard_16daytimesetps_2013_raw_gridded.m
 savedirname.iii = thesave.iii;
@@ -19,6 +21,10 @@ for ii = 1 : 4608; fprintf(1,'%s %3i %3i %8.4f %8.4f\n',thesave.fname{ii},thesav
 save howard_lat_lon_fname.mat savedirname
 %}
 
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV3.m .. use that name in Matlab')
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV3.m .. use that name in Matlab')
+disp('this is a symbolic link to clust_check_howard_16daytimesetps_2013_raw_griddedV3.m .. use that name in Matlab')
+disp(' ')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
 disp('WARNING ..... these Lat/Lon grids are WRONGLY NUMBERED because of matlab dir() .. so need to translate using "translator_wrong2correct.m" when concating timeseries')
@@ -49,6 +55,15 @@ end
 %% THIS IS THE TIMESTEP, 001 - 410 = 09/2002 - 08/2020 (averaged over 16 days)
 %% THIS IS THE TIMESTEP, 001 - 434 = 09/2002 - 08/2021 (averaged over 16 days)
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  
+if length(JOB) == 0
+  JOB = 458;  %% last one done to 2022/08
+
+  JOB = 479;  %% last one done to 2023/07
+  JOB = 487;  %% last one done to 2023/12
+
+  JOB = 498;  %% last one done to 2024/06
+  JOB = 500;  %% last one done to 2024/08
+end
 
 %JOB = 8    %% this is 2002/12 to 2003/01 so check mm/yy boundary
 %JOB = 27   %% this is Nov 2003 shutdown
@@ -100,15 +115,31 @@ fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% check to see if 64*72 files have been made for that date_stamp
 
+iTestQuantiles = +1;
+iTestQuantiles = -1;
+
+jj0 = 1; jjE = 64;
+ii0 = 1; iiE = 64;
+
+if iTestQuantiles == +1
+  %% /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/Readme_Anomaly_TWP_lat35_lon66  
+  jj0 = 35; jjE = 35;
+  ii0 = 66; iiE = 66;
+  x = translator_wrong2correct((jj0-1)*72+ii0,1)
+  jj0 = x.wrong2correct_I_J_lon_lat(2); jjE = x.wrong2correct_I_J_lon_lat(2);
+  ii0 = x.wrong2correct_I_J_lon_lat(1); iiE = x.wrong2correct_I_J_lon_lat(1);
+  mapWRONGindex = x.usethis2map_wrong2correct;
+end
+
 numdone = zeros(72,64);
-for jj = 1 : 64      %% latitude
+for jj = jj0 : jjE      %% 1 : 64      %% latitude
   if mod(jj,10) == 0
     fprintf(1,'+')
   else
     fprintf(1,'.');
   end
 
-  for ii = 1 : 72    %% longitude
+  for ii = ii0 : iiE   %%% 1 : 72    %% longitude
     JOB = (jj-1)*72 + ii;
 
     %% x = translator_wrong2correct(JOB);  don't need this since we are not translating
@@ -248,13 +279,30 @@ plot(double(s.sol_zen(ianpts)),s.asc_flag(ianpts))
 plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 
 pause(1)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 dbt = 180 : 1 : 340;
 iCnt = 0;
 thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
-for iii = 3 : length(thedir0)
+
+iii0 = 3; iiiE = length(thedir0);
+jjj0 = 1; jjjE = 72; 
+if iTestQuantiles == +1
+  iii0 = ii0; iiiE = iiE;
+  jjj0 = jj0; jjjE = jjE;
+end
+
+%% OUTER  LOOP      450 TIMESTEPS --> 1 FIXED TIMESTEP = JOB
+%%   MIDDLE LOOP    064 LATBINS
+%%     INNER  LOOP  072 LONBINS
+
+for iii = iii0 : iiiE   %% default 64 latbins << 3 : length(thedir0) >>
   dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
   dirx = dir([dirdirname '/*.nc']);
-  for jjj = 1 : length(dirx)
+  for jjj = jjj0 : jjjE    %% default 72 lonbins << 1 : 72 >>
     fname = [dirdirname '/' dirx(jjj).name];
 
     junkLat = iii-2;
@@ -273,6 +321,14 @@ for iii = 3 : length(thedir0)
     thesave.fname{iCnt} = fname;
 
     fprintf(1,'%4i %4i %4i %s \n',iii-2,jjj,iCnt,fname);
+
+    if iTestQuantiles
+      collect_the_64x72_stats
+      printarray([min(X) max(X)],'[min(BT1231) max(BT1231)]')
+      printarray([min(s.lon(1:s.total_obs)) max(s.lon(1:s.total_obs))  min(s.lat(1:s.total_obs)) max(s.lat(1:s.total_obs))],'[min(lon) max(lon) min(lat) max(lat)]')
+      printarray([quants; Y]','[quants; BT(quants)]')
+      keyboard_nowindow
+    end
 
     if ~exist(foutXY)
       collect_the_64x72_stats

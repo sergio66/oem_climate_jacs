@@ -18,8 +18,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 iExpectNumYears = -1; %% all so far
-iExpectNumYears = 20; %% 2002/09 - 2022/08
 iExpectNumYears = 08; %% 2002/09 - 2010/08
+iExpectNumYears = 20; %% 2002/09 - 2022/08
+iExpectNumYears = 22; %% 2002/09 - 2024/08
 
 iCheckDone1 = input('Check whats been done (-1/+1 default) makes up txt file for clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m with missing timesteps : ');
 if length(iCheckDone1) == 0
@@ -42,54 +43,15 @@ if iCheckDone1 > 0
   else
     iExpectNumTiles = iExpectNumYears*23 + 2;
   end
+
+  iExpectNumTiles = min(length(hugedir),iExpectNumTiles);  %% there cannot be more than length(hugedir) files
+
   for tt = 1 : iExpectNumTiles - 2
     wahoo = squeeze(numALLdone(tt,:,:));
     wahoo = sum(wahoo(:));
     if wahoo < 4608
+      are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
 
-      numdone = zeros(72,64);    
-      date_stamp = hugedir(tt+2).name;
-      for jj = 1 : 64      %% latitude
-        fprintf(1,'.');
-        for ii = 1 : 72    %% longitude
-  
-          %% JOB = (jj-1)*72 + ii;
-          %% x = translator_wrong2correct(JOB);  don't need this since we are not translating
-  
-          if iQAX == 1
-            fdirIN = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];     %% older, used for 16 quantiles
-            fileIN = [fdirIN '/stats_data_' date_stamp '.mat'];
-             
-          elseif iQAX == 3
-            fdirIN = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];     %% older, used for 16 quantiles
-            fileIN = [fdirIN '/iQAX_3_stats_data_' date_stamp '.mat'];
-  
-          elseif iQAX == 4
-            fdirIN = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];     %% older, used for 16 quantiles
-            fileIN = [fdirIN '/iQAX_4_stats_data_' date_stamp '.mat'];
-  
-          elseif iQAX == -1
-            fdirIN = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];  %% newer .. extremes and means
-            fileIN = [fdirIN '/stats_data_v3_extreme_' date_stamp '.mat'];
-  
-          elseif iQAX == 2
-            fdirIN = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];  %% newer .. extremes and means
-            fileIN = [fdirIN '/stats_data_v3_mean_' date_stamp '.mat'];
-  
-          end
-          thedir = [];
-  
-          if exist(fileIN)
-            thedir  = dir(fileIN);
-            if length(thedir) == 1
-              if thedir.bytes > 0           
-                numALLdone(tt,ii,jj) = 1;    
-                numdone(ii,jj) = 1;           
-              end
-            end
-          end  %% if exist(fileIN)
-        end    %% lon
-      end      %% lat
       if sum(numdone(:)) < 72*64
         fprintf(fid1,'%4i \n',tt+2);
         fprintf(fid2,'%4i %s \n',tt+2,date_stamp);
@@ -103,7 +65,7 @@ if iCheckDone1 > 0
 end
 
 figure(6); clf
-pcolor(squeeze(sum(numALLdone,1))'); colorbar; title(['numALLdone should be ' num2str(iExpectNumTiles-2)])
+pcolor(squeeze(sum(numALLdone,1))'); colorbar; title(['numALLdone should be ' num2str(iExpectNumTiles-2)]); colormap jet
 iPlot = squeeze(sum(numALLdone,1)); iPlot = sum(iPlot(:))/64/72;
 fprintf(1,' found %5i of %5i \n',floor(iPlot),iExpectNumTiles-2)
 %%%%%%%%%%%%%%%%%%%%%%%%%

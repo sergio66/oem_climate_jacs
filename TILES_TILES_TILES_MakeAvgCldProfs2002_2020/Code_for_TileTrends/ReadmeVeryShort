@@ -1,0 +1,14 @@
+Slack channel, STrow and me, Feb 7, 2021
+
+Larrabee when I load your anomaly stats fits, are the linear trends in there? And if so, where? b_desc or dbt_desc? I think it is dbt_desc ( I guess b_desc is drad(v)/dt)
+latstr = num2str(driver.latlon.latbin,'%02d');
+lonstr = num2str(driver.latlon.lonbin,'%02d');
+strowname = ['/home/strow/Work/Airs/Tiles/Data/Quantv1_fits/LatBin' latstr  '/LonBin' lonstr '/fits_LonBin' lonstr '_LatBin' latstr '_V1.mat'];
+strowstats = load(strowname);
+spectraltrend = nanmean(strowstats.b_desc(:,[15:16],2),2);   ----> looks wrong, or maybe rad trend
+spectraltrend = nanmean(strowstat.dbt_desc(:,[15 16]),2);   -----> looks correct, ie BT trend
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+copy code from
+  /home/strow/Work/Airs/Tiles/tile_fits.m

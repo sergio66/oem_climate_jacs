@@ -1,3 +1,5 @@
+addpath /asl/matlib/aslutil
+
 set_iQAX
 if iQAX == 1
   disp('iQAX == 1 so looking for regular quantiles   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00]')
@@ -149,45 +151,7 @@ iCheckDone2 = -1;
 iCheckDone2 = input('Check whats been translated wrong2correct (-1/+1) v2 : ');
 
 if iCheckDone2 > 0
-  numdone = nan(72,64);
-  for jj = 1 : 64      %% latitude
-    fprintf(1,'.');
-    for ii = 1 : 72    %% longitude
-      JOB = (jj-1)*72 + ii;
-      x = translator_wrong2correct(JOB);
-
-      if iQAX == 1
-        %% orig wrong
-        %% fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-        %% fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(ii,'%02i') '/LonBin' num2str(jj,'%02i') '/'];
-  
-        %% new, since "translator_wrong2correct" shows x/y=lon/lat, so lat=index(2) while lon=index(1)
-        fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-        fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-  
-      elseif iQAX == 3
-        %% new, since "translator_wrong2correct" shows x/y=lon/lat, so lat=index(2) while lon=index(1)
-        fdirIN  = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-        fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-  
-        %% new, since "translator_wrong2correct" shows x/y=lon/lat, so lat=index(2) while lon=index(1)
-        fdirIN  = ['../DATAObsStats_StartSept2002_v3/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-        fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Mean/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-  
-      elseif iQAX == 4
-        %% new, since "translator_wrong2correct" shows x/y=lon/lat, so lat=index(2) while lon=index(1)
-        fdirIN  = ['../DATAObsStats_StartSept2002_v4/LatBin' num2str(x.wrong2correct_I_J_lon_lat(2),'%02i') '/LonBin' num2str(x.wrong2correct_I_J_lon_lat(1),'%02i') '/'];
-        fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v4/Mean/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-  
-      end
-
-      thedir = dir([fdirIN '/*.mat']);
-      numdone(ii,jj) = length(thedir);    
-    end        
-    imagesc(numdone'); colormap jet; colorbar; pause(0.1);
-  end
-  fprintf(1,'\n');
-  imagesc(numdone'); colormap jet; colorbar
+  check_files_translated_wrong2correct
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

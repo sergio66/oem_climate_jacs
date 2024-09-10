@@ -8,6 +8,12 @@ disp('    ')
 disp('      (10) for anomalies     2002/09 to 202X/08 ')
 iType = input('enter choice : ');
 
+iQuantileSubset = input('Enter style of Quantiles (1,3,4), 3 = default  where eg 3 = [0.5 0.8 0.9 0.95 0.97 1.0] and 4 = [0 0.03 0.5 0.97 1] : ');
+if length(iQuantileSubset) == 0
+  iQuantileSubset = 3;
+end
+
+
 iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502 : ');
 if length(iNumTmeSteps) == 0
   iNumTmeSteps = 502;
@@ -35,36 +41,36 @@ for jj = 1 : 64
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon_v3/Extreme/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/extreme_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
     elseif iType == 1
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')        '/fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '.mat'];
 
     elseif iType == -1
-      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*DJF* | wc -l    
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_DJF.mat'];
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_' num2str(iQuantileSubset) '_fits_LonBin*DJF* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_DJF.mat'];
     elseif iType == -2
-      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*MAM* | wc -l    
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_MAM.mat'];
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_' num2str(iQuantileSubset) '_fits_LonBin*MAM* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_MAM.mat'];
     elseif iType == -3
-      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*JJA* | wc -l    
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_JJA.mat'];
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_' num2str(iQuantileSubset) '_fits_LonBin*JJA* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_JJA.mat'];
     elseif iType == -4
-      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*SON* | wc -l    
-      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_SON.mat'];
+      %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_' num2str(iQuantileSubset) '_fits_LonBin*SON* | wc -l    
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps' tstr '_SON.mat'];
 
     elseif iType == 10
-       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin04/LonBin54/iQAX_3_fits_LonBin54_LatBin04_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
-       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*_LatBin*_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
+       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin04/LonBin54/iQAX_' num2str(iQuantileSubset) '_fits_LonBin54_LatBin04_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
+       %% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_' num2str(iQuantileSubset) '_fits_LonBin*_LatBin*_V1_200200090001_202200080031_Anomaly_TimeStepsX457.mat
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
       if iNumTmeSteps == 457
         % 2002/09 to 2022/08
-        fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202200080031_Anomaly_TimeStepsX' tstr '.mat'];
+        fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202200080031_Anomaly_TimeStepsX' tstr '.mat'];
       elseif iNumTmeSteps == 498
         % 2002/09 to 2024/06
-        %fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
-        fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
+        %fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
+        fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
       elseif iNumTmeSteps == 502
         % 2002/09 to 2024/08
-        %fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
-        fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
+        %fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
+        fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
       end
 
     elseif iType == 13
@@ -72,10 +78,10 @@ for jj = 1 : 64
       fname = [fname '/iQAX_4_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_201000080031_TimeStepsX' tstr '.mat'];
     elseif iType == 14
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
-      fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_201800090001_202200080031_TimeSteps_366_457_X091.mat'];
+      fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_201800090001_202200080031_TimeSteps_366_457_X091.mat'];
     elseif iType == 15
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
-      fname = [fname '/iQAX_3_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat'];
+      fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat'];
     end
 
     if exist(fname)

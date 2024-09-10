@@ -90,6 +90,8 @@ if iQAX == 1
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
 elseif iQAX == 3
   fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_3_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
+elseif iQAX == 4
+  fn_summary = sprintf('LatBin%1$02d/LonBin%2$02d/iQAX_4_summarystats_LatBin%1$02d_LonBin%2$02d_timesetps_001_%3$03d_V1.mat',lati,loni,i16daysSteps);
 end
 fn_summary = fullfile(fdirpre,fn_summary);
 
@@ -255,10 +257,17 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%  iQAX = +1; %% quantile   quants = [0   0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+%  iQAX = +3; %% quantile   quants = [0   0.50 0.90 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT : bewteen Q(ii) and Q(1)  --- allsky, median, [hot,paper] [hotter] [hottest]
+%  iQAX = +3; %% quantile   quants = [0.5 0.80 0.90 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT : bewteen Q(ii) and Q(1)  --- allsky, median, [hot,paper] [hotter] [hottest]
+%  iQAX = +4; %% quantile   quants = [0 0.03 0.97 1.00];               %%% new quants : all, cold,  hot
+
 if iQAX == 1
   numQuant = 16;
 elseif iQAX == 3
   numQuant = 5;
+elseif iQAX == 4
+  numQuant = 3;
 end
 
 bt_anom_desc  = nan(numQuant,2645,length(k_desc));
@@ -270,6 +279,8 @@ if iQAX == 1
   qi1 = 12; qi2 = 16;
 elseif iQAX == 3
   qi1 = 3; qi2 = 5;
+elseif iQAX == 3
+  qi1 = 1; qi2 = 3;
 end
 
 clear damonth

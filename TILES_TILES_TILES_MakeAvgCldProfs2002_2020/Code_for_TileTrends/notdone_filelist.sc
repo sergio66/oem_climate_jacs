@@ -1,1 +1,1 @@
-sbatch --account=pi_strow   -p high_mem --array=507-528,837-858 sergio_matlab_jobB.sbatch 10
+sbatch --account=pi_strow   -p high_mem --array=1-4608 sergio_matlab_jobB.sbatchX Y 

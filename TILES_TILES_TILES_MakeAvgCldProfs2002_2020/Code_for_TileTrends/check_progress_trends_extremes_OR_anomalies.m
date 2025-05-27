@@ -8,7 +8,7 @@ disp('    ')
 disp('      (10) for anomalies     2002/09 to 202X/08 ')
 iType = input('enter choice : ');
 
-iQuantileSubset = input('Enter style of Quantiles (1,3,4), 3 = default  where eg 3 = [0.5 0.8 0.9 0.95 0.97 1.0] and 4 = [0 0.03 0.5 0.97 1] : ');
+iQuantileSubset = input('Enter style of Quantiles (1,3,4), 3 = default  where eg 3 = [0.5 0.8 0.9 0.95 0.97 1.0] and 4 = [0 0.03 0.97 1] : ');
 if length(iQuantileSubset) == 0
   iQuantileSubset = 3;
 end

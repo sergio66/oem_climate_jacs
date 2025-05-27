@@ -2,15 +2,21 @@ addpath /home/sergio/MATLABCODE/TIME
 addpath /asl/matlib/h4tools
 
 [yy,mm,dd,hh] = tai2utcSergio(a.p2.rtime);
-if min(mm) == 8 & mean(yy) == 2012
-  %% Aug 27, 2012- Sep 11, 2012
-  pclrfile = 'pclear_Aug2012.mat';
-elseif min(mm) == 5 & mean(yy) == 2012
-  pclrfile = 'pclear_Jun2012.mat';
-elseif min(mm) == 2 & mean(yy) == 2012
-  pclrfile = 'pclear_Feb2012.mat';
-elseif min(mm) == 12 & mean(yy) == 2012
-  pclrfile = 'pclear_Dec2012.mat';
+%% if min(mm) == 8 & mean(yy) == 2012
+%%   %% Aug 27, 2012- Sep 11, 2012
+%%   pclrfile = 'pclear_Aug2012.mat';
+%% elseif min(mm) == 5 & mean(yy) == 2012
+%%   pclrfile = 'pclear_Jun2012.mat';
+%% elseif min(mm) == 2 & mean(yy) == 2012
+%%   pclrfile = 'pclear_Feb2012.mat';
+%% elseif min(mm) == 12 & mean(yy) == 2012
+%%   pclrfile = 'pclear_Dec2012.mat';
+%% end
+pclrfile = ['pclear_' fnameOUT];
+
+if exist(pclrfile)
+  fprintf(1,'pclrfile = %s already exists \n',pclrfile);
+  error('pclrfile already exists');
 end
 
 if ~exist(pclrfile)

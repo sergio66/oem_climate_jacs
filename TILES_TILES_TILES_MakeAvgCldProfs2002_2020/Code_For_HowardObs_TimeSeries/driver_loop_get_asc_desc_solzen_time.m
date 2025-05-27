@@ -3,9 +3,10 @@ addpath /home/sergio/MATLABCODE
 addpath /home/sergio/MATLABCODE/TIME
 addpath /asl/matlib/rtptools/
 
-iNumTimeSteps = 412;
-iNumTimeSteps = 457;
-iNumTimeSteps = 498;
+iNumTimeSteps = 412;  % 2002/09 to 2020/06
+iNumTimeSteps = 457;  % 2002/09 to 2022/06
+%iNumTimeSteps = 498; % 2002/09 to 2024/06
+iNumTimeSteps = 502;  % 2002/09 to 2024/08
 
 fsave = ['asc_desc_solzen_time_' num2str(iNumTimeSteps) '_64x72.mat'];
 if ~exist(fsave)
@@ -16,7 +17,7 @@ else
 end
 
 for ii = 1 : 72
-  fprintf(1,'longitude %2i of 72 ',ii);
+  fprintf(1,'longitude %2i of 72  ... will loop through 64 latbins : ',ii);
   for jj = 1 : 64
     fprintf(1,'.');
     fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d') '/summarystats_LatBin' num2str(jj,'%02d') '_LonBin' num2str(ii,'%02d') '_timesetps_001_412_V1.mat'];

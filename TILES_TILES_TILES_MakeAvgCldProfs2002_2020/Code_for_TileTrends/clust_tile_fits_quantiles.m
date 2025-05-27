@@ -121,7 +121,7 @@ if ~exist(fnout)
   fprintf(1,'making fnout = %s \n',fnout)
 else
   fprintf(1,'fnout = %s already exists\n',fnout)
-  disp('fnout already exists')
+  fprintf(1,'WARNING fnout = %s already exists \n',fnout)
   return
 end
 

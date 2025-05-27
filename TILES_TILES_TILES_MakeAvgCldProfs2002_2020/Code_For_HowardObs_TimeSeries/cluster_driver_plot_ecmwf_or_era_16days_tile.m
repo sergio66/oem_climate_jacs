@@ -1,32 +1,44 @@
-iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
-iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
-iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
-iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012) DEFAULT FOR PLOTS
-
 addpath /home/sergio/KCARTA/MATLAB
 addpath /home/sergio/MATLABCODE
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/COLORMAP
 
-iAllChan = -1;  %% only one chan, 1231  DEFAULT
+JOB0 = str2num(getenv('SLURM_ARRAY_TASK_ID'));
+if length(JOB0) == 0
+  JOB0 = 1;
+end
+
+iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012)
+iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
+iTimeStep = JOB0;
+
 iAllChan = +1;  %% 2645 chans
-iAllChan = input('Enter (-1/default) for only one chan, 64 latins, 72 lonbins (+1) for 2645 chans, 1 latbin, 72 lonbins : ');
+iAllChan = -1;  %% only one chan, 1231  DEFAULT
+
+%iAllChan = input('Enter (-1/default) for only one chan, 64 latins, 72 lonbins (+1) for 2645 chans, 1 latbin, 72 lonbins : ');
 if length(iAllChan) == 0
   iAllChan = -1;
 end
 
 if iAllChan < 0
-  fnameOUT = ['plot_ecmwf_or_era_16days_tile_timestep' num2str(iTimeStep,'%03d') '.mat'];
+  fnameOUT = ['plot_ecmwf_or_era_16days_tile_timestep' num2str(JOB0,'%03d') '.mat'];
+  if exist(fnameOUT)
+    fprintf(1,'fnameOUT = %s already exists \n',fnameOUT)
+    error('quitting');
+  else
+    fprintf(1,'will make %s \n',fnameOUT);
+  end
+end
+
+if iAllChan < 0
+  %fnameOUT = ['plot_ecmwf_or_era_16days_tile_timestep' num2str(JOB0,'%03d') '.mat'];
   iaFound = zeros(72,64);
 
   disp('reading in 64 latbins : + at 10, . = 1')
   dbt = 200 : 1 : 320;
   dbt = 180 : 1 : 340;  %% some stemp and BT1231 in Antratice are 195 K
-
-  %% why do we have wierd Q90 data gaps over coastlines???? 
-  wierd_rlon     = [];
-  wierd_rlat     = [];
-  wierd_r1231    = [];
 
   clr90_lf       = [];
   clr90_rlat     = [];
@@ -58,9 +70,7 @@ if iAllChan < 0
   i97 = find(quants == 0.97);
 
   iRead = +1;
-%% comment out this if-end loop if debug checking why some points on castlines have no data
   if exist(fnameOUT)
-    fprintf(1,'fnameOUT already exists \n',fnameOUT);
     loader = ['load ' fnameOUT];
     eval(loader);
     iRead = -1;     
@@ -74,9 +84,13 @@ if iAllChan < 0
         fprintf(1,'.');
       end
       for ii = 1 : 72
+
+        %%% these are made by clust_make_ecmwf_or_era_16days_tile.m
+        %%% these are made by clust_make_ecmwf_or_era_16days_tile.m
+        %%% these are made by clust_make_ecmwf_or_era_16days_tile.m
+
         fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];
         fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
-        fprintf(1,'looking for %s \n',fsave);
         i10sec = -1;
         if exist(fsave)
           moo = dir(fsave);
@@ -87,8 +101,12 @@ if iAllChan < 0
             i10sec = 1;
           end
         end
+
         if iaFound(ii,JOB) == 0 & exist(fsave) & i10sec > 0
+          fprintf(1,'fsave to be read in = %s \n',fsave)
+
           a = load(fsave);
+          
           tobs = rad2bt(1231,a.p2.robs1);
           tcld = rad2bt(1231,a.p2.rcalc);
           tclr = rad2bt(1231,a.p2.sarta_rclearcalc);
@@ -128,29 +146,8 @@ if iAllChan < 0
     
           landfrac(ii,JOB) = nanmean(a.p2.landfrac);
           count(ii,JOB) = length(a.p2.stemp);
-
-          ind = find(a.p2.rlon >= -70 & a.p2.rlon <= -65 & a.p2.rlat >= -25 & a.p2.rlat <= -20);
-          if length(ind) > 0
-            wierd_rlon  = [wierd_rlon  a.p2.rlon(ind)];
-            wierd_rlat  = [wierd_rlat  a.p2.rlat(ind)];
-            wierd_r1231 = [wierd_r1231 tobs(ind)];
-            figure(1); clf; scatter_coast(a.p2.rlon(ind),a.p2.rlat(ind),10,tobs(ind)); title('All points inside this gridbox')
-            
-            quantile(tobs,quants)
-            indx = find(tobs >= quantile(tobs,quants(i90)));
-            figure(2); scatter_coast(a.p2.rlon(indx),a.p2.rlat(indx),10,tobs(indx)); title('All Q90 points for this same datafile')
-            %% keyboard_nowindow
-            pause(2)
-          end
-
+  
           ind = find(tobs >= quantile(tobs,quants(i90)));
-          if length(ind) == 0
-            scatter_coast(a.p2.rlon,a.p2.rlat,tobs); title('hmm')
-            [min(tobs) max(tobs)]
-            quantile(tobs,quants)
-            keyboard_nowindow
-          end
-
           clr90_lf      = [clr90_rlat a.p2.landfrac(ind)];
           clr90_rlat    = [clr90_rlat a.p2.rlat(ind)];
           clr90_rlon    = [clr90_rlon a.p2.rlon(ind)];
@@ -178,6 +175,8 @@ if iAllChan < 0
           clr97_clr1231 = [clr97_clr1231 tclr(ind)];
 
         elseif iaFound(ii,JOB) == 0 & (~exist(fsave) | i10sec < 0)
+
+          fprintf(1,'fsave to be read in BUT NOT FOUND %s \n',fsave)
           iaFound(ii,JOB) = 0;
     
           max_bt1231obs(ii,JOB)  = NaN;
@@ -238,35 +237,35 @@ if iAllChan < 0
   
   if sum(iaFound(:)) == 4608
     clear stemp
-    commentA = 'made by ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/driver_plot_ecmwf_or_era_16days_tile.m';
+    commentA = 'made by ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/cluster_driver_plot_ecmwf_or_era_16days_tile.m';
     saver = ['save ' fnameOUT ' *bt1231* *stemp* count dbtt iaFound latt dbtt dbt quants clr*_* commentA'];
-    iSave = input('found all 4608 files .. save??? (-1/+1 [default]) : ');
+    %iSave = input('found all 4608 files .. save??? (-1/+1 [default]) : ');
+    iSave = +1;
     if length(iSave) == 0
       iSave = +1;
     end
     if iSave > 0
-      figure(1); clf; simplemap(clr90_rlat,clr90_rlon,clr90_r1231); title('BT1231 obs Q90')
-      figure(2); clf; simplemap(clr90_rlat,clr90_rlon,clr90_r1231); title('BT1231 obs Q90');  axis([-80 -60 -50 -20])
-      boo = find(clr90_rlat >= -50 & clr90_rlat < -20 & clr90_rlon >= -80 & clr90_rlon < -60); whos boo
-        figure(3); clf; scatter_coast(clr90_rlon(boo),clr90_rlat(boo),10,clr90_r1231(boo))
-error('sjg;sjg;js;jgs;jl;gj;lj;sljg;jg;js;jg debug comment this out when happy')
       eval(saver)     
     end
   end
 
-  saver
+  disp('now running automatic_make_read_in_16days_clear.m')
+  companion_read_in_16days_clear
 
-  do_the_plots_ecmwf_or_era_16days_tile_generic
-  disp('ret to continue to main plots'); pause
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %do_the_plots_ecmwf_or_era_16days_tile      %% good try
-  do_the_plots_ecmwf_or_era_16days_tile_v2    %% awesome
-  %do_the_plots_ecmwf_or_era_16days_tile_wgt  %% ugh not good
+  disp('not making plots/analysis')
+%%%   do_the_plots_ecmwf_or_era_16days_tile_generic
+%%%   disp('ret to continue to main plots'); pause
+%%%   
+%%%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   %do_the_plots_ecmwf_or_era_16days_tile      %% good try
+%%%   do_the_plots_ecmwf_or_era_16days_tile_v2    %% awesome
+%%%   %do_the_plots_ecmwf_or_era_16days_tile_wgt  %% ugh not good
+%%% 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 else
+  error('UGH TOO MUCH TO DO THIS FOR ALL CHANS!!!!')
 
   disp('grabbing lots of memory first ...')
   robs1 = nan(72,2645,10000);
@@ -326,3 +325,4 @@ else
   do_the_plots_ecmwf_or_era_16days_tile_onelatbin
   
 end
+

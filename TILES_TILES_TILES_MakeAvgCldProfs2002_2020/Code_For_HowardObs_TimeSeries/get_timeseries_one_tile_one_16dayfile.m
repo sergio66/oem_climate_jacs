@@ -21,6 +21,8 @@ moob = find(xb.yy == 2019 & xb.mm >= 12,2);
 out = get_timeseries_one_tile_one_16dayfile(xb.name{moob})  
 %}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/COLORMAP
 addpath /home/sergio/KCARTA/MATLAB

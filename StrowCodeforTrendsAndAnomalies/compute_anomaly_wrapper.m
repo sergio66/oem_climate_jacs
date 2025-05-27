@@ -64,7 +64,7 @@ y = y(good);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if length(x) > 2 + N*2
+if length(x) > 2*(2 + N*2)
   [B, stats]             = Math_tsfit_lin_robust(x-x(1),y,N);
   [btanomaly,radanomaly] = compute_anomaly(1:length(x),x-x(1),B,f,y,iRad_or_OD);
 else

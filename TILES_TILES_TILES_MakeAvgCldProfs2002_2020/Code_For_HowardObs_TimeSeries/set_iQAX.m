@@ -10,8 +10,8 @@ iQAX = +4; %% quantile                 quants = [0 0.03 0.50 0.97 1.00];        
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-iQAX = +3; %% quantile   quants = [0.5 0.8 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
 iQAX = +4; %% quantile                 quants = [0 0.03 0.50 0.97 1.00];       %%% new quants : cold, median, hot
+iQAX = +3; %% quantile   quants = [0.5 0.8 0.9 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

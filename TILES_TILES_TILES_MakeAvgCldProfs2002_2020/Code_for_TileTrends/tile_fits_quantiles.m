@@ -96,6 +96,8 @@ fn_summary = fullfile(fdirpre,fn_summary);
 
 %% printarray([i16daysSteps i16daysStepsX])
 
+fprintf(1,'fn_summary = %s \n',fn_summary)
+
 if exist(fn_summary)
   fprintf(1,'tile_fits_quantiles.m :lati,loni = %2i %2i  loading  << %s >> with %3i i16daysSteps\n',lati,loni,fn_summary,i16daysSteps)
   d = load(fn_summary);

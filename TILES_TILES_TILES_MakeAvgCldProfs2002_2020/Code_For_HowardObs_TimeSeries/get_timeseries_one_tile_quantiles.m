@@ -1,4 +1,4 @@
-function out = get_timeseries_one_tile(latbin,lonbin,findtile)
+function out = get_timeseries_one_tile_quantiles(latbin,lonbin,findtile)
 
 %% iTileNum == Sergio = 1 -- 4608
 %%   so Latbin 01/Lonbin 01 == 0001
@@ -91,6 +91,9 @@ ttmax = 460;
 ttmax = iNumYears * 23;    %% there are 23 files per years (16 day intervals)
 iaFound = zeros(1,ttmax);
 
+dbt = 180 : 1 : 340;
+set_iQAX
+
 out.latbin = latbin;
 out.lonbin = lonbin;
 
@@ -148,7 +151,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ii = 0;
-for tt = 1 : ttmax
+%% so 8 steps for 2002, 23 step for other years, 13 steps for 2022
+for tt = 1 : 8 + (iNumYears-1)*23 + (23-8)
   ii    = ii + 1;
   YYX   = saveyear(tt);
   tstep = savestep(tt); 
@@ -180,24 +184,130 @@ for tt = 1 : ttmax
 
     out.name{tt} = 'DNE';
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    out.asc_lump.mean_lat(tt) = NaN;
+    out.asc_lump.mean_lon(tt) = NaN;
+    out.asc_lump.mean_rtime(tt) = NaN;
+    out.asc_lump.yy(tt) = NaN;
+    out.asc_lump.mm(tt) = NaN;
+    out.asc_lump.dd(tt) = NaN;
+    out.asc_lump.doy(tt) = NaN;
+    out.asc_lump.time(tt) = NaN;
+    out.asc_lump.mean_rad(:,tt) = NaN;
+    out.asc_lump.std_rad(:,tt) = NaN;
+    out.asc_lump.max_rad(:,tt) = NaN;
+    out.asc_lump.min_rad(:,tt) = NaN;
+    out.asc_lump.mean_rad_1231(tt) = NaN;
+    out.asc_lump.std_rad_1231(tt) = NaN;
+    out.asc_lump.max_rad_1231(tt) = NaN;
+    out.asc_lump.min_rad_1231(tt) = NaN;
+
+    out.asc_quantile.quantile1231_asc(tt,:) = NaN;
+    out.asc_quantile.count_quantile1231_asc(tt,:) = NaN;
+    out.asc_quantile.rad_asc(tt,:,:) = NaN;
+    out.asc_quantile.stdrad_asc(tt,:,:) = NaN;
+    out.asc_quantile.satzen_quantile1231_asc(tt,:) = NaN;
+    out.asc_quantile.solzen_quantile1231_asc(tt,:) = NaN;
+    out.asc_quantile.satzen_quantile1231_asc(tt,:) = NaN;
+    out.asc_quantile.solzen_quantile1231_asc(tt,:) = NaN;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    out.desc_lump.mean_lat(tt) = NaN;
+    out.desc_lump.mean_lon(tt) = NaN;
+    out.desc_lump.mean_rtime(tt) = NaN;
+    out.desc_lump.yy(tt) = NaN;
+    out.desc_lump.mm(tt) = NaN;
+    out.desc_lump.dd(tt) = NaN;
+    out.desc_lump.doy(tt) = NaN;
+    out.desc_lump.time(tt) = NaN;
+    out.desc_lump.mean_rad(:,tt) = NaN;
+    out.desc_lump.std_rad(:,tt) = NaN;
+    out.desc_lump.max_rad(:,tt) = NaN;
+    out.desc_lump.min_rad(:,tt) = NaN;
+    out.desc_lump.mean_rad_1231(tt) = NaN;
+    out.desc_lump.std_rad_1231(tt) = NaN;
+    out.desc_lump.max_rad_1231(tt) = NaN;
+    out.desc_lump.min_rad_1231(tt) = NaN;
+
+    out.desc_quantile.quantile1231_desc(tt,:) = NaN;
+    out.desc_quantile.count_quantile1231_desc(tt,:) = NaN;
+    out.desc_quantile.rad_desc(tt,:,:) = NaN;
+    out.desc_quantile.stdrad_desc(tt,:,:) = NaN;
+    out.desc_quantile.satzen_quantile1231_desc(tt,:) = NaN;
+    out.desc_quantile.solzen_quantile1231_desc(tt,:) = NaN;
+    out.desc_quantile.satzen_quantile1231_desc(tt,:) = NaN;
+    out.desc_quantile.solzen_quantile1231_desc(tt,:) = NaN;
+
   else
     fprintf(1,'tt = %3i timestep = %3i diff(tt-tstep) = %2i loading in %s \n',tt,tstep,tt-tstep,fname);
     iaFound(tt) = +1;
-    a = read_netcdf_lls(fname);
 
+    %a0 = read_netcdf_lls(fname);
+    [a] = read_netcdf_h5(fname);
+
+    ianpts = 1:a.total_obs;
+    %scatter(a.lon(ianpts),a.lat(ianpts),1,a.asc_flag(ianpts)); colorbar
+    %plot(double(a.sol_zen(ianpts)),a.asc_flag(ianpts))
+
+    [yy,mm,dd,hh] = tai2utcSergio(a.tai93(ianpts)+offset1958_to_1993);
+
+    iPlot = -1;
     lump_all_together_onetile_timestep
+    lump_all_together_onetile_day_quantile
+    lump_all_together_onetile_night_quantile
 
   end
 end
 
 fprintf(1,'found %3i out of %3i files \n',sum(iaFound),ttmax);
 
+%% keyboard_nowindow
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% see Code_for_TileTrends/tile_fits_quantiles.m
+trends_stats = find_trends_lagcoeff(out,quants);
+out.trends_stats = trends_stats;
+
+load ../Code_for_TileTrends/airs_f.mat
+out.fairs = fairs;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% save('fruit.mat', '-struct', 'fruit'):
-savename = ['tile_timeseries_latbin_' num2str(out.latbin,'%2i') '_lonbin_' num2str(out.lonbin,'%2i') '_meandata.mat'];
+savename = ['tile_timeseries_latbin_' num2str(out.latbin,'%2i') '_lonbin_' num2str(out.lonbin,'%2i') '_quantiledata.mat'];
+savename = ['../TrendsPaper_Reviewer_UNC/tile_timeseries_latbin_' num2str(out.latbin,'%2i') '_lonbin_' num2str(out.lonbin,'%2i') '_quantiledata.mat'];
 out.latbin = latbin;
 out.lonbin = lonbin;
 out.comment = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/get_timeseries_one_tile.m';
+
 saver = ['save ' savename ' out comment'];
 saver = ['save(savename,''-struct'',''out'');'];
+out.savename = savename;
 out.saver = saver;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%{
+%% when subroutine ends, 
+  savename = out.savename;
+  eval(out.saver)
+
+plot(fairs,out.trends_stats.resid_desc_std(:,3))
+plot(fairs,out.trends_stats.resid_desc_std(:,3),'+',fairs,out.trends_stats.resid_asc_std(:,3),'*')
+  ylabel('Std Fit Residual (K)'); legend('desc','asc','location','best');
+
+%% then load in the file and run these
+
+iaFound = find(max_rad_1231 > 0); whos iaFound
+
+figure(1); plot(1:460,squeeze(desc_quantile.rad_desc(:,3,1520)),1:460,squeeze(desc_quantile.stdrad_desc(:,3,1520))*50)
+figure(2); plot(1:2645,nanmean(squeeze(desc_quantile.rad_desc(:,1,:)),1),...
+                1:2645,nanmean(squeeze(desc_quantile.rad_desc(:,3,:)),1),...
+                1:2645,nanmean(squeeze(desc_quantile.rad_desc(:,5,:)),1))
+  title('mean rad Q 1,3,5')
+figure(3); plot(1:2645,nanmean(squeeze(desc_quantile.stdrad_desc(:,1,:)),1),...
+                1:2645,nanmean(squeeze(desc_quantile.stdrad_desc(:,3,:)),1),...
+                1:2645,nanmean(squeeze(desc_quantile.stdrad_desc(:,5,:)),1))
+  title('std rad Q 1,3,5')
+
+%}

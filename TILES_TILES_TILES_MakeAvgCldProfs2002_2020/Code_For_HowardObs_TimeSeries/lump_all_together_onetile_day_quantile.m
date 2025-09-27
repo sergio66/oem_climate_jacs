@@ -46,8 +46,8 @@ for qq = 1 : length(quants)-1
     out.asc_quantile.stdrad_asc(tt,qq,:) = nanstd(a.rad(:,asc(Z)),[],2);   
     out.asc_quantile.satzen_quantile1231_asc(tt,qq) = nanmean(a.sat_zen(asc(Z)));
     out.asc_quantile.solzen_quantile1231_asc(tt,qq) = nanmean(a.sol_zen(asc(Z)));
-    out.asc_quantile.lat_quantile1231_asc(tt,qq) = nanmean(a.lat(asc(Z)));
-    out.asc_quantile.lon_quantile1231_asc(tt,qq) = nanmean(a.lon(asc(Z)));
+    out.asc_quantile.lat_quantile1231_asc(tt,qq)    = nanmean(a.lat(asc(Z)));
+    out.asc_quantile.lon_quantile1231_asc(tt,qq)    = nanmean(a.lon(asc(Z)));
   elseif length(Z) == 1
     out.asc_quantile.rad_asc(tt,qq,:) = a.rad(:,asc(Z));   
     out.asc_quantile.stdrad_asc(tt,qq,:) = 0*a.rad(:,asc(Z));   
@@ -63,11 +63,22 @@ for qq = 1 : length(quants)-1
     out.asc_quantile.lat_quantile1231_asc(tt,qq) = NaN;
     out.asc_quantile.lon_quantile1231_asc(tt,qq) = NaN;
   end
+
+  %if qq == 3
+  %  figure(3); clf
+  %  plot(a.lon(asc(Z)),a.lat(asc(Z)),'.',out.asc_quantile.lon_quantile1231_asc(tt,qq),out.asc_quantile.lat_quantile1231_asc(tt,qq),'rx'); title([num2str(qq) ' ' num2str(tt)])
+  %end
+  
 end
+
 
 if iPlot > 0
   figure(2); clf
   plot(2002+doy/365,out.asc_quantile.quantile1231_asc)
-  title('BT 1231 ASC Q1-5'); 
+  title('BT 1231 ASC Q1-5');
+
+  figure(3); clf
+  plot(a.lon(asc(Z)),a.lat(asc(Z)),'.',out.asc_quantile.lon_quantile1231_asc(tt,qq),out.asc_quantile.lat_quantile1231_asc(tt,qq),'rx'); title(num2str(qq))
+  
   pause(0.1)
 end

@@ -21,9 +21,18 @@ startdateMaster = [2002 09 01]; stopdateMaster = [2022 09 07]; i16daysSteps = 45
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 08 25]; i16daysSteps = 479;                       %% 2002/09 to 2023/08 = 21   years, 479 steps **********
 startdateMaster = [2002 09 01]; stopdateMaster = [2023 12 29]; i16daysSteps = 487;                       %% 2002/09 to 2023/12 = 21.3 years, 487 steps **********
 
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
+
 startdateMaster = [2002 09 01]; stopdateMaster = [2024 06 24]; i16daysSteps = 498;                       %% 2002/09 to 2024/06 = 21.75 years, 498 steps **********
-startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 21.95 years, 501 steps **********
-startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 27]; i16daysSteps = 502;                       %% 2002/09 to 2024/07 = 22.00 years, 502 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/08 = 21.95 years, 501 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 27]; i16daysSteps = 502;                       %% 2002/09 to 2024/08 = 22.00 years, 502 steps **********
+startdateMaster = [2002 09 01]; stopdateMaster = [2025 08 31]; i16daysSteps = 525;                       %% 2002/09 to 2024/08 = 23.00 years, 525 steps **********
+
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
+%%% <<<< wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); >>>>
 
 disp(' ')
 fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i ... i16daysSteps = %3i \n',startdateMaster,stopdateMaster,i16daysSteps)
@@ -66,6 +75,7 @@ startdate = [2002 09 01]; stopdate = [2024 01 01];  % 22.3 years! %% Joao at JPL
 startdate = [2020 07 01]; stopdate = [2024 06 30];  % 4 hot years
 startdate = [2002 09 01]; stopdate = [2024 06 30];  % 21.5 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
 startdate = [2002 09 01]; stopdate = [2024 08 27];  % 22.0 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
+startdate = [2002 09 01]; stopdate = [2025 08 31];  % 23.0 years! %% AIRS 23 years
 
 disp(' ')
 fprintf(1,'Code_for_TileTrends/clust_tile_fits_quantiles.m : set_start_stop_dates.m : REFINED SUBSET start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdate,stopdate)

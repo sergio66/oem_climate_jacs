@@ -3,6 +3,7 @@ disp('      (3)  for extremes      2002/09 to 202X/08 == new    ')
 disp('      (13) for first 8 years 2002/09 to 2010/08 == new    183 steps')
 disp('      (14) for last  4 years 2018/09 to 2022/08 == new    091 steps')
 disp('      (15) for mid  14 years 2008/01 to 2022/12 == new    342 steps')
+disp('      (18) for mid  23 years 2002/09 to 2025/08 == new    526 steps')
 disp('      (-1,-2,-3,-4) : seasonal DJF/MAM/JJA/SON for 2002/09 to 2022/08')
 disp('    ')
 disp('      (10) for anomalies     2002/09 to 202X/08 ')
@@ -14,7 +15,7 @@ if length(iQuantileSubset) == 0
 end
 
 
-iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502 : ');
+iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502, 525 : ');
 if length(iNumTmeSteps) == 0
   iNumTmeSteps = 502;
 end
@@ -71,6 +72,10 @@ for jj = 1 : 64
         % 2002/09 to 2024/08
         %fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
         fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
+      elseif iNumTmeSteps == 525
+        % 2002/09 to 2024/08
+        %fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200200090001_202400060031_Anomaly_TimeStepsX' tstr '.mat'];
+        fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_Anomaly_TimeSteps' tstr '.mat'];
       end
 
     elseif iType == 13
@@ -82,6 +87,9 @@ for jj = 1 : 64
     elseif iType == 15
       fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
       fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_200800010001_202200120031_TimeSteps_122_464_X342.mat'];
+    elseif iType == 18
+      fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02d') '/LonBin' num2str(ii,'%02d')];
+      fname = [fname '/iQAX_' num2str(iQuantileSubset) '_fits_LonBin' num2str(ii,'%02d') '_LatBin' num2str(jj,'%02d') '_V1_TimeSteps525.mat'];
     end
 
     if exist(fname)
@@ -104,6 +112,8 @@ end
 fprintf(1,'\n');
 fprintf(1,'looked for files ~ %s \n',fname);
 sum(found_tile_trends_quantiles_extremes(:))
+
+figure(3); pcolor(found_tile_trends_quantiles_size); colorbar; colormap jet; title('file size'); shading interp
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % if iCnt > 0

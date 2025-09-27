@@ -14,6 +14,20 @@ iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
 iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
 iTimeStep = JOB0;
 
+%{
+see do_the_plots_ecmwf_or_era_16days_tile_v2.m
+if ~exist('iTimeStep')
+  iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+  iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+  iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012) DEFAULT
+  iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
+
+  iTimeStep = input('Enter iTimeStep for 2012 : (DJF)218 (MAM)224 (JJA/default)230 (SON)236 : ');
+  if length(iTimeStep) == 0
+    iTimeStep = 230;
+  end
+%}
+
 iAllChan = +1;  %% 2645 chans
 iAllChan = -1;  %% only one chan, 1231  DEFAULT
 
@@ -89,7 +103,8 @@ if iAllChan < 0
         %%% these are made by clust_make_ecmwf_or_era_16days_tile.m
         %%% these are made by clust_make_ecmwf_or_era_16days_tile.m
 
-        fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];
+        fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];         %% on taki
+        fdirsave = ['/asl/s1/sergio/alldata/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/']; %% on chip
         fsave = [fdirsave '/test_clust_make_ecmwf_or_era_16days_tile_timestep_' num2str(iTimeStep,'%03d') '_latbin_' num2str(JOB,'%02d') '_lonbin_' num2str(ii,'%02d') '.mat'];
         i10sec = -1;
         if exist(fsave)
@@ -250,7 +265,8 @@ if iAllChan < 0
   end
 
   disp('now running automatic_make_read_in_16days_clear.m')
-  companion_read_in_16days_clear
+  %companion_read_in_16days_clear
+  autimatic_read_in_16days_clear  
 
   disp('not making plots/analysis')
 %%%   do_the_plots_ecmwf_or_era_16days_tile_generic

@@ -58,44 +58,6 @@ quantsx = setdiff(quantsx,1.00);
 qx = quantile(bt1231,quantsx);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% these are the quantiles
-
-minn = min(bt1231,1);
-maxx = max(bt1231,1);
-
-for qq = 1 : length(quantsx)
-  if quantsx(qq) < 0.5
-    %% avg between 0 and qx(qq)
-    indsX = find(bt1231 <= qx(qq));
-  else
-    %% avg between qx(qq) and 1  
-    indsX = find(bt1231 >= qx(qq));
-  end
-  if length(indsX) == 1
-    indsX = ones(1,2) * indsX;
-  end
-  indsX = inds(indsX);
-
-  out.quant.count(tt,qq)         = length(indsX);
-  out.quant.mean_lat(tt,qq)      = nanmean(a.lat(indsX));
-  out.quant.mean_lon(tt,qq)      = nanmean(a.lon(indsX));
-  out.quant.mean_sol(tt,qq)      = nanmean(a.sol_zen(indsX));
-  out.quant.mean_sat(tt,qq)      = nanmean(a.sat_zen(indsX));
-  
-  out.quant.mean_rtime(tt,qq)    = nanmean(a.tai93(indsX));
-  [yy,mm,dd] = tai2utcSergio(out.quant.mean_rtime(tt,qq) + offset1958_to_1993);
-  doy = change2days(yy,mm,dd,2002);
-  out.quant.yy(tt,qq) = yy;     
-  out.quant.mm(tt,qq) = mm;     
-  out.quant.dd(tt,qq) = dd;     
-  out.quant.doy(tt,qq) = doy;  
-  out.quant.time(tt,qq) = 2002+doy/365;
-  
-  out.quant.mean_rad(tt,qq,:)    = nanmean(a.rad(:,indsX),2);
-  out.quant.std_rad(tt,qq,:)     = nanstd(a.rad(:,indsX),[],2);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this is the average
 
 out.avg.count(tt)         = length(inds);
@@ -129,7 +91,11 @@ out.avg.histall(:,tt)       = histc(bt1231,dbt)/length(bt1231);
 
 %% this is the min, and thos below 230 K
 boo = find(bt1231 <= 230);
-out.min.count230K(tt)      = length(boo);
+boo = inds(boo);
+out.min.count230K(tt) = length(boo);
+out.min.rad230k(:,tt) = nanmean(a.rad(:,boo),2);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 boo = find(bt1231 == min(bt1231),1);
 indsX = inds(boo);
@@ -150,43 +116,3 @@ out.min.time(tt) = 2002+doy/365;
 
 out.min.rad(:,tt)    = a.rad(:,indsX);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% this is the max
-boo = find(bt1231 == max(bt1231),1);
-indsX = inds(boo);
-
-out.max.mean_lat(tt)      = a.lat(indsX);
-out.max.mean_lon(tt)      = a.lon(indsX);
-out.max.mean_sol(tt)      = a.sol_zen(indsX);
-out.max.mean_sat(tt)      = a.sat_zen(indsX);
-
-out.max.rtime(tt)    = a.tai93(indsX);
-[yy,mm,dd] = tai2utcSergio(out.max.rtime(tt) + offset1958_to_1993);
-doy = change2days(yy,mm,dd,2002);
-out.max.yy(tt) = yy;     
-out.max.mm(tt) = mm;     
-out.max.dd(tt) = dd;
-out.max.doy(tt) = doy;  
-out.max.time(tt) = 2002+doy/365;
-
-out.max.rad(:,tt)    = a.rad(:,indsX);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if iPlot > 0
-  keyboard_nowindow
-  junk = rad2bt(f2645,squeeze(out.quant.mean_rad(1,:,:))');
-  plot(f2645,junk,'b',f2645,rad2bt(f2645,out.min.rad(:,1)),'g',f2645,rad2bt(f2645,out.max.rad(:,1)),'r')
-  axis([645 1620 200 300])
-  junkA = [rad2bt(1231,out.min.rad(1520,1)) junk(1520,:) rad2bt(1231,out.max.rad(1520,1))];
-  junkB = [junkA; [min(bt1231) qx max(bt1231)]]';
-  printarray(junkB,' the averaged data     quantiles')
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if iPlot > 0
-  figure(1); clf
-  plot(2002+doy/365,rad2bt(1231,out.min_rad_1231),'b',2002+doy/365,rad2bt(1231,out.mean_rad_1231),'g',2002+doy/365,rad2bt(1231,out.max_rad_1231),'r'); 
-  title('BT 1231 ALL'); legend('min','mean','max','location','best','fontsize',10);
-  pause(0.1)
-end

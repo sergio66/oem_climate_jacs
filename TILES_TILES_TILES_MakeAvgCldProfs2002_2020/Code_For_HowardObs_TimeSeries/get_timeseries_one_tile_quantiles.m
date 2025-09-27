@@ -256,6 +256,7 @@ for tt = 1 : 8 + (iNumYears-1)*23 + (23-8)
     lump_all_together_onetile_day_quantile
     lump_all_together_onetile_night_quantile
 
+keyboard_nowindow
   end
 end
 

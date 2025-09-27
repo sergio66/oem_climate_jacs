@@ -2,6 +2,7 @@
 
 addpath /asl/matlib/aslutil/
 addpath /home/sergio/MATLABCODE
+
 addpath /home/sergio/MATLABCODE/TIME
 
 %% JOB = 1 .. 64
@@ -61,7 +62,6 @@ all_72lonbins.maxBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.minBT1231 = nan(iiMax-iiMin+1,maxN);
 all_72lonbins.dccBT1231 = nan(iiMax-iiMin+1,maxN);
 
-
 disp(' ')
 disp('WARNING : this reads in ALL files ie essentially does startdateMaster of set_start_stop_dates.m')
 fprintf(1,'cluster_loop_make_correct_timeseriesV2.m : set_start_stop_dates.m : MASTER start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdateMaster,stopdateMaster)
@@ -118,58 +118,65 @@ for ii = iiMin : iiMax
 
   lonbin_time = struct;  
 
-  fprintf(1,'reading in %3i files for %s +=100, o=10, .=1 \n',length(thedir),fdirOUT)
-
-  clear ttsave
-  for ttt = 1 : length(thedir)
-    if mod(ttt,100) == 0
-      fprintf(1,'+\n');
-    elseif mod(ttt,10) == 0
-      fprintf(1,'o');
-    else
-      fprintf(1,'.');
+  if exist(fnameoutIIJJ)
+    fprintf(1,'no need to read in %3i files for %s  \n',length(thedir),fdirOUT)  
+    fprintf(1,'%s already exists \n',fnameoutIIJJ)
+    fprintf(1,'was looking at %s \n',fdirIN)
+    error(';gsjlksjg;')
+  else  
+    fprintf(1,'reading in %3i files for %s +=100, o=10, .=1 \n',length(thedir),fdirOUT)
+  
+    clear ttsave
+    for ttt = 1 : length(thedir)
+      if mod(ttt,100) == 0
+        fprintf(1,'+\n');
+      elseif mod(ttt,10) == 0
+        fprintf(1,'o');
+      else
+        fprintf(1,'.');
+      end
+  
+      fx = [fdirIN '/' thedir(ttt).name];
+      a = load(fx);
+      tt = thedir(ttt).name;
+      tt = tt(1:end-4);
+      tt = str2num(tt(end-2:end));
+      %fprintf(1,'[ttt tt] = %3i %3i %3i \n',ttt,tt,ttt-tt)
+      ttsave(tt) = tt;
+  
+      lonbin_time = cat_lonbin_time(lonbin_time,tt,a);
+      all_72lonbins.rlon(ii,tt) = a.lon_asc;
+      all_72lonbins.rlat(ii,tt) = a.lat_asc;
+      all_72lonbins.yy(ii,tt) = a.meanyear_asc;
+      all_72lonbins.mm(ii,tt) = a.meanmonth_asc;
+      all_72lonbins.dd(ii,tt) = a.meanday_asc;
+      all_72lonbins.meanBT1231(ii,tt) = rad2bt(1520,a.mean_rad_asc(1520));  %% ORIG WRONG CODE run on Dec 8, 2020
+      all_72lonbins.meanBT1231(ii,tt) = rad2bt(1231,a.mean_rad_asc(1520));  %% THIS IS CORRECT corrected Dec 16, 2020
+      all_72lonbins.maxBT1231(ii,tt) = a.max1231_asc;
+      all_72lonbins.minBT1231(ii,tt) = a.min1231_asc;
+      all_72lonbins.dccBT1231(ii,tt) = a.DCC1231_asc;
+      %radquantile(tt,:,:) = a.rad_quantile_desc;
+      %thetimestep(JOBB,tt) = str2num(thedir(tt).name(18:end-4));
     end
-
-    fx = [fdirIN '/' thedir(ttt).name];
-    a = load(fx);
-    tt = thedir(ttt).name;
-    tt = tt(1:end-4);
-    tt = str2num(tt(end-2:end));
-    %fprintf(1,'[ttt tt] = %3i %3i %3i \n',ttt,tt,ttt-tt)
-    ttsave(tt) = tt;
-
-    lonbin_time = cat_lonbin_time(lonbin_time,tt,a);
-    all_72lonbins.rlon(ii,tt) = a.lon_asc;
-    all_72lonbins.rlat(ii,tt) = a.lat_asc;
-    all_72lonbins.yy(ii,tt) = a.meanyear_asc;
-    all_72lonbins.mm(ii,tt) = a.meanmonth_asc;
-    all_72lonbins.dd(ii,tt) = a.meanday_asc;
-    all_72lonbins.meanBT1231(ii,tt) = rad2bt(1520,a.mean_rad_asc(1520));  %% ORIG WRONG CODE run on Dec 8, 2020
-    all_72lonbins.meanBT1231(ii,tt) = rad2bt(1231,a.mean_rad_asc(1520));  %% THIS IS CORRECT corrected Dec 16, 2020
-    all_72lonbins.maxBT1231(ii,tt) = a.max1231_asc;
-    all_72lonbins.minBT1231(ii,tt) = a.min1231_asc;
-    all_72lonbins.dccBT1231(ii,tt) = a.DCC1231_asc;
-    %radquantile(tt,:,:) = a.rad_quantile_desc;
-    %thetimestep(JOBB,tt) = str2num(thedir(tt).name(18:end-4));
+    fprintf(1,'\n');
+  
+    notfound = find(ttsave == 0);
+    lonbin_time.timestep_notfound = notfound;
+    lonbin_time = nan_lonbin_time_notfound(lonbin_time);
+  
+    datime = all_72lonbins.yy(ii,:) + all_72lonbins.mm(ii,:)/12 + all_72lonbins.dd(ii,:)/30/12;
+    plot(datime,all_72lonbins.meanBT1231(ii,:)); 
+    xlim([min(datime) max(datime)]); plotaxis2; 
+    pause(0.1);
+  
+    if ~exist(fnameoutIIJJ)
+      save(fnameoutIIJJ,'-struct','lonbin_time');
+      fprintf(1,'saved %s \n',fnameoutIIJJ);
+    else
+      fprintf(1,'%s already exists \n',fnameoutIIJJ);
+    end
+    disp(' ')
   end
-  fprintf(1,'\n');
-
-  notfound = find(ttsave == 0);
-  lonbin_time.timestep_notfound = notfound;
-  lonbin_time = nan_lonbin_time_notfound(lonbin_time);
-
-  datime = all_72lonbins.yy(ii,:) + all_72lonbins.mm(ii,:)/12 + all_72lonbins.dd(ii,:)/30/12;
-  plot(datime,all_72lonbins.meanBT1231(ii,:)); 
-  xlim([min(datime) max(datime)]); plotaxis2; 
-  pause(0.1);
-
-  if ~exist(fnameoutIIJJ)
-    save(fnameoutIIJJ,'-struct','lonbin_time');
-    fprintf(1,'saved %s \n',fnameoutIIJJ);
-  else
-    fprintf(1,'%s already exists \n',fnameoutIIJJ);
-  end
-  disp(' ')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,7 +196,7 @@ end
 fprintf(1,'\n');
 fprintf(1,'DONE : finished all 72 lonbins for latbin %2i \n',JOB)
 fprintf(1,'now do cd ../Code_for_TileTrends/ \n')
-fprintf(1,'now do edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps \n')
+fprintf(1,'now do edit eg clust_tile_fits_quantiles.m so we are reading in the eg 433 timesteps \n')
 fprintf(1,'now do   ensure start/stop are [2022 08 31],[2002 09 01] \n')
 fprintf(1,'now do sbatch -p high_mem --array=1-4608 sergio_matlab_jobB.sbatch 1 \n')
 

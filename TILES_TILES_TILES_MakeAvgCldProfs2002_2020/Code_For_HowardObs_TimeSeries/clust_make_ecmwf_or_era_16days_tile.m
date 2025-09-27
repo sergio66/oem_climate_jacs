@@ -89,6 +89,20 @@ if iTimeStep > maxN
   iTimeStep = maxN;
 end
 
+%{
+see do_the_plots_ecmwf_or_era_16days_tile_v2.m
+if ~exist('iTimeStep')
+  iTimeStep = 230-12; %% 10 years Feb 20, 2012 - Mar 11,  2012 (DJF 2012)
+  iTimeStep = 230-6;  %% 10 years May 20, 2012 - June 11, 2012 (MAM 2012)
+  iTimeStep = 230+0;  %% 10 years Aug 20, 2012 - Sep  11, 2012 (JJA 2012) DEFAULT
+  iTimeStep = 230+6;  %% 10 years Nov 20, 2012 - Dec 11,  2012 (SON 2012)
+
+  iTimeStep = input('Enter iTimeStep for 2012 : (DJF)218 (MAM)224 (JJA/default)230 (SON)236 : ');
+  if length(iTimeStep) == 0
+    iTimeStep = 230;
+  end
+%}
+
 date_stamp = hugedir(iTimeStep).name;
 fprintf(1,'iTimeStep = %4i date_stamp = %s \n',iTimeStep,date_stamp);
 
@@ -121,7 +135,8 @@ end
 for ii = iiMin : iStempII : iiMax
   jj = JOB;   %% latbin
   JOBB = (JOB-1)*72 + ii;
-  fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];
+  fdirsave = ['/asl/s1/sergio/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];          %% on taki
+  fdirsave = ['/asl/s1/sergio/alldata/JUNK2/16dayTimeStep/' num2str(iTimeStep,'%03d') '/'];  %% on chip
   if ~exist(fdirsave)
     fprintf(1,'making %s \n',fdirsave)
     mker = ['!/bin/mkdir -p ' fdirsave];

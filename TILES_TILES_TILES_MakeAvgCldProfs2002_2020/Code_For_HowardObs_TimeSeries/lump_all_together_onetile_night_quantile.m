@@ -46,22 +46,22 @@ for qq = 1 : length(quants)-1
     out.desc_quantile.stdrad_desc(tt,qq,:) = nanstd(a.rad(:,desc(Z)),[],2);   
     out.desc_quantile.satzen_quantile1231_desc(tt,qq) = nanmean(a.sat_zen(desc(Z)));
     out.desc_quantile.solzen_quantile1231_desc(tt,qq) = nanmean(a.sol_zen(desc(Z)));
-    out.desc_quantile.lat_quantile1231_desc(tt,qq) = nanmean(a.lat(desc(Z)));
-    out.desc_quantile.lon_quantile1231_desc(tt,qq) = nanmean(a.lon(desc(Z)));
+    out.desc_quantile.lat_quantile1231_desc(tt,qq)    = nanmean(a.lat(desc(Z)));
+    out.desc_quantile.lon_quantile1231_desc(tt,qq)    = nanmean(a.lon(desc(Z)));
   elseif length(Z) == 1
     out.desc_quantile.rad_desc(tt,qq,:) = a.rad(:,desc(Z));   
     out.desc_quantile.stdrad_desc(tt,qq,:) = 0*a.rad(:,desc(Z));   
     out.desc_quantile.satzen_quantile1231_desc(tt,qq) = a.sat_zen(desc(Z));
-    out.desc_quantile.lat_quantile1231_desc(tt,qq) = a.sol_zen(desc(Z));
-    out.desc_quantile.lon_quantile1231_desc(tt,qq) = a.lat(desc(Z));
-    out.desc_quantile.solzen_quantile1231_desc(tt,qq) = a.lon(desc(Z));
+    out.desc_quantile.solzen_quantile1231_desc(tt,qq) = a.sol_zen(desc(Z));
+    out.desc_quantile.lat_quantile1231_desc(tt,qq)    = a.lat(desc(Z));
+    out.desc_quantile.lon_quantile1231_desc(tt,qq)    = a.lon(desc(Z));
   elseif length(Z) == 0
     out.desc_quantile.rad_desc(tt,qq,:) = NaN;
     out.desc_quantile.stdrad_desc(tt,qq,:) = NaN;
     out.desc_quantile.satzen_quantile1231_desc(tt,qq) = NaN;
     out.desc_quantile.solzen_quantile1231_desc(tt,qq) = NaN;
-    out.desc_quantile.lat_quantile1231_desc(tt,qq) = NaN;
-    out.desc_quantile.lon_quantile1231_desc(tt,qq) = NaN;
+    out.desc_quantile.lat_quantile1231_desc(tt,qq)    = NaN;
+    out.desc_quantile.lon_quantile1231_desc(tt,qq)    = NaN;
   end
 end
 

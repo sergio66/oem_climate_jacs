@@ -132,6 +132,40 @@ set(gca,'ydir','normal')
 ylim([-90 +90])
 xlabel('BT 1231 (K)'); ylabel('Latitude')
 
+%%%%%%%%%%
+
+iSaveJGR = +1;
+iSaveJGR = -1;
+if iSaveJGR > 0
+  data_fig1.comment0   = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/do_the_plots_ecmwf_or_era_16days_tile_v2.m fig25';
+  data_fig1.dbtt       = dbtt;          %% the BT1231 bins
+  data_fig1.latbins    = latt;          %% the latitude bins
+  data_fig1.histc      = dada;          %% the histograms
+  data_fig1.Q0         = nanmin(dada0); %% min == quantile 0
+  data_fig1.Q1         = nanmax(dada1); %% max == quantile 1
+  data_fig1.mean       = squeeze(nanmean(dadaX,1)); %% mean
+  quants([IA(1) iQ])
+  data_fig1.Q50        = squeeze(nanmean(baba(:,:,IA(1)),1)); %% Q50
+  data_fig1.Q90        = squeeze(nanmean(baba(:,:,iQ),1)); %% Q50
+  
+  figure(100); clf
+  pcolor(data_fig1.dbtt,data_fig1.latbins,data_fig1.histc); colormap(jett); colorbar; shading interp
+  hold on;
+  plot(data_fig1.Q0,data_fig1.latbins,'c','linewidth',2);
+  plot(data_fig1.mean,data_fig1.latbins,'rx-','linewidth',2);
+  plot(data_fig1.Q50,data_fig1.latbins,'linewidth',2);
+  plot(data_fig1.Q90,data_fig1.latbins,'color',[1 1 1]*0.5,'linewidth',2);
+  plot(data_fig1.Q1,data_fig1.latbins,'b','linewidth',2);
+  hold off
+  xlim([210 310])
+  wah = [['    ']; ['min ']; ['mean']; num2str(quants(IA(1))','%4.2f'); ['0.90']; ['max ']];
+  hl = legend(wah,'location','west','fontsize',8);
+  set(gca,'ydir','normal')
+  ylim([-90 +90])
+  xlabel('BT 1231 (K)'); ylabel('Latitude')
+  
+  % save /home/sergio/MATLABCODE/oem_pkg_run/MATFILES_for_JGR_trends_paper/fig1.mat data_fig1
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(6); clf 
@@ -231,9 +265,16 @@ plot_QX_vs_uniformclear_filter    %% files here made by then run read_in_16days_
 addpath /asl/matlib/plotutils
 %{
 if iTimeStep == 230
-  figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_aug2012.pdf']);
-  figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_aug2012.pdf']);
-  figure(11); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_aug2012.pdf']);
+  figure(08);  aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_aug2012.pdf']);
+  figure(09);  aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_aug2012.pdf']);
+  figure(11);  aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90_vs_clearsky_filter_aug2012.pdf']);
+  figure(300); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/allthreefigs_q90_clearsky_aug2012.pdf']);
+
+  figure(08);  sergioprintfig(['/home/sergio/PAPERS/SUBMITPAPERS/trends_May2025/FigsRedoneSept2025/clearskyfilter_aug2012']);
+  figure(09);  sergioprintfig(['/home/sergio/PAPERS/SUBMITPAPERS/trends_May2025/FigsRedoneSept2025/q90clearfilter_aug2012']);
+  figure(11);  sergioprintfig(['/home/sergio/PAPERS/SUBMITPAPERS/trends_May2025/FigsRedoneSept2025/q90_vs_clearsky_filter_aug2012']);
+  figure(300); sergioprintfig(['/home/sergio/PAPERS/SUBMITPAPERS/trends_May2025/FigsRedoneSept2025/allthreefigs_q90_clearsky_aug2012'],300,-1,-1);
+
 elseif iTimeStep == 230 - 6
   figure(08); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/clearskyfilter_june2012.pdf']);
   figure(09); aslprint(['/home/sergio/PAPERS/SUBMITPAPERS/trends/Figs/q90clearfilter_june2012.pdf']);
@@ -245,3 +286,5 @@ elseif iTimeStep == 230 + 6
 end
 
 %}
+
+

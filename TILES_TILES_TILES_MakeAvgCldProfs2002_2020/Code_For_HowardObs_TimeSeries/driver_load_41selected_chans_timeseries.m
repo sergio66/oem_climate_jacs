@@ -90,7 +90,9 @@ disp('---------------------------')
 
 %% READ IN DATA
 if ~exist('radA')
-  iNumTimeSteps = 487;
+  iNumTimeSteps = 460;   %% this is 23 timesteps/year * 20 years 
+  iNumTimeSteps = 487;   %% this is 23 timesteps/year * 21 years
+  iNumTimeSteps = 526;   %% this is 23 timesteps/year * 23 years   
   radA = nan(4608,iNumTimeSteps,41,5);
   radD = nan(4608,iNumTimeSteps,41,5);
   
@@ -107,6 +109,7 @@ if ~exist('radA')
       fname = [fdir0 '/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_457_V1.mat'];  %% 2002/09-2022/08
       fname = [fdir0 '/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_479_V1.mat'];  %% 2002/09-2023/08
       fname = [fdir0 '/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_487_V1.mat'];  %% 2002/09-2023/12
+      fname = [fdir0 '/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/iQAX_3_summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_525_V1.mat'];  %% 2002/09-2025/08      
       a = load(fname);
       radA(iCnt,:,:,:) = squeeze(a.rad_quantile_asc(:,inds41,:));
       radD(iCnt,:,:,:) = squeeze(a.rad_quantile_desc(:,inds41,:));
@@ -148,13 +151,38 @@ saver = ['save -v7.3 ' fdir0 '/chans41_timeseries.mat radA radD chans41L1B inds4
 disp('in other window type      watch "ls -lth /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon//chans41_timeseries.mat" ')
 eval(saver)
 
-ix = find(freqs41 >= 1231,1); strix = num2str(round(freqs41(ix)),'%04d');
 ix = find(freqs41 >= 2616,1); strix = num2str(round(freqs41(ix)),'%04d');
 ix = find(freqs41 >= 0727,1); strix = num2str(round(freqs41(ix)),'%04d');
+ix = find(freqs41 >= 1231,1); strix = num2str(round(freqs41(ix)),'%04d');
 radAsmall = squeeze(radA(:,:,ix,3));
 radDsmall = squeeze(radD(:,:,ix,3));
 saver = ['save -v7.3 ' fdir0 '/chan_' num2str(ix) '_' strix '_timeseries.mat radAsmall radDsmall tai_asc tai_desc iNumTimeSteps fname_example thetime Xlon Ylat comment* iQAX quants daysSince2002'];
-eval(saver)
+% eval(saver)
+
+addpath ../../StrowCodeforTrendsAndAnomalies/
+kgood = find(isfinite(thetime));
+plot(thetime,nanmean(radAsmall,1))
+cosYY = cos((YY'*ones(1,length(thetime)))*pi/180);
+allBT = rad2bt(freqs41(ix),radAsmall);
+  meanBT = sum(allBT.*cosYY,1)./sum(cosYY,1);                                                          plot(thetime,meanBT); grid;  xlim([2020 2026])
+  npolar = find(YY >= +60); npolar = sum(allBT(npolar,:).*cosYY(npolar,:),1)./sum(cosYY(npolar,:),1);  plot(thetime,npolar); grid;  xlim([2020 2026])
+  spolar = find(YY <= -60); spolar = sum(allBT(spolar,:).*cosYY(spolar,:),1)./sum(cosYY(spolar,:),1);  plot(thetime,spolar); grid;  xlim([2020 2026])
+  nml    = find(YY >= +30 & YY < +60); nml = sum(allBT(nml,:).*cosYY(nml,:),1)./sum(cosYY(nml,:),1);   plot(thetime,nml);    grid;  xlim([2020 2026])
+  sml    = find(YY > -60 & YY <= -30); sml = sum(allBT(sml,:).*cosYY(sml,:),1)./sum(cosYY(sml,:),1);   plot(thetime,sml);    grid;  xlim([2020 2026])
+  trp    = find(YY >= -30 & YY <= +30); trp = sum(allBT(trp,:).*cosYY(trp,:),1)./sum(cosYY(trp,:),1);  plot(thetime,trp);    grid;  xlim([2020 2026])
+plot(thetime,meanBT,'k',thetime,npolar,'b',thetime,spolar,'b--',thetime,nml,'g',thetime,sml,'g--',thetime,trp,'r','linewidth',2);  grid;  xlim([2020 2026]); title([strix ' cm-1'])
+  legend('Mean','N Polar','S Polar','N ML','S ML','TRP','location','best');
+
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,npolar,4); trend_npolar = B(2); anom_npolar = btanomaly;
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,spolar,4); trend_spolar = B(2); anom_spolar = btanomaly;
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,meanBT,4); trend_meanBT = B(2); anom_meanBT = btanomaly;
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,nml,4); trend_nml = B(2); anom_nml = btanomaly;
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,sml,4); trend_sml = B(2); anom_sml = btanomaly;
+[B,stats,btanomaly,radanomaly] = compute_anomaly_wrapper(kgood,thetime*365,trp,4); trend_trp = B(2); anom_trp = btanomaly;
+
+plot(thetime,anom_meanBT,'k',thetime,anom_npolar,'b',thetime,anom_spolar,'b--',thetime,anom_nml,'g',thetime,anom_sml,'g--',thetime,anom_trp,'r','linewidth',2);  grid;  xlim([2020 2026]); title([strix ' cm-1 ANOMALY'])
+hold on; plot(thetime,anom_meanBT,'k','linewidth',4); hold off
+  legend('Mean','N Polar','S Polar','N ML','S ML','TRP','location','best');
 
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

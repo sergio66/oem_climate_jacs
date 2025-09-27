@@ -1,20 +1,20 @@
-function [bt_anom r_anom] = compute_anomaly(k,dtime,B,f,radiance,iConvertToBT);
+function [bt_anom r_anom] = compute_anomaly(k,dtime,B,f,radiance,iConvertRadoBT);
 
 % input 
-%   k           logical for r (raw measured radiance and times)    len(k) <= length(radiance)
-%   dtime       measurement times                                  len(k) <= length(radiance),lenngth(dtime)    length(dtime) = length(radiance)
-%   radiance    raw measured radiance or data timeseries           len(k) <= length(radiance),lenngth(dtime)    length(dtime) = length(radiance)
-%   f           observation wavenumber (one point)                 length(f) = 1; [] if this is eg OD
-%   B           generally 1 x 10 set of fitted coefficients, slope is B(2) which comes from 
-%               [B, stats, err] = Math_tsfit_lin_robust(dtime(k),r(k),4);
-%  iConvertToBT  +1 [OPTIONAL, DEFAULT] if you want RADanomaly --> BTanomaly 
-%                -1 (but you do not want this if eg "radiance" is really MODIS OD!!!)
+%   k              logical for r (raw measured radiance and times)    len(k) <= length(radiance)
+%   dtime          measurement times                                  len(k) <= length(radiance),lenngth(dtime)    length(dtime) = length(radiance)
+%   radiance       raw measured radiance or data timeseries           len(k) <= length(radiance),lenngth(dtime)    length(dtime) = length(radiance)
+%   f              observation wavenumber (one point)                 length(f) = 1; [] if this is eg OD
+%   B              generally 1 x 10 set of fitted coefficients, slope is B(2) which comes from 
+%                  [B, stats, err] = Math_tsfit_lin_robust(dtime(k),r(k),4);
+%  iConvertRadoBT  +1 [OPTIONAL, DEFAULT] if you want RADanomaly --> BTanomaly 
+%                  -1 (but you do not want this if eg "radiance" is really MODIS OD!!!)
 
 % output
-% if iConvertToBT > 0
+% if iConvertRadoBT > 0
 %   r_anom    is the radiance anomaly
 %   bt_anom is the bt anomaly
-% elseif iConvertToBT < 0
+% elseif iConvertRadoBT < 0
 %   r_anom = bt_anom = anomaly
 
 %% example use : AIRS
@@ -27,7 +27,7 @@ function [bt_anom r_anom] = compute_anomaly(k,dtime,B,f,radiance,iConvertToBT);
 %      anom_deepblue(ii,jj,:)    = compute_anomaly(boo,doy,B,[],data,-1);
 
 if nargin == 5
-  iConvertToBT = +1;
+  iConvertRadoBT = +1;
 end
 
 r_anom = zeros(size(k));
@@ -50,7 +50,7 @@ else
 end
 r_anom(k) = (radiance(k) - y') + g(:,2)*B(2);               %% anomaly = (raw signal - fitted signal) + B(2)*dtime
 
-if iConvertToBT > 0
+if iConvertRadoBT > 0
   % Convert to BT
   deriv = drdbt(f,rad2bt(f,radiance(k)));
   bt_anom(k) = r_anom(k)./deriv';

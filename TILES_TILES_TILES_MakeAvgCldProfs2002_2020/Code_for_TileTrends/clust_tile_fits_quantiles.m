@@ -14,12 +14,13 @@ addpath /home/sergio/MATLABCODE/TIME
 addpath /home/sergio/MATLABCODE/PLOTTER
 addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
 addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
 if length(JOB) == 0
   JOB = 2000;
 end
-% JOB = 2222
+%% JOB = 2222
 
 disp(' ')
 %for JOB=1:4608

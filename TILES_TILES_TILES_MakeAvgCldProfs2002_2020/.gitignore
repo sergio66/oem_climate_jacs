@@ -5,6 +5,9 @@
 *.png
 *.nc
 
+notdone*
+notdone_filelist.sc
+
 WORKS*
 DATA*
 SAGE3

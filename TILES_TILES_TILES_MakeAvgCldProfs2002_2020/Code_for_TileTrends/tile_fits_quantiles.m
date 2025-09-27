@@ -5,6 +5,23 @@ xnargin = nargin;
 
 %% copied from /home/strow/Work/Airs/Tiles/tile_fits.m
 
+%% Method 1 : wrong
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime,b,f,r);
+%% Method 1A : wrong
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime-dtime(1),b,f,r);
+%%
+%% Method 2 : correct
+%%   k = find(isfinite(r));
+%%   [b stats] = Math_tsfit_anomaly_robust(dtime(k)-dtime(k(1)),r(k),4);
+%%   [bt_anom r_anom] = compute_anomaly(k,dtime-dtime(1),b,f,r);
+%% Method 3 : correct
+%%   k = find(isfinite(r));
+%%   [b stats bt_anom r_anom] = compute_anomaly_wrapper(dtime(k)-dtime(k(1)),r(k),4,+1,-1);
+
 if nargin < 5
   error('need 5 arguments loni,lati,fdirpre,fout,i16daysSteps [stopdate,startdate,i16daysStepsX] are optional')
 end
@@ -51,6 +68,7 @@ disp(' ')
 %% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
 %% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
 %% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 526 timesteps till Aug 2025
 %% disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
 %% 
 %% fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
@@ -111,8 +129,13 @@ else
 end
 
 %mtime = tai2dtime(airs2tai(d.tai93_desc + offset1958_to_1993));
-mtime = tai2dtime(airs2tai(d.tai93_desc)); 
-dtime = datenum(mtime); 
+mtime = tai2dtime(airs2tai(d.tai93_desc));
+fprintf(1,'%s \n',mtime')
+dtime = datenum(mtime);
+figure(1); plot(dtime);          title('days in dtime, since 1800???')
+figure(2); plot(dtime-dtime(1)); title('days dtime-dtime(1)')
+figure(3); plot(diff(dtime));    title('diff(dtime)')
+pause(0.1)
 
 % [mtime(1)]
 % [d.tai93_desc(1)/1000 dtime(1)]
@@ -269,6 +292,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%  iQAX = +1; %% quantile   quants = [0   0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
+%  iQAX = +3; %% quantile   quants = [0   0.50 0.90 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT : bewteen Q(ii) and Q(1)  --- allsky, median, [hot,paper] [hotter] [hottest]
+%  iQAX = +3; %% quantile   quants = [0.5 0.80 0.90 0.95 0.97 1.00];   %%% TRENDS PAPER DEFAULT : bewteen Q(ii) and Q(1)  --- allsky, median, [hot,paper] [hotter] [hottest]
+%  iQAX = +4; %% quantile   quants = [0 0.03 0.97 1.00];               %%% new quants : all, cold,  hot
+
 if iQAX == 1
   numQuant = 16;
 elseif iQAX == 3
@@ -325,6 +353,7 @@ if iAllorSeason < 0
   %% only DJF, MAM, JJA, SON
   iNumSineCosCycles = 0;
 end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for qi = qi1 : qi2
    % r1231 = squeeze(d.rad_quantile_desc(:,1520,qi));
@@ -401,7 +430,7 @@ for qi = 1:numQuant
   dbt_asc(:,qi)     = b_asc(:,qi,2)./deriv;
   dbt_err_asc(:,qi) = berr_asc(:,qi,2)./deriv;
   % <<< *** /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m uses these *** >>>     
-     
+  
   % Correct dbt_ for lag-1 correlations (note b*(:,2) values NOT corrected for lag-1)
   lagc = sqrt( ( 1 + lag_desc(:,qi) ) ./ ( 1 - lag_desc(:,qi) ) ) ;
   dbt_err_desc(:,qi) = lagc .* dbt_err_desc(:,qi);

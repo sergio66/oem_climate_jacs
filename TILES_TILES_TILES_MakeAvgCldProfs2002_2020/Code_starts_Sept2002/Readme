@@ -22,16 +22,16 @@ do this for trends paper stuff
   Check   hugedir = dir('/asl/isilon/airs/tile_test7/');                               %% 480 timesteps till Sep 2023, 2024_s499 = 499 steps till June 2024
   Check   ls -ltr ../DATAObsStats_StartSept2002/LatBin32/LonBin36/iQAX_3_stats_data_*  %% iQAX_3_stats_data_2024_s499.mat is the last one 
                                             %% made by clust_check_howard_16daytimesetps_2013_raw_griddedV2.m -> clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
-                                            %% option 10 of sergio_matlab_jobB.sbatch
+                                            %% option 10 of sergio_matlab_chip.sbatch
   Check   ls -ltr ls -ltr ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3*  %% iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_498_V1.mat is the last one, 
                                             %% made by cluster_loop_make_correct_timeseriesV2.m 
-                                            %% option 11 of sergio_matlab_jobB.sbatch
+                                            %% option 11 of sergio_matlab_chip.sbatch
 
   ls -lt clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m <===> clust_check_howard_16daytimesetps_2013_raw_griddedV2.m               ie symbolic links
-  kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 457)  2002/09-2022/08
-  kleenslurm; sbatch             --array=460-499  sergio_matlab_jobB.sbatch 10  -- to make the "wrong" data   (should really end at 502)  2002/09-2024/08
+  kleenslurm; sbatch             --array=430-460  sergio_matlab_chip.sbatch 10  -- to make the "wrong" data   (should really end at 457)  2002/09-2022/08
+  kleenslurm; sbatch             --array=460-499  sergio_matlab_chip.sbatch 10  -- to make the "wrong" data   (should really end at 502)  2002/09-2024/08
 
-  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 11  -- to correct things          (should really end at 502), edit set_start_stop_dates.m, 
+  kleenslurm; sbatch             --array=1-64     sergio_matlab_chip.sbatch 11  -- to correct things          (should really end at 502), edit set_start_stop_dates.m, 
                  startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 11]; i16daysSteps = 501;                       %% 2002/09 to 2024/07 = 21.95 years, 501 steps **********
                  startdateMaster = [2002 09 01]; stopdateMaster = [2024 08 27]; i16daysSteps = 502;                       %% 2002/09 to 2024/07 = 22    years, 502 steps **********
                                                                                       *** this code fixes the iaQX wrong lat/lon so only uses startdateMaster/stopdateMaster ***
@@ -82,14 +82,14 @@ end
   iQAX = +2; %% mean
   iQAX = +3; %% newer quantile (integrate from Q to 1)  <<<<DEFAULT>>>>
 
-  kleenslurm; sbatch             --array=430-460  sergio_matlab_jobB.sbatch 12  -- to make the "wrong" data   (should really end at 457/502 for August 2022/2024)
-  kleenslurm; sbatch             --array=1-64     sergio_matlab_jobB.sbatch 13  -- to correct things          (should really end at 457/502 for August 2022/2024)
+  kleenslurm; sbatch             --array=430-460  sergio_matlab_chip.sbatch 12  -- to make the "wrong" data   (should really end at 457/502 for August 2022/2024)
+  kleenslurm; sbatch             --array=1-64     sergio_matlab_chip.sbatch 13  -- to correct things          (should really end at 457/502 for August 2022/2024)
 
 #########################
 
 edit eg clust_tile_fits_quantiles.m so we are reading in the 433 timesteps,
   ensure start/stop are [2021 08 31],[2002 09 01]
-sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
+sbatch -p high_mem --array=1-4608%128 sergio_matlab_chip.sbatch 1
 
 (1) These are similar yet different as described above
     Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m    symbolically linked to
@@ -135,9 +135,9 @@ sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
 
    check progress using    driver_loop_checkprogress_timeseries.m --->  are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
      eg look for  ../DATAObsStats_StartSept2002_v3/LatBin32/LonBin36/stats_data_v3_quantile_2021_s432.mat
-   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_jobB.sbatch 10 >>>
-   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_jobB.sbatch 10 >>>
-   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_jobB.sbatch 10 >>>
+   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_chip.sbatch 10 >>>
+   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_chip.sbatch 10 >>>
+   <<< sbatch -p high_mem --array=479-490%8  sergio_matlab_chip.sbatch 10 >>>
 
 2) Code_For_HowardObs_TimeSeries/cluster_loop_make_correct_timeseriesV2.m then rearranges the LatBinYY/LonBinXX correctly!!!!
   x = translator_wrong2correct(JOBB);
@@ -148,9 +148,15 @@ sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
   fnameoutIIJJ = [fdirOUT '/summarystats_LatBin' num2str(jj,'%02i') '_LonBin' num2str(ii,'%02i') '_timesetps_001_' num2str(length(thedir),'%03i') '_V1.mat'];
   lonbin_time = struct;
 
-  <<< sbatch  --array=1-64     sergio_matlab_jobB.sbatch 11 >>>
-  <<< sbatch  --array=1-64     sergio_matlab_jobB.sbatch 11 >>>
-  <<< sbatch  --array=1-64     sergio_matlab_jobB.sbatch 11 >>>
+  Run
+    driver_convert_WRONG_latlon_individual_2_CORRECT_LatLon.m
+  In cluster_loop_make_correct_timeseriesV2.m
+    set_iQAX              %%% <<<< CHECK THIS
+    set_start_stop_dates  %%% <<<< CHECK THIS
+  Then
+  <<< sbatch  --array=1-64     sergio_matlab_chip.sbatch 11 >>>
+  <<< sbatch  --array=1-64     sergio_matlab_chip.sbatch 11 >>>
+  <<< sbatch  --array=1-64     sergio_matlab_chip.sbatch 11 >>>
 
    check SLOW progress using    driver_loop_checkprogress_timeseries.m --->  are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps 
    check FAST progress using    check_files_translated_wrong2correct.m
@@ -161,8 +167,8 @@ B) cd ../Code_for_TileTrends/
 ===============================
 3a) Then do the trends using Code_for_TileTrends
 [sergio@taki-usr2 Code_for_TileTrends]$ ls -lt clust_tile_fits_*
--rw-r--r-- 1 sergio pi_strow 7233 Aug  7 17:11 clust_tile_fits_quantiles.m            kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1
--rw-rw-r-- 1 sergio pi_strow 8242 Aug 11 19:42 clust_tile_anomalies_quantiles.m       kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 10
+-rw-r--r-- 1 sergio pi_strow 7233 Aug  7 17:11 clust_tile_fits_quantiles.m            kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_chip.sbatch 1
+-rw-rw-r-- 1 sergio pi_strow 8242 Aug 11 19:42 clust_tile_anomalies_quantiles.m       kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_chip.sbatch 10
 and
 -rw-rw-r-- 1 sergio pi_strow 6799 Jan 31  2024 clust_tile_fits_quantiles_loop72lons_backwards.m
 -rw-rw-r-- 1 sergio pi_strow 6798 Jan 31  2024 clust_tile_fits_quantiles_loop72lons.m
@@ -243,7 +249,7 @@ After that we decided to start from Sept 1, 2002 and go from there  .. this is p
     AHA = '/asl/s1/sergio/rtp/MakeAvgProfs2002_2020/Retrieval/LatBin65/SubsetJacLatbin/';
     AHA = '/asl/s1/sergio/rtp/MakeAvgProfs2002_2020_startSept2002/Retrieval/LatBin65/SubsetJacLatbin/';
     and then run the jobs on ze kluster
-        sbatch --constraint=hpcf2013       --array=1-64 sergio_matlab_jobB.sbatch
+        sbatch --constraint=hpcf2013       --array=1-64 sergio_matlab_chip.sbatch
 
 %%   ~/MATLABCODE/CRODGERS_FAST_CLOUD/split_apart_2645chan_all_lat_all_lon_16_allchans_jacs.m
 %%   ~/MATLABCODE/CRODGERS_FAST_CLOUD/split_apart_2645chan_all_lat_all_lon_16_allchans_jacs_startSept2002.m

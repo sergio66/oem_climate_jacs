@@ -2,18 +2,11 @@
 % airs_tile_task - batch wrapper for airsL1c2buf
 %
 % cp   /home/strow/Work/Airs/Tiles/run_tile_fit.m  driver_run_tile_fits.m
-%% run_tile_fit
+%   run_tile_fit
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+adderpath 
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over latbins 1-64
 if length(JOB) == 0
@@ -49,7 +42,7 @@ fprintf(1, 'airs_tile_task: jarid %d procid %d nprocs %d\n',jarid, procid, nproc
 fdirpre      = '/home/strow/Work/Airs/Tiles/Data/Quantv1';        %% symbolic link to /home/strow/Work/Airs/Tiles/Data/Quantv1 -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '/home/strow/Work/Airs/Tiles/Data/Quantv1_fits';
 
-%% Sergio stuff (run from my dir)
+%% Sergio stuff (run from my dir) should work even in Apr 2026+
 fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
 

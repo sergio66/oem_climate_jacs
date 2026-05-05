@@ -1,13 +1,12 @@
-addpath /home/motteler/shome/chirp_test
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /asl/matlib/aslutil
-
 %{
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/                               | wc -l   64 subdirs
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_*        | wc -l   72 files in each subdir
 ls -lt /umbc/rs/strow/asl/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_* | wc -l   72 files in each subdir
 %}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+adderpath
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -39,7 +38,10 @@ if length(JOB) == 0
   JOB = 202;
 
   JOB = 525;
-  JOB = 524;  
+  JOB = 524;
+
+  JOB = 1;
+  JOB = 340;
 end
 
 %JOB = 6
@@ -60,6 +62,7 @@ date_stamp = ['2015_s283'];   %% example
 
 isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
 isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
+isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,19 +79,29 @@ end
 junk = find(iaFound == 1); junk = max(junk); maxN = junk; 
   fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
 
-disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0)
-  iTimeStepNotFound = 0;
+iaTimeStepsNotFound = [];
+iTimeStepNotFound   = 0;
+junk = find(iaFound(1:junk) == 0);
+if length(junk) > 0
+  disp('these timesteps are not found : ');
+  iaTimeStepsNotFound = junk;
   iTimeStepNotFound = length(junk);
-fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+  fprintf(1,'so should only find %3i Sergio processed files \n',maxN - iTimeStepNotFound);
+end
+
 disp(' ' )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dbt = 180 : 1 : 340;
-set_iQAX
 
+JOB0 = JOB;
 if iVers == 0
-  JOB = JOB + 2 - iTimeStepNotFound;  %% because first two are '.' and '..'
+  %JOB = JOB + 2 - iTimeStepNotFound;  %% because first two are '.' and '..'
+
+  moo = find(JOB > iaTimeStepsNotFound);
+  JOB = JOB + 2 - length(moo);  %% because first two are '.' and '..' and we also have to ignore iaTimeStepsNotFound
+  
 elseif iVers == 1
   disp('make sure you have run driver_loop_checkprogress_timeseries before this')
   disp('make sure you have run driver_loop_checkprogress_timeseries before this')
@@ -98,7 +111,7 @@ elseif iVers == 1
 end
 
 date_stamp = hugedir(JOB).name;
-fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
+fprintf(1,'JOB0 = %4i --> JOB = %4i date_stamp = %s \n',JOB0,JOB,date_stamp);
 %error('kjskjs')
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% check to see if 64*72 files have been made for that date_stamp
@@ -119,72 +132,42 @@ if iTestQuantiles == +1
   mapWRONGindex = x.usethis2map_wrong2correct;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+tt = JOB - 2;
+set_iQAX
+
 disp('INITIAL CHECK : HAS ANYTHING BEEN MADE???? looping over 64 latbins .....')
-numdone = zeros(72,64);
-for jj = jj0 : jjE      %% latitude  01 : 64 unless test
-  if mod(jj,10) == 0
-    fprintf(1,'+')
-  else
-    fprintf(1,'.');
+
+% old_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
+%   fprintf(1,'are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps_old : sum(numdone(:)) = %8i ',sum(numdone(:)))
+are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
+  fprintf(1,'are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps     : sum(numdone(:)) = %8i ',sum(numdone(:)))
+
+%% from old_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
+  if iQAX == 1
+    QAXdir = ['/stats_data_' date_stamp '.mat'];
+    QAXdir = ['/iQAX_1_stats_data_' date_stamp '.mat'];
+  elseif iQAX == 3
+    QAXdir = ['/iQAX_3_stats_data_' date_stamp '.mat'];
+  elseif iQAX == 4
+    QAXdir = ['/iQAX_4_stats_data_' date_stamp '.mat'];
   end
-
-  for ii = ii0 : iiE    %% longitude   01 : 72 unless test
-    xJOBx = (jj-1)*72 + ii;
-
-    %% x = translator_wrong2correct(xJOBx);  don't need this since we are not translating
-    fdirIN  = ['../DATAObsStats_StartSept2002/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%
-    iDebug = -1;
-    if iDebug > 0
-      thedirjunk = dir([fdirIN '/*.mat']);
-      iaFound2 = zeros(1,600);
-      for ii2 = 1 : length(thedirjunk)
-        junk = thedirjunk(ii2).name;
-        junk = junk(1:end-4);
-        junk = str2num(junk(end-2:end));
-        iaFound2(junk) = 1;
-      end
-      junk = find(iaFound2 == 1); junk = max(junk); maxN2 = junk; 
-      disp('these timesteps are not found : '); junk = find(iaFound2(1:junk) == 0)
-        iTimeStepNotFound2 = 0;
-        iTimeStepNotFound2 = length(junk);
-
-      X = maxN - iTimeStepNotFound;
-      Y = length(thedirjunk);
-      str = ['LatBin ' num2str(jj,'%02i') ' LonBin ' num2str(ii,'%02i') ' expects ' num2str(X,'%03i') ' files and found ' num2str(Y,'%03i') ' files'];
-      fprintf(1,'%s \n',str);
-    end
-    %%%%%%%%%%%%%%%%%%%%%%%%%
-
-    if iQAX == 1
-      QAXdir = ['/stats_data_' date_stamp '.mat'];
-      QAXdir = ['/iQAX_1_stats_data_' date_stamp '.mat'];
-    elseif iQAX == 3
-      QAXdir = ['/iQAX_3_stats_data_' date_stamp '.mat'];
-    elseif iQAX == 4
-      QAXdir = ['/iQAX_4_stats_data_' date_stamp '.mat'];
-    end
-
-    thedir = dir([fdirIN QAXdir]);
-    if length(thedir) == 1
-      if thedir.bytes > 0           
-        numdone(ii,jj) = 1;    
-      end
-    end
-  end        
-end
-fprintf(1,'\n');
-fprintf(1,'sum(numdone(:)) = %8i ',sum(numdone(:)))
+%% from old_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
 
 if sum(numdone(:)) == 72*64
   fprintf(1,'have already made %4i of 4608 files for timestep %3i = %s, see eg %s  \n',sum(numdone(:)),JOB,date_stamp,[fdirIN QAXdir])
-  error('this timestep already done!!!')
-  return
+  lser = ['ls -lt ' fileIN]; eval(lser)
+  error('all 4608 files like this alreay done for this timestep, exiting')
+  %error('this timestep already done!!!')
+  %return
 else
   fprintf(1,'have only made %4i of 4608 files for timestep %3i = %s, see eg %s  \n',sum(numdone(:)),JOB,date_stamp,[fdirIN QAXdir])
   disp('humph .. files not made, the show must go on!!!')
   fprintf(1,'some or no files not made for timestep %3i = %s .. so reading them in SLOWLY \n',JOB,date_stamp);
+  fprintf(1,'timestep %03i found %4i of 4608 files ... need to do this timestep \n',tt,sum(numdone(:)))  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -210,7 +193,6 @@ thesave = make_blank_thesave_struct(quants,dbt,4608);
   
 fn = ['/asl/isilon/airs/tile_test7/'        date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 fn = ['/umbc/rs/strow/asl/airs/tile_test7/' date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
-fn = [isilonX                               date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
 ianpts = 1:s.total_obs;
@@ -226,7 +208,7 @@ pause(1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 iCnt = 0;
-thedir0 = dir(['/asl/isilon/airs/tile_test7/'        date_stamp '/']);              %%%% 450 timesteps
+thedir0 = dir(['/asl/isilon/airs/tile_test7/'        date_stamp '/']);             %%%% 450 timesteps
 thedir0 = dir(['/umbc/rs/strow/asl/airs/tile_test7/' date_stamp '/']);             %%%% 450 timesteps
 thedir0 = dir([isilonX                               date_stamp '/']);             %%%% 450 timesteps
 
@@ -241,7 +223,7 @@ end
 %%   MIDDLE LOOP    064 LATBINS
 %%     INNER  LOOP  072 LONBINS
 
-tt = JOB - 2;
+%% technically, already done this above
 are_4608_files_alreadymade_by_clust_check_howard_16daytimesetps
 if sum(numdone(:)) == 4608
   lser = ['ls -lt ' fileIN]; eval(lser)
@@ -302,18 +284,27 @@ toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 wnum = s.wnum;
-h2645 = load('/home/sergio/MATLABCODE/CRODGERS_FAST_CLOUD/h2645structure.mat');
+h2645 = load([dir_crodgers '/h2645structure.mat']);
 wnum = h2645.h.vchan;
 
 iSave = +1;
 if iSave > 0
-  %saver = ['save stats_howard_16daytimesetps_' date_stamp '_raw_gridded.mat thesave dbt quants wnum'];
-  %eval(saver);
+  % saver = ['save stats_howard_16daytimesetps_' date_stamp '_raw_gridded.mat thesave dbt quants wnum'];
+  % eval(saver);
 
   %%% DATAObsStats_StartSept2002 is where we keep our Howard Obs stats
   %% ls DATA_StartSept2002/LatBin01 -- summary_latbin_01_lonbin_01.rtp to summary_latbin_01_lonbin_72.rtp
-  
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%
   %{
+  %% first   mkdir /home/sergio/nogit/TILES/ 
+  %% then    cd /home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/
+  %%         ln -s /home/sergio/nogit/TILES/ DATAObsStats_StartSept2002
+  %% then    cd Code_For_HowardObs_TimeSeries
+  %%         ls -lt ../DATAObsStats_StartSept2002
+
+  %% then run this code by cut and paste,  or run   "mker_dirs_64lats_72lons.m" from Code_For_HowardObs_TimeSeries
+  
   for junkLat = 1 : 64
     mker = ['!mkdir ../DATAObsStats_StartSept2002/LatBin' num2str(junkLat,'%02d') '/'];
     eval(mker);
@@ -323,7 +314,8 @@ if iSave > 0
     end
   end
   %}
-
+  %%%%%%%%%%%%%%%%%%%%%%%%%
+  
   %% do_the_save_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m --> do_the_save_howard_16daytimesetps_2013_raw_griddedV2
   do_the_save_howard_16daytimesetps_2013_raw_griddedV2(date_stamp,thesave,dbt,quants,wnum,iQAX);
 
@@ -332,6 +324,12 @@ end
 disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
 disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
 disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correct_timeseriesV2.m .. reads 72 lonbins x N TIMSTEPS, cats everything together, for output into correct LATBIN file ')
+
+return
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %{
 %% thesave in this code is 
@@ -387,13 +385,11 @@ disp('these were incorrect LatBinJJ/LonBinII .. now run cluster_loop_make_correc
 
 %}
 
-return
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%{
 figure(1); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
 figure(2); clf; scatter_coast(thesave.lon_asc,thesave.lat_asc,50,thesave.meansolzen_asc);    colormap jet; title('asc solzen')
 figure(3); clf; scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meanhour_desc);   colormap jet; title('desc hh UTC')
@@ -418,3 +414,8 @@ figure(11); clf; plot(wnum,diff(rad2bt(wnum,squeeze(thesave.rad_desc(1,15:16,:))
 
 %plot(thesave.lon_desc(oo))
 %pcolor(thesave.lon_desc,thesave.lat_desc,10,thesave.count_desc)
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

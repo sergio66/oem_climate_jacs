@@ -48,9 +48,9 @@ elseif nargin == 9
   iAllorSeason = +1;
 end
 
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/time
-addpath /home/strow/Matlab/Math
+% addpath /asl/matlib/aslutil
+% addpath /asl/matlib/time
+% addpath /home/strow/Matlab/Math
 
 load_fairs
 
@@ -167,7 +167,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if xnargin > 6
-  timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+  %timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+  timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2028_0012.mat');  
   rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
   rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
   iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);

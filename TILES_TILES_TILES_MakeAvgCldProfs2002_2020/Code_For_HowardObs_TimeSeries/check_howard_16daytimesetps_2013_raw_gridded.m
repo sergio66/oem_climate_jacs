@@ -1,7 +1,15 @@
-addpath /home/motteler/shome/chirp_test
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /asl/matlib/aslutil
+% addpath /home/motteler/shome/chirp_test
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /asl/matlib/aslutil
+
+addpath /home/sergio/git/matlabcode/TIME
+addpath /home/sergio/git/matlabcode/PLOTTER
+addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/aslutil
+addpath /home/sergio/git/matlabcode/chirp_test
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %{
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/                        | wc -l      64 subdirs
@@ -9,7 +17,14 @@ ls -lt /asl/isilon/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_* | wc -l    
 %}
 
 %% 2013_s237 to 2013_s259
-fn = '/asl/isilon/airs/tile_test7/2013_s237/N00p00/tile_2013_s237_N00p00_E000p00.nc';
+%clust_check_howard_16daytimesetps_2013_raw_griddedV2.m:63:isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
+%clust_check_howard_16daytimesetps_2013_raw_griddedV2.m:64:isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
+%clust_check_howard_16daytimesetps_2013_raw_griddedV2.m:65:isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
+
+isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
+isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
+isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
+fn = [isilonX '/2013_s237/N00p00/tile_2013_s237_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
 ianpts = 1:s.total_obs;
@@ -22,9 +37,13 @@ plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 pause(1)
 dbt = 180 : 1 : 340;
 iCnt = 0;
-thedir0 = dir('/asl/isilon/airs/tile_test7/2013_s237/');
+%thedir0 = dir('/asl/isilon/airs/tile_test7/2013_s237/');
+thedir0 = dir([isilonX '/2013_s237/'])
+
+
 for iii = 3 : length(thedir0)
-  dirdirname = ['/asl/isilon/airs/tile_test7/2013_s237/' thedir0(iii).name];
+  %dirdirname = ['/asl/isilon/airs/tile_test7/2013_s237/' thedir0(iii).name];
+  dirdirname = [isilonX '/2013_s237/' thedir0(iii).name];  
   dirx = dir([dirdirname '/*.nc']);
   for jjj = 1 : length(dirx)
     fname = [dirdirname '/' dirx(jjj).name];
@@ -90,9 +109,28 @@ for iii = 3 : length(thedir0)
   end
 end
 
-%{
-save stats_howard_16daytimesetps_2013_raw_gridded.mat thesave dbt
-%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ~exist('stats_howard_16daytimesetps_2013_raw_gridded.mat')
+  disp('saving stats_howard_16daytimesetps_2013_raw_gridded.mat')
+  save stats_howard_16daytimesetps_2013_raw_gridded.mat thesave dbt
+end
+
+if ~exist('howard_lat_lon_fname.mat')
+  %% see driver_convert_WRONG_latlon_individual_2_CORRECT_LatLon.m
+  savedirname.iii = thesave.iii;
+  savedirname.jjj = thesave.jjj;
+  savedirname.lat = thesave.lat_asc;
+  savedirname.lon = thesave.lon_asc;
+  savedirname.fname = thesave.fname;
+  for ii = 1 : 4608;
+    fprintf(1,'%s %3i %3i %8.4f %8.4f\n',thesave.fname{ii},thesave.iii(ii),thesave.jjj(ii),thesave.lat_asc(ii),thesave.lon_asc(ii));
+  end
+  save howard_lat_lon_fname.mat savedirname
+end  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(1); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')
 figure(2); scatter_coast(thesave.lon_desc,thesave.lat_desc,50,thesave.meansolzen_desc); colormap jet; title('desc solzen')

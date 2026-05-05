@@ -65,13 +65,14 @@ if [[ "$1" -eq "" ]]; then
 elif [[ "$1" -eq "1" ]]; then
   echo "cmd line arg = 1, generic run to fit trends"
   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_fits_quantiles; exit"
-elif [[ "$1" -eq "10" ]]; then
-  echo "cmd line arg = 10, anomalies"
-  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_anomalies_quantiles; exit"
 elif [[ "$1" -eq "2" ]]; then
   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
 elif [[ "$1" -eq "3" ]]; then
   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons_backwards; exit"
+elif [[ "$1" -eq "10" ]]; then
+  echo "cmd line arg = 10, anomalies"    
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_anomalies_quantiles; exit"
+#  
 elif [[ "$1" -eq "4" ]]; then
   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
 elif [[ "$1" -eq "5" ]]; then

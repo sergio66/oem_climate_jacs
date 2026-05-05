@@ -2,19 +2,16 @@
 % airs_tile_task - batch wrapper for airsL1c2buf
 %
 % cp   /home/strow/Work/Airs/Tiles/run_tile_fit.m  driver_run_tile_fits.m
+%   run_tile_fit
 
-%% run_tile_fit
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+adderpath
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
+if length(JOB) == 0
+  JOB = 1;
+end
 % JOB = 2222
 
 system_slurm_stats

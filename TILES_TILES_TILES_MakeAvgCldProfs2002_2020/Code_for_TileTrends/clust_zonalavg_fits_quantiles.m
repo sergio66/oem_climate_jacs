@@ -1,13 +1,15 @@
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+adderpath
 
+Nsteps = 429;  %% 09/2002-08/2020
+ NNsteps = Nsteps + 0;
+Nsteps = 525;  %% 09/2002-08/2025
+ NNsteps = Nsteps + 1;
+
+% sbatch --array=1-64 sergio_matlab_chip.sbatch 6
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% 1 : 64 for the 64 latbins
+if length(JOB) == 0
+  JOB = 1;
+end
 %JOB = 32;
 %JOB = 11
 
@@ -18,19 +20,27 @@ end
 
 %system_slurm_stats
 
-alldata_asc   = nan(72,429,2645,16);
-alldata_desc  = nan(72,429,2645,16);
-allcount_asc  = nan(72,429,16);
-allcount_desc = nan(72,429,16);
+set_iQAX
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+nquants = 16;
+nquants = length(quants)-1;
+
+alldata_asc   = nan(72,NNsteps,2645,nquants);
+alldata_desc  = nan(72,NNsteps,2645,nquants);
+allcount_asc  = nan(72,NNsteps,nquants);
+allcount_desc = nan(72,NNsteps,nquants);
 
 latstr = num2str(JOB,'%02d');
 
+NstepsStr = num2str(Nsteps);
 if iAorOorL == 0
-  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trends_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_429_V1.mat'];
+  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trendsNanomalies_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_' NstepsStr '_V1.mat'];
 elseif iAorOorL == -1
-  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trends_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_429_V1_land.mat'];
+  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trendsNanomalies_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_' NstepsStr '_V1_land.mat'];
 elseif iAorOorL == +1
-  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trends_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_429_V1_ocean.mat'];
+  fout = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/trendsNanomalies_zonalavg_fits_quantiles_LatBin' latstr '_timesetps_001_' NstepsStr '_V1_ocean.mat'];
 end
 
 if exist(fout)
@@ -38,7 +48,9 @@ if exist(fout)
   error('file exists');
 end
 
-[h,ha,p,pa] = rtpread('/asl/s1/sergio/MakeAvgProfs2002_2020/summary_17years_all_lat_all_lon_2002_2019_palts.rtp');
+%[h,ha,p,pa] = rtpread('/asl/s1/sergio/MakeAvgProfs2002_2020/summary_17years_all_lat_all_lon_2002_2019_palts.rtp');
+p = load('../Code_For_HowardObs_TimeSeries/tile_avg_salti_lf_emis.mat');
+
 ind = (1:72) + (JOB-1)*72;
 landfrac = p.landfrac(ind);
 if iAorOorL == 0
@@ -57,7 +69,7 @@ for ii = 1 : 72
     fprintf(1,'.');
   end
   lonstr = num2str(ii,'%02d');
-  fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/LonBin' lonstr '/summarystats_LatBin' latstr '_LonBin' lonstr '_timesetps_001_429_V1.mat'];
+  fname = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' latstr '/LonBin' lonstr '/iQAX_' num2str(iQAX) '_summarystats_LatBin' latstr '_LonBin' lonstr '_timesetps_001_' NstepsStr '_V1.mat'];
   x = load(fname);
   alldata_asc(ii,:,:,:)  = x.rad_quantile_asc;
   alldata_desc(ii,:,:,:) = x.rad_quantile_desc;
@@ -68,7 +80,7 @@ fprintf(1,'\n');
 wnum = x.wnum;
 
 tstep = 1;
-qtile = 16;
+qtile = nquants;
 addpath /asl/matlib/aslutil
 
 wonk = squeeze(alldata_desc(usethese,tstep,:,qtile))';
@@ -81,8 +93,8 @@ elseif length(usethese) == 1
 end
 
 if length(usethese) > 1
-  for tstep = 1 : 429
-    for qtile = 1 : 16
+  for tstep = 1 : NNsteps
+    for qtile = 1 : nquants
       wonk = squeeze(alldata_desc(usethese,tstep,:,qtile))';
       rad_avg_desc(tstep,qtile,:) = nanmean(wonk,2);
   
@@ -95,8 +107,8 @@ if length(usethese) > 1
   rad_avg_asc = permute(rad_avg_asc,[1 3 2]);
   rad_avg_desc = permute(rad_avg_desc,[1 3 2]);
 elseif length(usethese) == 1
-  for tstep = 1 : 429
-    for qtile = 1 : 16
+  for tstep = 1 : NNsteps
+    for qtile = 1 : nquants
       wonk = squeeze(alldata_desc(usethese,tstep,:,qtile))';
       rad_avg_desc(tstep,qtile,:) = wonk;
   
@@ -110,38 +122,52 @@ elseif length(usethese) == 1
   rad_avg_desc = permute(rad_avg_desc,[1 3 2]);
 end
 
-plot(1:429,squeeze(rad_avg_desc(:,1520,:)))
-plot(1:429,squeeze(rad_avg_asc(:,1520,:))-squeeze(rad_avg_desc(:,1520,:)))
+plot(1:NNsteps,squeeze(rad_avg_desc(:,1520,:)))
+plot(1:NNsteps,squeeze(rad_avg_asc(:,1520,:))-squeeze(rad_avg_desc(:,1520,:)))
 
-plot(1:429,smooth(squeeze(rad_avg_asc(:,1520,01))-squeeze(rad_avg_desc(:,1520,01)),23),...
-     1:429,smooth(squeeze(rad_avg_asc(:,1520,16))-squeeze(rad_avg_desc(:,1520,16)),23))
+plot(1:NNsteps,smooth(squeeze(rad_avg_asc(:,1520,01))-squeeze(rad_avg_desc(:,1520,01)),23),...
+     1:NNsteps,smooth(squeeze(rad_avg_asc(:,1520,nquants))-squeeze(rad_avg_desc(:,1520,nquants)),23))
 
-trends = tile_fits_zonalavg_quantiles(rad_avg_asc,x.tai93_asc,count_asc,rad_avg_desc,x.tai93_desc,count_desc,429); %% ,[2021 08 31],[2002 09 01]);
-trends.quants =  x.quants;
-trends.wnum = wnum;
+size(rad_avg_asc)
+size(x.tai93_asc)
+size(count_asc)
+
+trends = tile_fits_zonalavg_quantiles(nquants,rad_avg_asc,x.tai93_asc,count_asc,rad_avg_desc,x.tai93_desc,count_desc,NNsteps,[2025 08 31]);           %% ,[2021 08 31],[2002 09 01]);
+anoms  = tile_fits_zonalavg_quantiles_anomalies(nquants,rad_avg_asc,x.tai93_asc,count_asc,rad_avg_desc,x.tai93_desc,count_desc,NNsteps,[2025 08 31]); %% ,[2021 08 31],[2002 09 01]);
+
+trends.quants = x.quants;
+trends.wnum   = wnum;
+anoms.quants  = x.quants;
+anoms.wnum    = wnum;
+
 if iAorOorL ~= 0
   trends.usethese = usethese;
 end
 
 comment = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_for_TileTrends/clust_zonalavg_fits_quantiles.m';
-saver = ['save ' fout ' trends comment'];
+saver = ['save ' fout ' trends anoms comment'];
 if ~exist(fout)
-  fprintf(1,'saving to %s\n',fout);  
+  % save ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/trends_zonalavg_fits_quantiles_LatBin01_timesetps_001_525_V1.mat trends anoms comment'
+  fprintf(1,'saving to %s\n',fout);
   eval(saver)
 else
   fprintf(1,'%s exists, not saving \n',fout);
 end
 
+%% see eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/trends_zonalavg_fits_quantiles_LatBin01_timesetps_001_525_V1.mat'
+
+qstr = ['Q' num2str(nquants)];
+
 figure(1); 
-  subplot(211); plot(wnum,trends.dbt_desc(:,[1 16]));     hl = legend('Q1','Q16'); ylabel('trend'); title('desc');
-  subplot(212); plot(wnum,trends.dbt_err_desc(:,[1 16])); hl = legend('Q1','Q16'); ylabel('unc');;
+  subplot(211); plot(wnum,trends.dbt_desc(:,[1 nquants]));     hl = legend('Q1',qstr); ylabel('trend'); title('desc');
+  subplot(212); plot(wnum,trends.dbt_err_desc(:,[1 nquants])); hl = legend('Q1',qstr); ylabel('unc');;
 figure(2); 
-  subplot(211); plot(wnum,trends.dbt_asc(:,[1 16]));     hl = legend('Q1','Q16'); ylabel('trend'); title('asc');
-  subplot(212); plot(wnum,trends.dbt_err_asc(:,[1 16])); hl = legend('Q1','Q16'); ylabel('unc');;
+  subplot(211); plot(wnum,trends.dbt_asc(:,[1 nquants]));     hl = legend('Q1',qstr); ylabel('trend'); title('asc');
+  subplot(212); plot(wnum,trends.dbt_err_asc(:,[1 nquants])); hl = legend('Q1',qstr); ylabel('unc');;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %{
-ind_lons = load('/home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/iType_2_convert_sergio_clearskygrid_obsonly_Q16.mat');
+ind_lons = load('/home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/iType_2_convert_sergio_clearskygrid_obsonly_' qstr '.mat');
 do_dah_zonal_comparisons
 %}

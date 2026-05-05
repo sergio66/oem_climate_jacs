@@ -1,17 +1,47 @@
+Contents
+---------
+
+A) sergio_matlab_chip.sbatch
+B) Individual Tile/Timestep
+C) To make a time series of a channel
+D) cooling trends for tile 2788 over India
+E1) Make the tile subsets : but into "wrong" subdir : big job ***
+E2) Make the tile subsets : now put into "right" subdir : big job ***
+F1) Make the spectral trends only ***
+F2) Make the spectral trends and anomalies ***
+G) can do same for eg mean trends/anomalies, zonal trends/anomalies
+H) then go to
+   /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/
+   for trends/anomaly retrievals ****
+I) Can make landfrac/salti/emissivity tile averages using driver_lf_salti_emis.m
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A) sergio_matlab_chip.sbatch
+----------------------------
+
 see sergio_matlab_jobB.sbatch
 
 sergio_matlab_jobB --> sergio_matlab_chip after April 2025
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Individual Tile
+
+B)  Individual Tile/Timestep
+-----------------------------
+
 driver_check_tile_land_or_ocean_hist.m
-  inut tile number, timestep .. and it reads in the particular tile/timestep. 
+  input tile number, timestep .. and it reads in the particular tile/timestep. 
   And also reads the trends for that tile, and compares the histograms
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+C) To make a time series of a channel
+-------------------------------------
+
 Timeseries
 
-To make a time series of a channel
 cd Code_for_TileTrends
 -rw-rw-r-- 1 sergio pi_strow  5258 Sep 15 04:39 driver_bt1231_timeseries_YY0MM0DD0_YYEMMEDDE_0001_4608.m
 -rw-rw-r-- 1 sergio pi_strow  8607 Sep 15 04:37 get_1231_timeseries_JOB.m
@@ -41,7 +71,8 @@ plot(1:523,dcc_t23_35_66.min.count230K./dcc_t23_35_66.avg.count - t23_35_66.min.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cooling trends for tile 2788 over India
+D) cooling trends for tile 2788 over India
+-------------------------------------------
 
 see  /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m
 
@@ -74,6 +105,9 @@ B = Math_tsfit_lin_robust((mootime-2002)*365,moo.bt1231_desc,4); fprintf(1,'bt12
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+E1) Make the tile subsets : but into "wrong" subdir : big job ***
+-------------------------------------------------------------------
+
 as Howard makes more data, need to update the tiled data I make for trends/quantiles, 23 timesteps per year
 
 cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so only need relatively fast "periodic updates"
@@ -88,7 +122,8 @@ cd Code_For_HowardObs_TimeSeries, remember we have already done 2002-2022 so onl
      then add even more recent tiles     kleenslurm; sbatch -p 2024 --array=500-530%8  sergio_matlab_chip.sbatch 10     
 
 for clust_check_howard_16daytimesetps_2013_raw_griddedV2
-   make sure you set iQAX in here, using set_iQAX.m; right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
+   make sure you set iQAX in here, using <<< set_iQAX.m >>>
+     right now we do iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];
      iQAX = +1; %% quantile   quants = [0 0.01 0.02 0.03 0.04 0.05 0.10 0.25 0.50 0.75 0.9 0.95 0.96 0.97 0.98 0.99 1.00];
      iQAX = +4; %% quantile   quants = [0 0.03 0.50 0.97 1.00];
      iQAX = +3; %% quantile   quants = [0 0.50 0.9 0.95 0.97 1.00];  <<< should use this as DEFAULT >>>
@@ -102,7 +137,19 @@ for clust_check_howard_16daytimesetps_2013_raw_griddedV2
       could be corrected eg using  x = translator_wrong2correct(JOB);
    output dir = eg ../DATAObsStats_StartSept2002/LatBin01/LonBin32/iQAX_3_stats_data_2015_s288.mat
 
-2) Then fix the tiled directory matchups : run this with 
+   Watch progress using
+     watcher_progress.sc
+   which is
+     watch "ls -lt ../DATAObsStats_StartSept2002/LatBin30/LonBin42/*.mat | wc -l"
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+E2) Make the tile subsets : now put into "right" subdir : big job ***
+----------------------------------------------------------------------
+
+1) Then fix the tiled directory matchups using cluster_loop_make_correct_timeseriesV2.m : run this with 
      sbatch -p high_mem --array=1-64     sergio_matlab_jobB.sbatch 11
      sbatch -p 2024     --array=1-64     sergio_matlab_chip.sbatch 11       
 
@@ -110,9 +157,38 @@ for clust_check_howard_16daytimesetps_2013_raw_griddedV2
           startdateMaster = [2002 09 01]; stopdateMaster = [2025 08 14]; i16daysSteps = 524;                       %% 2002/09 to 2024/08 = 23.00 years, 524 steps **********
 	  then you can eg use
 	    startdate = [2002 09 01]; stopdate = [2025 02 28]; 
-
+  
    cluster_loop_make_correct_timeseriesV2
-     look at
+
+2) THIS CODE WILL not work unless you have
+     stats_howard_16daytimesetps_2013_raw_gridded.mat
+   and
+     howard_lat_lon_fname.mat
+   which come from running
+     check_howard_16daytimesetps_2013_raw_gridded.m
+   Then run
+     driver_convert_WRONG_latlon_individual_2_CORRECT_LatLon.m
+   so you get
+     reorder_indexing.mat
+
+3) run this by hand first, so as to make the DIRS to save things to
+for jj = 1 : 64
+  for ii = 1 : 72
+    fdirOUT = ['../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin' num2str(jj,'%02i') '/LonBin' num2str(ii,'%02i') '/'];
+    if ~exist(fdirOUT)
+      mker = ['!mkdir -p ' fdirOUT];
+      eval(mker)
+    end
+  end
+end
+
+4) now run eg driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m
+     so you can make ../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat
+   this is good enough since Nmax == 600 ... so plans well ahead (504 = till 2024/06 and AIRS/Squa will end by 2027/09 so three more years so 23*3 = 69 more steps ==> total < 600)
+     it makes
+       /home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries//timestepsStartEnd_2002_09_to_2028_0012.mat
+       
+5) look at
        set_iQAX
        set_start_stop_dates    : wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); tells you the timespans
       
@@ -129,7 +205,7 @@ for clust_check_howard_16daytimesetps_2013_raw_griddedV2
      -rw-rw-r-- 1 sergio pi_strow  19215047 Sep 17  2022 fits_LonBin09_LatBin09_V1_TimeSteps457.mat
      -rw-rw-r-- 1 sergio pi_strow 160716993 Sep 17  2022 summarystats_LatBin09_LonBin09_timesetps_001_457_V1.mat
 
-   clear all; 
+5) clear all; 
    load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_summarystats_LatBin32_LonBin36_timesetps_001_457_V1.mat
      meanBT_asc                    457x2645               4835060  single
      meanBT_desc                   457x2645               4835060  single
@@ -137,7 +213,9 @@ for clust_check_howard_16daytimesetps_2013_raw_griddedV2
      rad_quantile_desc             457x2645x5            48350600  double
      plot(rad2bt(1231,squeeze(rad_quantile_asc(:,1520,:))));  hl=legend(num2str((1:5)'));
 
-2a) If you want to make a timeseries of 4608 tiles x 480 timesteps x 41 channels x 5 quantiles, look at eg
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+6) If you want to make a timeseries of 4608 tiles x 480 timesteps x 41 channels x 5 quantiles, look at eg
   driver_load_41selected_chans_timeseries.m
 iNumTimeSteps = 487;
 radA = nan(4608,iNumTimeSteps,41,5);
@@ -148,12 +226,40 @@ probably makes eg
 -rw-rw-r-- 1 sergio pi_strow 3776057549 Feb 26  2024 ../DATAObsStats_StartSept2002_CORRECT_LatLon/chans41_timeseries.mat
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+F1) Make the spectral trends only ***
+------------------------------------
+
 cd Code_for_TileTrends
 3) Now make spectral trends from YYYY1:MM1:DD1 to YYYY2:MM2:DD2 AND ANOMALIES
 
-3a : trends only
-----------------
-     this is VERY FAST (of course, depending how many nodes you get on HPC)
+more sergio_matlab_chip.sbatch
+
+if [[ "$1" -eq "" ]]; then
+  echo "cmd line arg = DNE, generic run to fit trends"
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_fits_quantiles; exit"
+elif [[ "$1" -eq "1" ]]; then
+  echo "cmd line arg = 1, generic run to fit trends"
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_fits_quantiles; exit"
+elif [[ "$1" -eq "10" ]]; then
+  echo "cmd line arg = 10, anomalies"
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAllorSeason = +1; clust_tile_anomalies_quantiles; exit"
+elif [[ "$1" -eq "2" ]]; then
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons; exit"
+elif [[ "$1" -eq "3" ]]; then
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_quantiles_loop72lons_backwards; exit"
+elif [[ "$1" -eq "4" ]]; then
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_extremes; exit"
+elif [[ "$1" -eq "5" ]]; then
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "clust_tile_fits_means; exit"
+elif [[ "$1" -eq "6" ]]; then
+  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -nosplash -r "iAorOorL = -1; clust_zonalavg_fits_quantiles; exit"
+fi
+
+3a : trends only, one tile at a time
+------------------------------------
+
+  this is VERY FAST (of course, depending how many nodes you get on HPC)
      clust_tile_fits_quantiles.m JOB=1:4608 or clust_tile_fits_quantiles_loop72lons.m JOB = 1:64
        set start/stop times via     set_start_stop_dates.m      eg
          startdate = [2002 09 01]; stopdate = [2007 08 31]; % 05 years!
@@ -164,16 +270,18 @@ cd Code_for_TileTrends
     fnout = [fnout    num2str(startdate,'%04d') '_' num2str(stopdate,'%04d')  '_TimeStepsX' num2str(i16daysStepsX,'%03d')];
     fnout = fullfile(fdirpre_out,fnout);
 
-    set_iQAX              %%% <<<< CHECK THIS
-    set_start_stop_dates  %%% <<<< CHECK THIS
+    set_iQAX              %%% <<<< CHECK THIS, it is    lrwxrwxrwx 1 sergio pi_sergio 43 Mar 19 07:59 set_iQAX.m -> ../Code_For_HowardObs_TimeSeries/set_iQAX.m
+    set_start_stop_dates  %%% <<<< CHECK THIS  it is    lrwxrwxrwx 1 sergio pi_sergio 55 Mar 19 07:59 set_start_stop_dates.m -> ../Code_For_HowardObs_TimeSeries/set_start_stop_dates.m
 
-   ** run this      :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m
-   **   or these 2  :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
-   **               :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
+  # run this with      kleenslurm; sbatch -p 2024 --array=1-4608%128 sergio_matlab_chip.sbatch 0,1 for clust_tile_fits_quantiles.m  
+    
+   ** run this      :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m                          iAllorSeason = +1
+   **   or these 2  :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m               iAllorSeason = +1
+   **               :  kleenslurm; sbatch -p high_mem --array=1-64       sergio_matlab_jobB.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m     iAllorSeason = +1
 
-   ** run this      :  kleenslurm; sbatch -p 2024 --array=1-4608%128 sergio_matlab_chip.sbatch 1   for clust_tile_fits_quantiles.m
-   **   or these 2  :  kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m
-   **               :  kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
+   ** run this      :  kleenslurm; sbatch -p 2024 --array=1-4608%128 sergio_matlab_chip.sbatch 1   for clust_tile_fits_quantiles.m                              iAllorSeason = +1
+   **   or these 2  :  kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m                   iAllorSeason = +1
+   **               :  kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m         iAllorSeason = +1
 
    clear all; 
    load /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin32/LonBin36/iQAX_3_fits_LonBin36_LatBin32_V1_TimeSteps457.mat
@@ -185,24 +293,66 @@ cd Code_for_TileTrends
   NOTE the default is to make the annnual trends (ie use all data) but can also make seasonal trends DJF, MAM, JJA, SON
   see variable iAllorSeason ... but you an also contro this in "sergio_matlab_chip.sbatch"
 
+3b : trends only, one latbin (72 lonbins) at a time
+---------------------------------------------------
+  # run this with      kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 2   for clust_tile_fits_quantiles_loop72lons.m  AND
+  # run this with      kleenslurm; sbatch -p 2024 --array=1-64       sergio_matlab_chip.sbatch 3   for clust_tile_fits_quantiles_loop72lons_backwards.m
+
   Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
   Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
   Make sure you check the progress (make sure everything is done) using   check_progress_trends_extremes_quantiles.m
+
+check progress using
+  ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*_LatBin*_V1_TimeSteps525.mat | wc -l
+and  
+  check_progress_trends_extremes_OR_anomalies.m
+    iType = input('enter choice : ');                                                       >> 18
+    iQuantileSubset = input('Enter style of Quantiles (1,3,4) :                             >> 3
+    iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502, 525 : '); >> 525
+edit
+  notdone_filelist.sc
+as needed, then run
+  notdone_filelist.sc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-3b : trends and anomalies
--------------------------
+F2) Make the spectral anomalies ***
+-----------------------------------------------
 
-Anomalies
-clust_tile_anomalies_quantiles.m 
+clust_tile_anomalies_quantiles.m
+
 differs from above in that it calls "tile_fits_quantiles_anomalies" rather than "tile_fits_quantiles" and does both trends and anomalies
     r = squeeze(d.rad_quantile_desc(:,ch,qi));
     bt_desc(ch,qi) = nanmean(rad2bt(fairs(ch),squeeze(d.rad_quantile_desc(:,ch,qi))));
     [b_desc(ch,qi,:)     stats] = Math_tsfit_lin_robust(dtime(k_desc)-dtime(k_desc(1)),r(k_desc),iNumSineCosCycles);
     [bt_anom_desc(qi,ch,:) rad_anom_desc(qi,ch,:)] = compute_anomaly(k_desc,dtime,squeeze(b_desc(ch,qi,:)),fairs(ch),r);
 
+kleenslurm; sbatch --array=1-4608%128 sergio_matlab_chip.sbatch 10  for clust_tile_anomalies_quantiles.m
+
+check progress using
+  ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/LonBin*/iQAX_3_fits_LonBin*_LatBin*_V1_Anomaly_TimeSteps525.mat | wc -l
+and  
+  check_progress_trends_extremes_OR_anomalies.m
+    iType = input('enter choice : ');                                                       >> 18
+    iQuantileSubset = input('Enter style of Quantiles (1,3,4) :                             >> 3
+    iNumTmeSteps = input('Enter number timesteps eg 412, 429, 457, [default] 502, 525 : '); >> 525
+edit
+  notdone_filelist.sc
+as needed, then run
+  notdone_filelist.sc
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+G) can do same for eg mean trends/anomalies, zonal trends/anomalies
+-------------------------------------------------------------------
+
+clust_zonalavg_fits_quantiles.m
+  kleenslurm; sbatch -p 2024 --array=1-64 sergio_matlab_chip.sbatch 6         for clust_zonalavg_fits_quantiles.m
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+H) then go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/ for trends/anomaly retrievals
+-----------------------------------------------------------------------------------------------------------------------
 
 4a) finally clust_tile_fits_quantiles.m suggests for trend analysis
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_trends.m and edit/run as needed')
@@ -214,4 +364,12 @@ disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_tre
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')
 disp('now go to /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/driver_put_together_QuantileChoose_anomalies.m and edit/run as needed')
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+I) Can make landfrac/salti/emissivity tile averages using driver_lf_salti_emis.m
+------------------------------------------------------------------------
+
+Need this for doing eg ERA5 monthly spectral trends and/or anomalies
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

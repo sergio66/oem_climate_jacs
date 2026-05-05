@@ -143,5 +143,5 @@ if iCnt > 0
   fprintf(fid,'%s \n',str);
   fclose(fid);
   disp(' ')
-  disp('now check notdone_filelist.sc and change "sergio_matlab_jobB.sbatchX Y" to eg "sergio_matlab_jobB.sbatch 10"  ')
+  disp('now check notdone_filelist.sc and change "sergio_matlab_jobB.sbatchX Y" to eg "sergio_matlab_chip.sbatch 1"  ')
 end

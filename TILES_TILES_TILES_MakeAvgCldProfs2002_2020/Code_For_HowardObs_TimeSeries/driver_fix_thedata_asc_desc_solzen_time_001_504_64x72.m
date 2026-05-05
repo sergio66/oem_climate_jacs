@@ -54,8 +54,10 @@ for ii = 2 : Nmax
 end  
 
 commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m'];
-fileout = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
-fileout = [fileout '/timestepsStartEnd_2002_09_to_' num2str(thedateE(Nmax,1),'%04d') '_' num2str(thedateE(Nmax,2),'%04d') '.mat'];
+dirout = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
+dirout = ['/home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
+
+fileout = [dirout '/timestepsStartEnd_2002_09_to_' num2str(thedateE(Nmax,1),'%04d') '_' num2str(thedateE(Nmax,2),'%04d') '.mat'];
 saver = ['save ' fileout ' commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM'];
 if ~exist(fileout)
   fprintf(1,'saving %s  \n',fileout);
@@ -68,7 +70,7 @@ return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%% driver_loop_get_asc_desc_solzen_time.m
 load('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72.mat');
 thedata0 = thedata;
 if iDorA > 0

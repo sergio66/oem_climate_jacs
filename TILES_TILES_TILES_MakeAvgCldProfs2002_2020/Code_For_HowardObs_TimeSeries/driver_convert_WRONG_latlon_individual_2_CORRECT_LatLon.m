@@ -1,4 +1,22 @@
-%% Howard : The actual indexing is about as simple as it could be, tiles run S to N, from 1 to 64, and from W to E, from, 1 to 72.    tile_file gives you the filename from the indices, and tile_index finds indices from lat/lon values
+%% Howard : The actual indexing is about as simple as it could be,
+%%   tiles run S to N, from 1 to 64, and from W to E, from, 1 to 72.
+%%   tile_file gives you the filename from the indices, and tile_index
+%%   finds indices from lat/lon values
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% addpath /asl/matlib/h4tools
+% addpath /home/sergio/MATLABCODE/matlb/h4tools
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/matlib/rtp_prod2/util/
+% addpath /home/sergio/MATLABCODE/matlib/science/            %% for usgs_deg10_dem.m that has correct paths
+% addpath HOWARD_CODE
+
+addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/h4tools
+addpath /home/sergio/git/matlabcode/PLOTTER
+addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/rtp_prod2/util/
+addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/science/            %% for usgs_deg10_dem.m that has correct paths
+addpath /home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/HOWARD_CODE/
+addpath /home/sergio/git/matlabcode/DEM_DigitalELeveationModel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %(A)
@@ -21,17 +39,32 @@ plot(X(1:73), Y(1:73),'o')   %% yay so I loop     do outer 1 : 64; do inner 1 : 
 %% cd /home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES
 use_this_rtp = 'RTP/summary_17years_all_lat_all_lon_2002_2019_palts_startSept2002.rtp';
 use_this_rtp = '/asl/s1/sergio/MakeAvgProfs2002_2020_startSept2002/summary_17years_all_lat_all_lon_2002_2019.rtp';
-addpath /asl/matlib/h4tools
-[h,ha,p,pa] = rtpread(use_this_rtp);
-plot(p.rlon(1:73),p.rlat(1:73),'x',X(1:73), Y(1:73),'o')
+
+if exist(use_this_rtp)
+  [h,ha,p,pa] = rtpread(use_this_rtp);
+  plot(p.rlon(1:73),p.rlat(1:73),'x',X(1:73), Y(1:73),'o')
+else
+  fprintf(1,'use_this_rtp = \n       %s DNE  \n generating p.ralt,p.rlon using X Y \n',use_this_rtp)
+  iX = 0;
+  for jj = 1 : 64
+    for ii = 1 : 72
+      iX = iX + 1;
+      p.rlon(iX) = x(ii);
+      p.rlat(iX) = y(jj);
+      p.stemp(iX) = 300 + -abs(p.rlat(iX));
+    end
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %(C)
 %% ... THIS IS THE ODD ONE OUT .... makes sense since we do it by lonbin
-woo = load('DATA_StartSept2002/pall_16daytimestep_123_2008_01_05_to_2008_01_21.mat'); %% see eg driver_split_apart_rtp_howard_bins_startSept2002.m
-plot(woo.pall.pavg(1).rlon,woo.pall.pavg(1).rlat,'.')    %% there are 72 of them
 
-plot(p.rlon(1:64),p.rlat(1:64),'bx',woo.pall.pavg(1).rlon,woo.pall.pavg(1).rlat,'r.')
+if exist('DATA_StartSept2002/pall_16daytimestep_123_2008_01_05_to_2008_01_21.mat')
+  woo = load('DATA_StartSept2002/pall_16daytimestep_123_2008_01_05_to_2008_01_21.mat'); %% see eg driver_split_apart_rtp_howard_bins_startSept2002.m
+  plot(woo.pall.pavg(1).rlon,woo.pall.pavg(1).rlat,'.')    %% there are 72 of them
+  plot(p.rlon(1:64),p.rlat(1:64),'bx',woo.pall.pavg(1).rlon,woo.pall.pavg(1).rlat,'r.')
+end
 
 %{
 so look at ~/MATLABCODE/CRODGERS_FAST_CLOUD/clustbatch_redo_stemp_wv_cloud_filelist.m
@@ -50,6 +83,7 @@ iDoAnomalyOrRates = -1;  %% do the trends/rates
 iLon0A = 1; iLonEA = 72;
 iOffset = (JOB-1)*72;
 iLon0 = iLon0A + iOffset;  iLonE = iLonEA + iOffset;
+
 %for iLon = iLonE : -1 : iLonE
 for iLon = iLon0 : iLonE
   if iDoAnomalyOrRates == -1
@@ -72,15 +106,13 @@ r1lat = 0.5*(r1lat(1:end-1)+r1lat(2:end));
 [Y1,X1] = meshgrid(r1lat,r1lon);
 X1 = X1; Y1 = Y1;
 
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/rtp_prod2/util/
-addpath /home/sergio/MATLABCODE/matlib/science/            %% for usgs_deg10_dem.m that has correct paths
-[salti, landfrac] = usgs_deg10_dem(Y1(:),X1(:));
+%[salti, landfrac] = usgs_deg10_dem(Y1(:),X1(:));
+[salti,landfrac,gebco] = gdemm_dem_and_imerg_lf(Y1(:),X1(:));
 figure(1); scatter_coast(X1(:),Y1(:),50,landfrac); colorbar; title('landfrac');  caxis([0 1])
 
 %figure(1); pcolor(X1,Y1,(reshape(results(:,1),72,64))); shading interp; colorbar; title('CO2');
-figure(1); pcolor(X1,Y1,reshape(p.stemp,72,64)); shading interp; colorbar; title('Is this correct STEMP map YEAH BUDDY');
-figure(2); scatter_coast(X1(:),Y1(:),50,p.stemp); shading interp; colorbar; title('Is this correct STEMP map YEAH BUDDY');
+figure(1); pcolor(X1,Y1,reshape(p.stemp,72,64));  colormap jet; shading interp; colorbar; title('Is this correct STEMP map YEAH BUDDY');
+figure(2); scatter_coast(X1(:),Y1(:),50,p.stemp); colormap jet; shading interp; colorbar; title('Is this correct STEMP map YEAH BUDDY');
 
 [Yind,Xind] = meshgrid(1:64,1:72);
 Xstretch    = X1(:);    Ystretch = Y1(:);
@@ -89,26 +121,30 @@ Xindstretch = Xind(:); Yindstretch = Yind(:);
 plot(p.rlon(1:73),p.rlat(1:73),'x',X(1:73), Y(1:73),'o',Xstretch(1:73),Ystretch(1:73),'+')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% see HOWARD_CODE/tile_loop1.m
-addpath HOWARD_CODE
 correctorder_howardfilenames = tile_loop1A;
-plot(p.rlon(1:(72*2)+1),p.rlat(1:(72*2)+1),'bx',X(1:(72*2)+1), Y(1:(72*2)+1),'co',Xstretch(1:(72*2)+1),Ystretch(1:(72*2)+1),'r+',correctorder_howardfilenames.rlon(1:(72*2)+1),correctorder_howardfilenames.rlat(1:(72*2)+1),'gs')
+plot(p.rlon(1:(72*2)+1),p.rlat(1:(72*2)+1),'bx',X(1:(72*2)+1), Y(1:(72*2)+1),'co',Xstretch(1:(72*2)+1),Ystretch(1:(72*2)+1),'r+',...
+    correctorder_howardfilenames.rlon(1:(72*2)+1),correctorder_howardfilenames.rlat(1:(72*2)+1),'gs')
 
-%load stats_howard_16daytimesetps_2013_s237_raw_gridded.mat  %% from check_howard_16daytimesetps_2013_raw_gridded.m
-%savedirname.iii = thesave.iii;
-%savedirname.jjj = thesave.jjj;
-%savedirname.lat = thesave.lat_asc;
-%savedirname.lon = thesave.lon_asc;
-%savedirname.fname = thesave.fname;
-%for ii = 1 : 4608; fprintf(1,'%s %3i %3i %8.4f %8.4f\n',thesave.fname{ii},thesave.iii(ii),thesave.jjj(ii),thesave.lat_asc(ii),thesave.lon_asc(ii)); end
-%save howard_lat_lon_fname.mat savedirname
+
+%{
+%%%% run this if needed
+load stats_howard_16daytimesetps_2013_s237_raw_gridded.mat  %% from check_howard_16daytimesetps_2013_raw_gridded.m
+savedirname.iii = thesave.iii;
+savedirname.jjj = thesave.jjj;
+savedirname.lat = thesave.lat_asc;
+savedirname.lon = thesave.lon_asc;
+savedirname.fname = thesave.fname;
+for ii = 1 : 4608;
+  fprintf(1,'%s %3i %3i %8.4f %8.4f\n',thesave.fname{ii},thesave.iii(ii),thesave.jjj(ii),thesave.lat_asc(ii),thesave.lon_asc(ii));
+end
+save howard_lat_lon_fname.mat savedirname
+%}
+
 wrongorder_howardfilenames_from_dirs = load('howard_lat_lon_fname.mat');
 plot(p.rlon(1:73),p.rlat(1:73),'x',X(1:73), Y(1:73),'o',Xstretch(1:73),Ystretch(1:73),'+',wrongorder_howardfilenames_from_dirs.savedirname.lon(1:73),wrongorder_howardfilenames_from_dirs.savedirname.lat(1:73),'ks')
 
@@ -155,7 +191,14 @@ plot(Xindstretch-wrongorder_howardfilenames_from_dirs.savedirname.iii(themapWron
 iii = wrongorder_howardfilenames_from_dirs.savedirname.iii;
 jjj = wrongorder_howardfilenames_from_dirs.savedirname.jjj;
 commentthemapWrong2Right = 'see covert_WRONG_latlon_individual_2_CORRECT_latlon_timeseries.m -- you will need to map iii and jjj to Xindstretch and Yindstretch';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
 save reorder_indexing.mat commentthemapWrong2Right themapWrong2Right correctname wrongname Xindstretch Yindstretch correctorder_howardfilenames wrongorder_howardfilenames_from_dirs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% so correctorder_howardfilenames.ilat(1:72) = 1
 %%    correctorder_howardfilenames.ilon(1:72) = 1:72

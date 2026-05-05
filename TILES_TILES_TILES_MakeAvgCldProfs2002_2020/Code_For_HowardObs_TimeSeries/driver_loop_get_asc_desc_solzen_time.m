@@ -1,12 +1,12 @@
-addpath /asl/matlib/aslutil
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /asl/matlib/rtptools/
+adderpath
 
 iNumTimeSteps = 412;  % 2002/09 to 2020/06
 iNumTimeSteps = 457;  % 2002/09 to 2022/06
-%iNumTimeSteps = 498; % 2002/09 to 2024/06
+iNumTimeSteps = 498;  % 2002/09 to 2024/06
 iNumTimeSteps = 502;  % 2002/09 to 2024/08
+iNumTimeSteps = 524;  % 2002/09 to 2025/08
+
+disp('this looks at eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin01/iQAX_3_summarystats_LatBin01_LonBin01_timesetps_001_524_V1.mat ..... ')
 
 fsave = ['asc_desc_solzen_time_' num2str(iNumTimeSteps) '_64x72.mat'];
 if ~exist(fsave)
@@ -58,6 +58,9 @@ end
 utchh = squeeze(nanmean(thedata.hour_desc,3))'; rlon = squeeze(nanmean(thedata.rlon_desc,3))'; lshD = utchour2localtime(utchh,rlon); lshD = mod(lshD,24); pcolor(lshD); colorbar; title('Desc local hour')
 utchh = squeeze(nanmean(thedata.hour_asc,3))';  rlon = squeeze(nanmean(thedata.rlon_asc,3))';  lshA = utchour2localtime(utchh,rlon); lshA = mod(lshA,24); pcolor(lshA); colorbar; title('Asc local hour')
 hhx = -1:0.25:+25; plot(hhx,histc(lshD(:),hhx),hhx,histc(lshA(:),hhx),'linewidth',2); hl = legend('Desc','Asc','location','best'); grid; xlim([-1 25])
+
+return
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %{

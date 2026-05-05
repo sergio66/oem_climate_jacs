@@ -19,8 +19,8 @@
 # first this with   sbatch -p 2024 --array=479-490%8  sergio_matlab_chip.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2, 2023/07-2023/12
 # first this with   sbatch -p 2024 --array=500-530%8  sergio_matlab_chip.sbatch 10      for clust_check_howard_16daytimesetps_2013_raw_griddedV2, 2023/12-2025/08
 # NOTE 460 = 23 * 20 = number of timesteps so far since 2002/09/01 that Howard has made, so this will increase by 23 each year
-# then this with sbatch -p 2024 --array=1-64     sergio_matlab_chip.sbatch 11           for cluster_loop_make_correct_timeseriesV2
-# then this with sbatch             --array=1-64     sergio_matlab_chip.sbatch 11           for cluster_loop_make_correct_timeseriesV2
+# then this with    sbatch -p 2024 --array=1-64     sergio_matlab_chip.sbatch 11           for cluster_loop_make_correct_timeseriesV2
+# then this with    sbatch         --array=1-64     sergio_matlab_chip.sbatch 11           for cluster_loop_make_correct_timeseriesV2
 ########################################################################
 #########################################################################
 
@@ -38,14 +38,16 @@
 ########################################################################
 # run this with sbatch             --array=1-4608%8   sergio_matlab_chip.sbatch 16  for clust_driver_get_timeseries_dcc_one_tile.m
 ########################################################################
+########################################################################
+########################################################################
 
 #SBATCH --job-name=MAKE_16day_avg     ## name
 #SBATCH -N1                           ## number of job step is to be allocated per instance of matlab
 #SBATCH --cpus-per-task 1             ## tasks per node/number of cores per matlab session will be
 
-#SBATCH --partition=2024              ## desired partition
 #SBATCH --cluster=chip-cpu            ## desired cluster
-#SBATCH --account=pi_strow
+#SBATCH --account=pi_strow            ## cpu owner
+#SBATCH --partition=2024              ## desired partition
 #SBATCH --qos=shared                  ## qos to get as many cpu2024 as possible, else put pi_strow
 
 ########################################################################
@@ -77,16 +79,14 @@
 #SBATCH --mem-per-cpu=24000
 #########################
 
+#########################
 ## this is for choices 3,6,11,14
 ###SBATCH --mem-per-cpu=16000
 ##SBATCH --qos=medium+
 ##SBATCH --time=03:59:00 
 ##SBATCH --mem-per-cpu=10000
+#########################
 
-#### -nojjvm kills code which try to plot
-####   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nojvm -nodisplay -r
-#### so re-write to
-####  /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -r
 ########################################################################
 ### check the number of input arguments
 if [ $# -gt 0 ]; then
@@ -95,6 +95,11 @@ elif [ $# -eq 0 ]; then
   echo "Your command line contains no arguments"
 fi
 ########################################################################
+
+#### -nojvm kills code which try to plot
+####   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nojvm -nodisplay -r
+#### so re-write to
+####   /usr/ebuild/installs/software/MATLAB/2023b/bin/matlab -nodisplay -r
 
 if [[ "$1" -eq "" ]]; then
   echo "cmd line arg = DNE, generic run"

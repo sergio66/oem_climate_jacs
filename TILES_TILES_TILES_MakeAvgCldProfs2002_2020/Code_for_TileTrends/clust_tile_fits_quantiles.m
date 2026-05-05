@@ -2,19 +2,11 @@
 % airs_tile_task - batch wrapper for airsL1c2buf
 %
 % cp   /home/strow/Work/Airs/Tiles/run_tile_fit.m  driver_run_tile_fits.m
-%% run_tile_fit
+%   run_tile_fit
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
-addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
+adderpath
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));   %% loop over ind tiles 1-4608
 if length(JOB) == 0
@@ -50,7 +42,7 @@ fprintf(1, 'airs_tile_task: jarid %d procid %d nprocs %d\n',jarid, procid, nproc
 fdirpre      = '/home/strow/Work/Airs/Tiles/Data/Quantv1';        %% symbolic link to /home/strow/Work/Airs/Tiles/Data/Quantv1 -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '/home/strow/Work/Airs/Tiles/Data/Quantv1_fits';
 
-%% Sergio stuff (run from my dir)
+%% Sergio stuff (run from my dir) should work even in Apr 2026+
 fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
 fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
 
@@ -121,19 +113,19 @@ fnout = fullfile(fdirpre_out,fnout);
 if ~exist(fnout)
   fprintf(1,'making fnout = %s \n',fnout)
 else
-  fprintf(1,'fnout = %s already exists\n',fnout)
-  fprintf(1,'WARNING fnout = %s already exists \n',fnout)
-  return
+  %fprintf(1,'fnout = %s already exists skipping\n',fnout)
+  %return
+  fprintf(1,'WARNING fnout = %s already exists \n',fnout)  
 end
 
 if ~exist(fdirpre_out)
   mkdir(fdirpre_out)
 end
 
-if exist(fnout)
-  fprintf(1,'fnout = %s already exists, skipping \n',fnout)
-  return
-end
+%if exist(fnout)
+%  fprintf(1,'fnout = %s already exists, skipping \n',fnout)
+%  return
+%end
 
 % run the target script
 %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments

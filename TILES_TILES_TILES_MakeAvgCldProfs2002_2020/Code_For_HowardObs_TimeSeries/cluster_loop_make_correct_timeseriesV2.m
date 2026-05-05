@@ -1,9 +1,6 @@
 %% DATAObsStats_StartSept2002/LatBin32/LonBin36/stats_data_2009_s158.mat
 
-addpath /asl/matlib/aslutil/
-addpath /home/sergio/MATLABCODE
-
-addpath /home/sergio/MATLABCODE/TIME
+adderpath
 
 %% JOB = 1 .. 64
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));  %% this is the latbin, and inside here we loop over the 72 lonbins
@@ -201,6 +198,9 @@ fprintf(1,'now do   ensure start/stop are [2022 08 31],[2002 09 01] \n')
 fprintf(1,'now do sbatch -p high_mem --array=1-4608 sergio_matlab_jobB.sbatch 1 \n')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %{
 yymmdd = yy + (mm-1)/12 + (dd-1)/12/30;
 plot(yymmdd(1:end-1),diff(yymmdd))

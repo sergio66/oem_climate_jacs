@@ -1,0 +1,563 @@
+I have a radiative transfer code, the input in N level atmospheric
+profiles (N between 75-100) of temperature, humidity, ozone,
+co2,ch4,n2o concentration, surface temperature, surface temperature,
+view angle, plus surface emissivity.  Output is M radiances per
+profile (M between 500-2500). Can you help me build a DNN to predict
+the radiance,given these inputs
+
+Good problem — this is essentially a fast neural emulator for a
+hyperspectral RT model (the kind of thing used to speed up
+RTTOV/CRTM/LBLRTM-type forward models for OSSEs or retrieval
+systems). A few design decisions matter a lot here before you write
+any Keras/PyTorch code, so let me walk through them and then give you
+a working skeleton.
+
+>>>
+
+Key design decisions
+
+1. Fixed input grid. Your profiles have variable N (75–100 levels),
+but a DNN needs a fixed-size input. Interpolate every profile onto one
+reference pressure grid (e.g. 100 levels spanning your full pressure
+range) before training. Don't zero-pad — that introduces
+discontinuities the network has to learn around. Pressure-log
+interpolation (linear in ln(p)) is standard.
+
+2. Feature transforms.:
+
+  Temperature: use as-is (z-score normalized per level).
+
+  Humidity, O3, CO2, CH4, N2O: these are trace-gas concentrations that
+  span orders of magnitude and are close to log-normal — log-transform
+  them before normalizing. This alone often improves accuracy more
+  than architecture changes.
+  
+  Scalars: surface temperature (z-score), view angle → use as
+  secant/cosine (airmass factor) rather than raw degrees, since
+  transmittance depends on airmass, not angle linearly.
+
+  Surface emissivity: if this is a single broadband value, treat as a
+  scalar. If it's spectrally resolved (one value per output channel,
+  which is common for M~500-2500 IR channels), it's actually a
+  per-channel input feature — that changes the architecture (see
+  below). I'll assume scalar/band-averaged for the skeleton, but flag
+  where to change it if it's spectral.
+
+3. Output compression — do this, it matters a lot. With M between 500
+and 2500, radiances across adjacent channels are highly correlated
+(they sample overlapping/broad absorption features). Don't predict all
+M outputs directly from a dense layer — instead:
+
+  Run PCA/EOF decomposition on your training radiance spectra, keep
+  ~20-50 components (typically captures >99.9% of variance for
+  hyperspectral IR).
+  
+  Train the network to predict the PCA coefficients (small output
+  layer, easier optimization, much less overfitting).
+  
+  Reconstruct the M radiances with the fixed (or fine-tuned) linear PCA decoder.
+
+This is exactly how operational NN emulators for RTTOV/CRTM are built,
+and it's the single biggest lever for both accuracy and speed here.
+
+4. Work in brightness temperature, not radiance. Radiance is a
+nonlinear (Planck) function of temperature and spans large dynamic
+range across channels (window vs. absorption bands). Converting to
+brightness temperature makes the target smoother and more linear in
+the inputs, which the network fits more easily. Convert back to
+radiance via inverse Planck for final output if you need physical
+units.
+
+5. Architecture. A profile is a vertical sequence, so a small 1D-CNN
+(or even just a well-normalized MLP) over the stacked gas/temperature
+channels captures local vertical structure (e.g. a CO2 layer's effect
+depends on neighboring levels) better than a flat MLP treating each
+level independently. Concatenate the profile encoder output with the
+scalar branch, then a dense trunk predicting PCA coefficients.
+
+Let me put together a working PyTorch skeleton with all of this wired
+in.Ran 2 commands, created a fileRan 2 commands, created a file
+<< see rt_emulator.py >>
+
+No network access to install torch here, so I couldn't do a live run —
+let me at least syntax-check it.Verify no syntax errorsVerify no
+
+Syntax checks out (couldn't do a full run since this sandbox has no
+network to install torch — worth running it yourself before trusting
+it).
+
+A few things worth flagging before you plug in real data:
+
+  Surface emissivity: I treated it as one scalar. If it's actually
+  spectral (a value per output channel), it should be concatenated as
+  an extra channel-aligned input to the decoder stage, not the encoder
+  — otherwise the network has to learn to re-derive per-channel
+  structure it's already been handed. Tell me if that's the case and
+  I'll restructure it.
+  
+  PCA fit: fit the PCA/ProfileNormalizer only on the training split,
+  never on val/test, or you'll leak information.
+
+  Decoder fine-tuning: start with finetune_decoder=False
+  (physically-grounded PCA reconstruction) to get a working baseline,
+  then try True once the pipeline is validated — it usually buys a bit
+  more accuracy at the cost of interpretability.
+
+  Data volume: for M~1000-2500 channels and reasonable generalization
+  across atmospheric states, expect to need on the order of tens of
+  thousands to a few hundred thousand training profiles, covering your
+  full range of latitude/season/surface type. If you're generating
+  this synthetically from the RT code itself, use a Latin hypercube or
+  similar design over your input space rather than pure random
+  sampling — it covers the space more efficiently.
+
+  Validation metric: don't just look at MSE on PCA coefficients —
+  check reconstructed brightness-temperature error per channel (bias
+  and RMSE) against your RT code's actual output, since PCA truncation
+  error compounds with network error.
+
+Want me to help with the training-data generation strategy (sampling
+design over the input space), or adjust the architecture for spectral
+emissivity?
+
+
+>>>>
+
+I can;t interpolate because the different N corresponds to different surface proessures. So for ocean N = 97, for Mt Everest or Anttica N =75, for Dead Sea N = 100
+
+Reconciled variable surface pressures through sigma-coordinate normalization approach
+Reconciled variable surface pressures through sigma-coordinate normalization approach
+
+Good catch — that's a real physical difference, not just a
+data-formatting nuisance, and pure pressure-grid interpolation would
+be wrong: Everest's atmosphere genuinely stops around 325 hPa, so
+there's no real data to interpolate down to 1000 hPa, and any padding
+would be fabricating atmosphere that doesn't exist.
+
+The standard fix (this is exactly how NWP models like ECMWF/GFS handle
+terrain-following levels) is to interpolate onto a sigma coordinate
+instead of a pressure coordinate:
+
+σ = p / p_surface
+
+σ runs from 0 (top of atmosphere) to 1 (the surface) for every
+profile, regardless of what the actual surface pressure is. So
+Everest's profile and an ocean profile both map cleanly onto the same
+fixed number of σ-levels (say 100), with σ=1 always meaning "the
+surface," wherever that physically is.
+
+Two things to add back in because σ alone throws away information:
+
+  Surface pressure becomes an explicit scalar input. The same σ level
+  corresponds to a different actual pressure depending on terrain —
+  and pressure broadening of absorption lines depends on the real
+  pressure, not σ. Without this the network can't tell "σ=0.5 over the
+  ocean" from "σ=0.5 over Everest," which are physically very
+  different atmospheric states.
+
+  Interpolate in log(σ) near the top (thin, rapidly varying) and it's
+  fine roughly linear lower down — same idea as before, just swap the
+  coordinate.
+
+Let me update the script.Now update where it's used and add p_surface as a scalar input.
+Refined documentation and demonstrated interpolation for variable-pressure profile  sUpdated and re-checked — syntax is clean.
+
+Summary of the change: profiles now interpolate onto a fixed sigma
+grid (σ = p/p_surface, 0=TOA, 1=surface) instead of a fixed pressure
+grid, so terrain of any elevation maps onto the same number of levels
+without fabricating nonexistent atmosphere below high ground or
+truncating real atmosphere over the ocean. surf_pressure is added as
+an explicit scalar input, since two profiles at the same σ level can
+sit at very different actual pressures (Everest vs. ocean), and
+pressure broadening of the absorption lines depends on the real
+pressure, not σ.
+
+One more thing to watch for once you build the real training set:
+class balance across terrain type. If your dataset is mostly ocean
+profiles (N≈97) with only a handful of high-terrain cases (N≈75), the
+network will underfit those — worth checking your sample distribution
+over surface pressure/elevation and oversampling the extremes if
+they're rare, since those are exactly the cases where the sigma-grid
+physics matters most.
+
+Similarly surface emissivity is also spectral
+Architected compression strategy for spectral emissivity integration
+
+Right — that changes the architecture meaningfully. Emissivity varies
+per channel just like radiance does, so it can't be a single scalar
+feeding a bottleneck the same way surface temperature does. But you
+also can't hand the raw M-length emissivity vector to a small MLP
+trunk without blowing up the parameter count.
+
+The fix is the same trick as the output side: emissivity spectra are
+themselves smooth/low-rank (this is true for both ocean models like
+IREMIS and land spectral libraries like ASTER/CAMEL) — so PCA-compress
+emissivity too, and feed those few coefficients in as inputs alongside
+the other scalars, rather than as a single number.
+
+Let me view the current file and make the edit.
+Architected spectral emissivity integration into compression pipeline
+
+Now update the main example: remove scalar emissivity, add spectral emissivity compression, and wire it into the scalar branch.
+
+Also update the doc comment further down that references RadianceCompressor by old name (already renamed via class rename, but double check nothing else references it) and re-check compile
+
+Clean — no stale references, syntax checks out.
+
+What changed: RadianceCompressor is now a generic SpectralCompressor,
+used twice — once fit on the target BT spectra (~20-50 components),
+once fit on the emissivity spectra (likely fewer, ~5-10, since
+emissivity curves tend to be smoother than absorption-line-dominated
+radiance). The emissivity PCA coefficients get concatenated onto the
+other scalars and flow into the same scalar branch — no change needed
+to the trunk/decoder architecture itself, since it was already generic
+on n_scalars.
+
+Two things to double check against your actual data:
+
+  Same channel grid. This only works cleanly if emissivity is defined
+  on the same wavenumber grid as your output radiances (or can be
+  interpolated onto it first). If your RT code takes emissivity on a
+  coarser native grid (common — surface emissivity atlases are often
+  lower resolution than the instrument channels), interpolate it onto
+  the M-channel grid before fitting the PCA, otherwise the compressed
+  coefficients won't align with anything physically.
+
+  Ocean vs. land emissivity behavior differs a lot. Ocean emissivity
+  is a smooth, physically-modeled function of view angle and wind
+  speed;land/desert/ice emissivity spectra have sharper features
+  (e.g. quartz reststrahlen bands in desert sand). If your dataset
+  spans both, check that a single global PCA basis captures both
+  regimes well — if land spectra are systematically poorly
+  reconstructed, it's worth fitting separate emissivity compressors
+  per surface type, or just increasing n_emis_pca.
+
+>>>>
+
+The upper atmosphere tempearure and WV profiles are very similar, of
+course ozone has varivbility. So would compressing the (100 sigma)
+level T,Q,etc be beneficial
+
+Weighed PCA compression benefits against radiative transfer
+sensitivity trade-offsWeighed PCA compression benefits against
+radiative transfer sensitivity trade-offsYes — and this is actually
+the standard approach in the retrieval/NWP literature for exactly the
+reason you're describing: the atmosphere's vertical structure has far
+fewer effective degrees of freedom than the number of levels you
+sample it on.
+
+Why it works, physically:
+
+  Temperature is tightly constrained by hydrostatic balance and
+  radiative-dynamical coupling — the profile shape doesn't vary
+  independently level-by-level, it varies in a handful of large-scale
+  vertical modes (lapse-rate perturbations, tropopause height shifts,
+  boundary-layer inversions). Above the tropopause especially, T and Q
+  variability collapses to almost nothing, exactly as you said.
+  
+  Water vapor is more variable than T but still highly structured —
+  most of its variance loads onto a similarly small number of modes,
+  with somewhat more needed to capture boundary-layer/moist-layer
+  sharpness.
+  
+  Ozone has real independent variability — column amount and the
+  altitude of the peak concentration both vary substantially (tropics
+  vs. midlatitude vs. polar vortex), so it needs more modes to
+  represent faithfully.
+
+  CO2, CH4, N2O are nearly well-mixed gases. Their vertical shape has
+  very little independent variability — it's mostly a magnitude
+  scaling plus a small stratospheric aging gradient. These might not
+  need more than 2-5 components each, or arguably don't need a learned
+  encoder at all — a couple of physically motivated scalars might
+  suffice.
+
+This is the same logic operational physical retrieval algorithms use
+(AIRS, IASI physical retrievals project the state vector onto ~10-20
+eigenvectors for T/Q rather than retrieving level-by-level) — you're
+not doing anything unusual here, you're following well-trodden ground.
+
+Practical benefits for your network specifically:
+
+Cuts input dimensionality from ~600 (100 levels × 6 vars) down to
+maybe 60-100 total coefficients — far fewer parameters, faster
+training, less overfitting risk, and less training data needed to
+constrain it well.
+
+It also means you can likely drop the CNN encoder entirely and replace
+it with a plain MLP on the concatenated EOF coefficients — the
+convolution's job (learning vertical correlation structure) is already
+done by the PCA. Simpler architecture, easier to debug, probably just
+as accurate.
+
+Denoises: unphysical high-frequency wiggles across levels (which the
+network would otherwise have to learn to ignore) get smoothed out by
+construction.
+
+Caveats to check before committing:
+
+Don't pick a fixed number of components a priori — fit PCA on your
+training profiles and look at cumulative explained variance per
+variable; keep enough to hit something like 99.9-99.99%, then verify
+by checking level-by-level reconstruction error against a physically
+meaningful tolerance (e.g. <0.1-0.2 K for T, a few % relative for Q,
+tighter for O3 near the peak since that's radiatively
+important). Quick way to check:
+
+python code
+
+pca = PCA().fit(temperature_profiles)  # (n_samples, n_levels)
+cum_var = np.cumsum(pca.explained_variance_ratio_)
+n_needed = np.searchsorted(cum_var, 0.9999) + 1
+
+PCA is linear — sharp features like a strong boundary-layer inversion
+or a moist layer edge can need more components than the smooth bulk of
+the profile does, since they're localized and don't compress as
+well. Check reconstruction error specifically in those regions, not
+just the global average.
+
+Fit the PCA on a training set that actually spans your full
+climatology (tropics through polar, including the ozone hole if that's
+in scope) — a narrow training distribution will give you a compact
+basis that fails on the tails.
+
+Do this per variable, separately (T, Q, O3, and probably a
+lighter/shared treatment for the well-mixed gases) rather than one
+joint PCA across all 6 stacked — the physical variability scales and
+structures are too different to share a basis well.
+
+Want me to fold this into the script — replacing the CNN profile
+encoder with per-variable EOF compression feeding a simpler MLP trunk?
+
+I did not notice that you put in a CNN into the DNN?
+
+Yes — it's in the ProfileEncoder class, specifically these lines from the script I gave you:
+
+class ProfileEncoder(nn.Module):
+    """1D-CNN over the vertical dimension. Input (batch, n_vars, n_levels)."""
+
+    def __init__(self, n_vars, n_levels, out_dim=128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv1d(n_vars, 32, kernel_size=5, padding=2),
+            nn.ReLU(),
+            nn.Conv1d(32, 64, kernel_size=5, padding=2),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool1d(1),  # global pool over levels
+        )
+        self.flatten_proj = nn.Linear(64 * 1, out_dim)
+
+This takes your stacked (T, Q, O3, CO2, CH4, N2O) profiles as a
+6-channel, 100-length sequence and runs two 1D convolutions across the
+vertical dimension before feeding into the trunk. The reasoning at the
+time was that a convolution can pick up local vertical correlation
+structure (e.g. a layer's absorption depends on its neighbors) better
+than a flat MLP that treats each level as independent.
+
+Given what you just pointed out — that T and Q vertical structure is
+dominated by a handful of large-scale modes, and that EOF/PCA
+compression is the natural way to represent that — the CNN is now
+doing redundant work. The PCA basis already captures the vertical
+correlation structure explicitly and more efficiently than asking a
+CNN to discover it implicitly from data. So my suggestion is to
+actually remove the CNN and replace ProfileEncoder with a plain MLP
+operating on the concatenated per-variable EOF coefficients — simpler,
+fewer parameters, easier to interpret, and likely just as accurate or
+better given limited training data.
+
+Want me to make that edit — swap out the CNN encoder for per-variable
+PCA compression feeding a plain MLP?
+
+>>>>
+
+I'll work slowly  through this
+
+That's a very reasonable pace for this — better to actually sit with
+the design decisions (sigma coordinates, PCA compression choices, the
+encoder swap) than to have code handed to you faster than you can
+absorb why it's structured that way. It'll also be easier to spot if
+something doesn't match your actual RT code's conventions once you've
+had time to check it against real profiles.
+
+A couple of things that might help while you're working through it,
+given the Matlab background:
+
+  numpy arrays and PCA via sklearn.decomposition.PCA map over fairly
+  directly from Matlab's matrix/pca() mental model — the main
+  adjustment is usually just axis-order conventions (numpy defaults to
+  samples-as-rows, same as Matlab, so that part's not too bad) and
+  0-indexing.
+
+  The PyTorch-specific pieces (nn.Module, the training loop, tensors
+  vs. arrays) are the more genuinely new territory if you haven't used
+  a DL framework before — worth testing those in isolation with toy
+  data before wiring the whole pipeline together.
+
+  If it's useful, you could prototype the PCA/EOF compression step and
+  check the explained-variance/reconstruction-error numbers directly
+  in Matlab first, since that part doesn't need any deep learning
+  framework at all — then only bring the compressed coefficients into
+  Python once you're confident in the compression itself.
+
+No need to do anything with that now — just flagging it in case it's a
+useful way to split the ramp-up. Feel free to come back whenever, with
+questions on any specific piece, once you've had a chance to dig in.
+
+>>>
+
+Actually, one important thing is my profiles/radiance etc are in .mat
+files ... I assume they can be read in by Python? I heard they have to
+be separate variabes, and not lumped together in a structure
+
+Yes, Python can read .mat files, and what you heard is basically right
+— it's much less painful if you save flat variables rather than a
+struct.  The core tool is scipy.io.loadmat, but there's a version
+split that matters:
+
+v7 and earlier (the default unless you use -v7.3): scipy.io.loadmat
+works directly, returns a dict.  v7.3 (HDF5-based — Matlab switches to
+this automatically for variables over 2GB, or if you explicitly
+save(..., '-v7.3')): scipy.io.loadmat cannot read these. You need h5py
+or the mat73 package instead.
+
+Check which you have — if scipy.io.loadmat throws an error like
+NotImplementedError: Please use HDF reader for matlab v7.3 files,
+that's your answer.
+
+Yes, Python can read .mat files, and what you heard is basically right
+— it's much less painful if you save flat variables rather than a
+struct.  The core tool is scipy.io.loadmat, but there's a version
+split that matters:
+
+  v7 and earlier (the default unless you use -v7.3): scipy.io.loadmat works directly, returns a dict.
+  
+  v7.3 (HDF5-based — Matlab switches to this automatically for
+  variables over 2GB, or if you explicitly save(..., '-v7.3')):
+  scipy.io.loadmat cannot read these. You need h5py or the mat73
+  package instead.
+
+Check which you have — if scipy.io.loadmat throws an error like
+NotImplementedError: Please use HDF reader for matlab v7.3 files,
+that's your answer.  On structs vs. separate variables — this is the
+real practical issue. If you save like this in Matlab:
+  matlabsave('profiles.mat', 'T', 'Q', 'O3', 'CO2', 'CH4', 'N2O', 'surf_pressure', 'radiance')
+then in Python:
+import scipy.io as sio
+data = sio.loadmat('profiles.mat')
+T = data['T']          # straight into a numpy array, no fuss
+Q = data['Q']
+radiance = data['radiance']
+
+Each variable comes back as a clean numpy array. If instead you have
+everything nested in one struct (e.g. profile.T, profile.Q,
+profile.radiance), loadmat wraps it in an awkward nested object
+(mat_struct / structured array with dtype=object), and unpacking
+nested structs/cell arrays reliably gets fiddly, especially with mixed
+sizes like yours (variable N per profile). It's doable with
+squeeze_me=True, struct_as_record=False options, but it's extra code
+that breaks in subtle ways with cell arrays.
+
+My recommendation: save with flat top-level variables from Matlab like
+above, one array per physical quantity, and skip structs entirely for
+this pipeline. If your data's already saved as structs and you can't
+easily resave it, let me know and I can write the unpacking code —
+just flagging it's more code and more fragile than the flat
+approach.
+
+
+When you're ready to pick this back up — whether that's testing the
+.mat loading, working through the PCA/EOF compression on your actual
+profiles, or revisiting the encoder architecture — just bring it back
+and we can pick up wherever you left off. No rush on any of it.
+
+When you're ready to pick this back up — whether that's testing the
+.mat loading, working through the PCA/EOF compression on your actual
+profiles, or revisiting the encoder architecture — just bring it back
+and we can pick up wherever you left off. No rush on any of it.
+
+>>>>
+
+I'll have about 38000 test profilesradiances. Far fewer than the
+millions I know many pople train on, but these test profiles are
+chosen for variability.
+
+38,000 is very likely enough for this problem, and the "millions"
+comparison you're thinking of comes from a different regime of problem
+than yours.
+
+Why the comparison doesn't transfer directly: The people training on
+millions of samples are usually doing image classification, language
+modeling, or line-by-line spectroscopic databases — tasks where the
+input space is combinatorially huge or the target function has fine,
+high-frequency structure that only shows up with massive data. Your
+problem is a smooth, physically constrained regression: temperature,
+humidity, and trace-gas profiles map to radiance through well-behaved
+(if nonlinear) radiative transfer physics, not through arbitrary pixel
+combinations. Once you compress inputs to EOF coefficients (~10-20
+each for T/Q, fewer for the well-mixed gases, more for O3) and outputs
+to PCA coefficients (~20-50), you're really training a regression from
+maybe 50-70 effective input dimensions to ~30 effective output
+dimensions — not from 600 raw inputs to 2500 raw outputs. That's a
+much friendlier problem, and 38k samples gives you a healthy number of
+samples per effective dimension.
+
+Precedent for this specific task: operational fast-RT regression
+models (e.g. the classic diverse profile sets used to train RTTOV's
+regression coefficients) have historically used sample sizes in the
+range of tens to a couple thousand carefully chosen diverse profiles,
+not millions — precisely because they exploit the same smoothness and
+low intrinsic dimensionality you're relying on. Modern NN-based RT
+emulators in the literature typically train on tens of thousands to
+~100k profiles. 38k sitting at the lower end of that range, but
+selected deliberately for variability rather than randomly, likely
+punches above its raw count — random climatological sampling wastes a
+lot of samples clustered near the mean state; a diversity-selected set
+doesn't.
+
+Things worth doing given this sample size specifically:
+
+  Use k-fold cross-validation rather than a single train/val/test
+  split, or at least a few different random splits, to get a stable
+  estimate of generalization error. With 38k you can afford 5-fold CV
+  without it being computationally painful, and it protects you from
+  an unlucky single split — especially important since the set was
+  deliberately curated rather than i.i.d. sampled.
+  
+  Split by profile "family," not just randomly, if your diverse set
+  has recognizable clusters (e.g. tropical ocean, polar, desert,
+  mid-latitude storm). Random splitting risks near-duplicate profiles
+  landing in both train and test, which would inflate your apparent
+  accuracy. Stratify or group-split so similar profiles stay together.
+
+  Fit a simple linear (or PCA-to-PCA linear) baseline first, before
+  the DNN. Since BT (rather than raw radiance) is a fairly linear
+  function of the inputs after your log-transforms, a plain linear
+  regression from input EOFs to output PCA coefficients might get you
+  surprisingly far, cheaply, with your full 38k. This tells you how
+  much the nonlinearity of the DNN is actually buying you, and gives
+  an early, very fast sanity check on the whole pipeline
+  (normalization, PCA, everything) before you spend time tuning
+  network architecture.
+
+  Keep the network small relative to 38k samples. Given the
+  reduced-dimension inputs/outputs, you likely don't need the 256-256
+  trunk I sketched earlier — something more like 64-128 units per
+  layer, with dropout or weight decay, will resist overfitting much
+  better at this data scale. Watch the train/val loss gap closely as
+  your main overfitting signal.
+
+  You have an option most people training on fixed datasets don't: you
+  own the RT code. If validation reveals the model is weak in a
+  particular regime (e.g. high emissivity contrast, low-latitude ozone
+  extremes), you can generate more profiles specifically there rather
+  than being stuck with whatever you already have — a cheap form of
+  active learning, since presumably running the forward RT model to
+  generate more truth data is your bottleneck, not collecting real-world
+  measurements.
+
+Nothing here needs action from you today — just context to have in
+mind while you're working through the rest at your own pace.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+

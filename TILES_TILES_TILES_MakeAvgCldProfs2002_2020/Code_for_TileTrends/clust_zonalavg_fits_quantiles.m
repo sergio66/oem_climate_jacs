@@ -155,6 +155,8 @@ else
 end
 
 %% see eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/trends_zonalavg_fits_quantiles_LatBin01_timesetps_001_525_V1.mat'
+%% ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin*/trendsNanomalies_zonalavg_fits_quantiles_LatBin*_timesetps_001_525_V1_land.mat | wc -l
+%%  64
 
 qstr = ['Q' num2str(nquants)];
 

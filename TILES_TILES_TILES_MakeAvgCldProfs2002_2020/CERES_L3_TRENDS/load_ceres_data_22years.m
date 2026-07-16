@@ -1,6 +1,18 @@
-function ceres = load_ceres_data_22years(ceres_fnameA,ceres_fnameB);
+function ceres = load_ceres_data_22years(ceres_fnameA,ceres_fnameB,rtpIN);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% see eg driver_compute_or_load_ceres_olr_trends_new.m : download max 15 years at a time so you need two files
+%% data  is from https://ceres.larc.nasa.gov/data/
+%%   if iYears == 20
+%%     ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF-TOA_Ed4.1_Subset_200209-202108.nc';  %% what I brought
+%%     ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF-TOA_Ed4.2_Subset_200209-202208.nc';
+%%     ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.1_Subset_200209-202108.nc';      %% what Ryan suggests
+%%     ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_200209-202208.nc';      %% what Ryan suggests
+%%  elseif  iYears == 22
+%%     ceres_fnameA = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_200209-201706.nc';
+%%     ceres_fnameB = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_201707-202403.nc';
+%%  end
 
 if nargin < 2
   error('need 2 filenames')
@@ -75,7 +87,7 @@ ceres.lat = a.lat;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% [h,ha,p,pa] = rtpread('../FIND_NWP_MODEL_TRENDS/summary_atm_N_cld_20years_all_lat_all_lon_2002_2022_monthlyERA5.ip.rtp');
-[h,ha,p,pa] = rtpread('/home/sergio/MATLABCODE/oem_pkg_run/FIND_NWP_MODEL_TRENDS/summary_atm_N_cld_20years_all_lat_all_lon_2002_2022_monthlyERA5.ip.rtp');
+[h,ha,p,pa] = rtpread(rtpIN);
 
 hindex = 1 : 8;
 hindex = 1;

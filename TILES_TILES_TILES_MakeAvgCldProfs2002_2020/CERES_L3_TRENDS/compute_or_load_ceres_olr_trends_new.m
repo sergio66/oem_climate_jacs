@@ -1,10 +1,18 @@
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
-addpath /home/sergio/MATLABCODE/COLORMAP
-addpath /home/sergio/MATLABCODE/PLOTTER 
-addpath /home/sergio/MATLABCODE
-addpath /asl/matlib/h4tools
+%addpath /home/sergio/MATLABCODE/TIME
+%addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
+%addpath /home/sergio/MATLABCODE/COLORMAP
+%addpath /home/sergio/MATLABCODE/PLOTTER 
+%addpath /home/sergio/MATLABCODE
+%addpath /asl/matlib/h4tools
 
+addpath /home/sergio/git/matlabcode/TIME
+addpath /home/sergio/git/matlabcode/COLORMAP
+addpath /home/sergio/git/matlabcode/PLOTTER 
+addpath /home/sergio/git/matlabcode
+addpath /umbc/rs/pi_sergio/WorkDirDec2025/matlabcode/matlibSergio/matlib2025/h4tools
+addpath /home/sergio/git/oem_climate_jacs/StrowCodeforTrendsAndAnomalies/
+
+addpath /home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% function ceres = load_ceres_data(ceres_fname,iCorT)   
 %% iCorT = +1;  %% the clear filled region in a pixel
@@ -17,21 +25,40 @@ iCorT = 0;   %% both
 iCorT
 
 iYears = 20; 
-iYears = 22; 
+iYears = 22;
+iYears = 23; 
 
 if iYears < 22
   error('use compute_or_load_ceres_olr_trends')
 end
 
+%% can only bring less than 2 Mb per file so order for 15+ years are divided into two
+%% can only bring less than 2 Mb per file so order for 15+ years are divided into two
+%% can only bring less than 2 Mb per file so order for 15+ years are divided into two
 if iYears == 20
   ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF-TOA_Ed4.1_Subset_200209-202108.nc';  %% what I brought
   ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF-TOA_Ed4.2_Subset_200209-202208.nc'; 
   ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.1_Subset_200209-202108.nc';      %% what Ryan suggests
   ceres_fname = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_200209-202208.nc';      %% what Ryan suggests
-elseif  iYears == 22
+elseif iYears == 22
   ceres_fnameA = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_200209-201706.nc';
   ceres_fnameB = '/asl/s1/sergio/CERES_OLR_15year/CERES_EBAF_Ed4.2_Subset_201707-202403.nc';
+elseif iYears == 23
+  %% need all these selected on https://ceres-tool.larc.nasa.gov/ord-tool/jsp/EBAF421Selection.jsp
+  %%    TOA Fluxes	
+  %%    TOA CRE Fluxes (clear-sky for total region)	
+  %%    Solar Flux	
+  %%    Cloud Parameters	
+  %%    Surface Fluxes	
+  %%    Surface CRE Fluxes (clear-sky for total region)	
+  ceres_fnameA = '/home/sergio/nogit/TEMP_STUFF/CERES_OLR/CERES_EBAF_Ed4.2.1_Subset_200209-201706.nc';
+  ceres_fnameB = '/home/sergio/nogit/TEMP_STUFF/CERES_OLR/CERES_EBAF_Ed4.2.1_Subset_201707-202508.nc';
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rtpIN = '/home/sergio/MATLABCODE/oem_pkg_run/FIND_NWP_MODEL_TRENDS/summary_atm_N_cld_20years_all_lat_all_lon_2002_2022_monthlyERA5.ip.rtp';
+rtpIN = '/home/sergio/git/kcarta_gen/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/RTP/summary_23years_all_lat_all_lon_2002_2025_monthlyERA5.op.rtp';
 
 if iYears == 20
   if iCorT > 0
@@ -52,14 +79,16 @@ if iYears == 20
     ceres = ceresR;
   end
 else
-  ceres = load_ceres_data_22years(ceres_fnameA,ceres_fnameB);
+  ceres = load_ceres_data_22years(ceres_fnameA,ceres_fnameB,rtpIN);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if iYears == 20
   bonk = findstr(ceres_fname,'.nc');
   startD = ceres_fname(bonk-13:bonk-08); startY = str2num(startD(1:4)); startM = str2num(startD(5:6));
   stopD  = ceres_fname(bonk-06:bonk-01); stopY  = str2num(stopD(1:4));  stopM  = str2num(stopD(5:6));
-else
+else 
   bonk = findstr(ceres_fnameA,'.nc');
   startD = ceres_fnameA(bonk-13:bonk-08); startY = str2num(startD(1:4)); startM = str2num(startD(5:6)); 
   bonk = findstr(ceres_fnameB,'.nc');
@@ -94,6 +123,9 @@ thetime.yymm = yymm;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 error(';lkas')
+if ~exist('yymm_ceres')
+  yymm_ceres = thetime.yymm;
+end
 make_trends_anomalies_ceres_2022
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,7 +146,8 @@ if iSave > 0
   eval(saver);
 end
 
-[h,ha,p,pa] = rtpread('/home/sergio/MATLABCODE/oem_pkg_run/FIND_NWP_MODEL_TRENDS/summary_atm_N_cld_20years_all_lat_all_lon_2002_2022_monthlyERA5.ip.rtp');
+%[h,ha,p,pa] = rtpread('/home/sergio/MATLABCODE/oem_pkg_run/FIND_NWP_MODEL_TRENDS/summary_atm_N_cld_20years_all_lat_all_lon_2002_2022_monthlyERA5.ip.rtp');
+[h,ha,p,pa] = rtpread(rtpIN);
 figure(3); clf; pcolor(reshape(ceres_trend.trend_toa_lw_all_4608,72,64)');      colorbar; colormap(usa2); shading flat; caxis([-1 +1]); title('ALL')
 figure(4); clf; pcolor(reshape(ceres_trend.trend_toa_lw_clr_t_4608,72,64)');    colorbar; colormap(usa2); shading flat; caxis([-1 +1]); title('CLR')
 figure(3); clf; simplemap(p.rlat,p.rlon,ceres_trend.trend_toa_lw_all_4608,5);   colorbar; colormap(usa2); shading flat; caxis([-1 +1]/2); title('ALL')

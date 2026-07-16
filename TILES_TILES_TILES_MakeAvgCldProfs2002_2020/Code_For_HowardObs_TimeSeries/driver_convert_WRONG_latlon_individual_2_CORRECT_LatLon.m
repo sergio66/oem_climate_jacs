@@ -44,6 +44,8 @@ if exist(use_this_rtp)
   [h,ha,p,pa] = rtpread(use_this_rtp);
   plot(p.rlon(1:73),p.rlat(1:73),'x',X(1:73), Y(1:73),'o')
 else
+  make_p_struct
+  
   fprintf(1,'use_this_rtp = \n       %s DNE  \n generating p.ralt,p.rlon using X Y \n',use_this_rtp)
   iX = 0;
   for jj = 1 : 64
@@ -54,6 +56,9 @@ else
       p.stemp(iX) = 300 + -abs(p.rlat(iX));
     end
   end
+
+  make_p_struct
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%

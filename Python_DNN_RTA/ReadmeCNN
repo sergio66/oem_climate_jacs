@@ -1,0 +1,32 @@
+CNN decoder instead of the fixed linear PCA decoder — reasonable thing
+to test, though I'd temper expectations: your truncation-floor check
+earlier came back at 0.086 K, meaning the linear PCA basis already
+captures the spectrum almost perfectly. A nonlinear decoder raises the
+representational ceiling higher than that, but since 0.086 K wasn't
+your bottleneck to begin with, this is less likely to close your
+0.5→0.2 K gap than the data-density fix. Still worth trying since it's
+a real alternative — here's a compact version, trained end-to-end
+directly against the raw BT spectrum instead of PCA coefficients (so
+the network learns its own nonlinear compression rather than being
+constrained to PCA's linear subspace)
+
+A few honest caveats on this one:
+
+  This is the most speculative piece of code I've given you in this
+  conversation — the reshape/stripdims/repelem dimension juggling for
+  the upsample blocks is the kind of thing that's genuinely easy to
+  get subtly wrong without a MATLAB session to iterate against. Treat
+  it as a starting sketch, not working code.
+
+  Given your diagnostics, I'd deprioritize this relative to the data
+  augmentation (component-swapping) approach — that one has a clear
+  causal story tied to what you actually found (joint-density gaps),
+  while the CNN decoder is a representational-capacity upgrade for a
+  bottleneck (PCA truncation) that you already showed isn't the
+  limiting factor.
+
+  If you do try it and it doesn't move the needle, that itself would
+  be useful confirmation that the ceiling really is data density, not
+  compression capacity — so it's not wasted effort either way, just
+  not where I'd spend limited time first.
+

@@ -64,19 +64,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
-% JOB = 49;
-% JOB = 21;
-% JOB = 269
-% JOB = 705;
-% JOB = 16
-% JOB = 10
-% JOB = 1
+if length(JOB) == 0
+  % JOB = 49;
+  % JOB = 21;
+  % JOB = 269
+  % JOB = 705;
+  % JOB = 16
+  % JOB = 10
+  % JOB = 1
+  JOB = 2304;
+end
 
 %kcvers = 118;
 %kcvers = 116;
 %kcvers = 112;
 %kcvers = 121;
-kcvers = 120;
+%kcvers = 120;
+kcvers = 122;
 
 iiBin = JOB;
 iLatbin = iiBin;

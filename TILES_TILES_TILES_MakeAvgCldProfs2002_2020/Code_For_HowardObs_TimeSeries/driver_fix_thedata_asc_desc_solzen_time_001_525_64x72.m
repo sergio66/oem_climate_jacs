@@ -1,7 +1,7 @@
 %% very similar to driver_fix_thedata_asc_desc_solzen_time_001_412_64x72.m
 
 %% script function to fix_thedata_asc_desc_solzen_time_001_412_64x72 2002/09 to 2020/08
-%% script function to fix_thedata_asc_desc_solzen_time_001_504_64x72 2002/09 to 2024/08
+%% script function to fix_thedata_asc_desc_solzen_time_001_525_64x72 2002/09 to 2025/08
 
 addpath /home/sergio/MATLABCODE/TIME
 
@@ -14,7 +14,8 @@ switchERAtoECM = utc2taiSergio(2019,09,01,12);  %% this is when ERA ends
 
 %% unfortunately some 16 day dates are missing
 %%   388 should be end of 2019/08/31, not 387  -- there is a step missing between 168 and 169
-%%   411 should be end of 2020/09/01 
+%%   411 should be end of 2020/09/01
+%%   524 should be end of 2025/09/01 
 
 N = 16; N = 15; N1 = 1;
   firstORend = 0;
@@ -30,6 +31,7 @@ rtimeE(1) = utc2taiSergio(yy1,mm1,dd1,12);
 
 Nmax = 412;
 Nmax = 504;
+Nmax = 525;
 Nmax = 600;
 
 for ii = 2 : Nmax
@@ -53,9 +55,9 @@ for ii = 2 : Nmax
   end
 end  
 
-commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m'];
-dirout = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
-dirout = ['/home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/'];
+commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_525_64x72.m'];
+dirout = ['/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/'];
+dirout = ['/home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/'];
 
 fileout = [dirout '/timestepsStartEnd_2002_09_to_' num2str(thedateE(Nmax,1),'%04d') '_' num2str(thedateE(Nmax,2),'%04d') '.mat'];
 saver = ['save ' fileout ' commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM'];
@@ -87,7 +89,7 @@ return
 %% driver_loop_get_asc_desc_solzen_time.m
 
 
-load('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72.mat');
+load('/home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_412_64x72.mat');
 thedata0 = thedata;
 if iDorA > 0
   meanrtime = nanmean(squeeze(nanmean(thedata.rtime_desc,1)),1);
@@ -146,20 +148,20 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% fix the bad days
-Nstep2002_09_to_2020_08 = 411; %% we will stop at 411
+Nstep2002_09_to_2025_08 = 525; %% we will stop at 525
 
 clear thedata
 if iDorA > 0
-  commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m ... bad indices = ' num2str(bad)];
+  commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_525_64x72.m ... bad indices = ' num2str(bad)];
 
-  thedata.rlon_desc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.rlat_desc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.solzen_desc       = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.satzen_desc       = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.hour_desc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.rtime_desc        = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.bt1231_desc       = zeros(72,64,Nstep2002_09_to_2020_08,3);
-  thedata.bt1231_quant_desc = zeros(72,64,Nstep2002_09_to_2020_08,16);
+  thedata.rlon_desc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.rlat_desc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.solzen_desc       = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.satzen_desc       = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.hour_desc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.rtime_desc        = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.bt1231_desc       = zeros(72,64,Nstep2002_09_to_2025_08,3);
+  thedata.bt1231_quant_desc = zeros(72,64,Nstep2002_09_to_2025_08,16);
 
   for ii = 1 : length(bad)
     if ii == 1
@@ -205,27 +207,27 @@ if iDorA > 0
     end
   end
 
-  for ii = 1 : Nstep2002_09_to_2020_08
+  for ii = 1 : Nstep2002_09_to_2025_08
     tt = ii; junk = thedata.rtime_desc(:,:,tt); junk = mean(junk(:)); [junkYY,junkMM,junkDD,junkHH] = tai2utcSergio(junk); 
     fprintf(1,' %3i  tS tData tE  %4i/%2i/%2i     %4i/%2i/%2i     %4i/%2i/%2i     deltaRtime(Max-Junk) = %8.6f %3i\n',ii,thedateS(tt,:),junkYY,junkMM,junkDD,thedateE(tt,:),(rtimeE(tt)-junk)/86400,round((rtimeE(tt)-junk)/86400))
     deltatimeX(ii) = round((rtimeE(ii)-junk)/86400);
     rtime_thedataX(ii) = junk;
   end
 
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_001_504_64x72_fix_desc.mat thedata translateOld2New commentFix
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2020_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
+  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_001_525_64x72_fix_desc.mat thedata translateOld2New commentFix
+  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2025_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
 
 elseif iDorA < 0
-  commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m ... bad indices = ' num2str(bad)];
+  commentFix = ['see /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA/driver_fix_thedata_asc_desc_solzen_time_001_525_64x72.m ... bad indices = ' num2str(bad)];
 
-  thedata.rlon_asc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.rlat_asc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.solzen_asc       = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.satzen_asc       = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.hour_asc         = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.rtime_asc        = zeros(72,64,Nstep2002_09_to_2020_08);
-  thedata.bt1231_asc       = zeros(72,64,Nstep2002_09_to_2020_08,3);
-  thedata.bt1231_quant_asc = zeros(72,64,Nstep2002_09_to_2020_08,16);
+  thedata.rlon_asc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.rlat_asc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.solzen_asc       = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.satzen_asc       = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.hour_asc         = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.rtime_asc        = zeros(72,64,Nstep2002_09_to_2025_08);
+  thedata.bt1231_asc       = zeros(72,64,Nstep2002_09_to_2025_08,3);
+  thedata.bt1231_quant_asc = zeros(72,64,Nstep2002_09_to_2025_08,16);
 
   for ii = 1 : length(bad)
     if ii == 1
@@ -259,15 +261,15 @@ elseif iDorA < 0
     thedata.rtime_asc(:,:,bad(ii)+(ii-1))         = 0.5*(rtimeS(bad(ii)+(ii-1))+rtimeE(bad(ii)+(ii-1))) + drtime;
   end
 
-  for ii = 1 : Nstep2002_09_to_2020_08
+  for ii = 1 : Nstep2002_09_to_2025_08
     tt = ii; junk = thedata.rtime_asc(:,:,tt); junk = mean(junk(:)); [junkYY,junkMM,junkDD,junkHH] = tai2utcSergio(junk); 
     fprintf(1,' %3i  tS tData tE  %4i/%2i/%2i     %4i/%2i/%2i     %4i/%2i/%2i     deltaRtime(Max-Junk) = %8.6f %3i\n',ii,thedateS(tt,:),junkYY,junkMM,junkDD,thedateE(tt,:),(rtimeE(tt)-junk)/86400,round((rtimeE(tt)-junk)/86400))
     deltatimeX(ii) = round((rtimeE(ii)-junk)/86400);
     rtime_thedataX(ii) = junk;
   end
 
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_504_64x72_fix_asc.mat thedata translateOld2New commentFix
-  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
+  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/asc_desc_solzen_time_525_64x72_fix_asc.mat thedata translateOld2New commentFix
+  save /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2025/Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2025_09.mat  commentFix thedateS thedateE rtimeS rtimeE Nmax switchERAtoECM bad
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -284,14 +286,14 @@ so now need to change filenames depending on "translateOld2New" it really should
   394-409  396-411 
 
 plan would be : 
-(a) modify these so they read asc_asc_solzen_time_001_504_64x72_fix_asc.mat or asc_asc_solzen_time_001_504_64x72_fix_desc.mat instead of asc_asc_solzen_time_001_504_64x72.mat
+(a) modify these so they read asc_asc_solzen_time_001_525_64x72_fix_asc.mat or asc_asc_solzen_time_001_525_64x72_fix_desc.mat instead of asc_asc_solzen_time_001_525_64x72.mat
 -rw-rw-r-- 1 sergio pi_strow 13495 Aug  4 20:40 clust_loop_make16day_tile_28points.m
   currently saves into   
-          dout = ['/asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_v3/TimeSeries/ERA/Tile_16day/DESC/Day' num2str(ddd,'%02d') '/ERAindex' num2str(eeeXY_cnt,'%02d')  '/'];
+          dout = ['/asl/s1/sergio/MakeAvgObsStats2002_2025_startSept2002_v3/TimeSeries/ERA/Tile_16day/DESC/Day' num2str(ddd,'%02d') '/ERAindex' num2str(eeeXY_cnt,'%02d')  '/'];
           fout = [dout '/era_tile_X_' num2str(eeeX) '_Y_' num2str(eeeY)  '_day_' num2str(ddd,'%02d') '_individual_timestep_' num2str(JOB,'%03d') '.mat'];
 -rw-rw-r-- 1 sergio pi_strow  8144 Aug  4 09:24 clust_loop_make16day_tile_center.m
   currently saves into   
-          fout = ['/asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_v3/TimeSeries/ERA/Tile_Center/DESC/era_tile_center_timestep_' num2str(JOB,'%03d') '.mat'];
+          fout = ['/asl/s1/sergio/MakeAvgObsStats2002_2025_startSept2002_v3/TimeSeries/ERA/Tile_Center/DESC/era_tile_center_timestep_' num2str(JOB,'%03d') '.mat'];
 (b) make new files   rename_loop_make16day_tile_28points.m   and   rename_loop_make16day_tile_center.m   so they do the following
 
 look at current dir

@@ -1,0 +1,98 @@
+I have a 1D vector called X that I want to train to be the same as
+another 1D truth vector called Y given some input parameters P. I have
+N such sets of parameters, truth vectors and vectors to be trained
+(X,Y,P). How do I build a DNN in Matlab to do this?
+
+You have N training examples, where for each example i:
+
+P_i : input parameters (vector)
+X_i : initial 1D vector you want to adjust/train
+Y_i : target truth vector (desired output)
+
+The DNN should learn to map (P, X) → Y (or a correction that makes X closer to Y).
+
+Note " Sometimes more stable:
+Target becomes Delta = Y - X
+Network outputs correction → final = X + predicted_delta
+Just change Target = Y - X; and keep everything else the same. This is often better when X is already close to Y.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Recommended Approach: Concatenate P and X as Input
+matlab% Data shapes (after organizing your data):
+
+% P : [numParams × N]
+% X : [vectorLength × N]     % initial vectors
+% Y : [vectorLength × N]     % truth vectors
+
+% Combine inputs
+Input = [P; X];                % size: [numParams + vectorLength, N]
+Target = Y;                    % size: [vectorLength, N]
+
+% Strongly recommended: normalize
+[InputNorm, muIn, sigmaIn] = normalize(Input, 2);   % along observations
+[TargetNorm, muT, sigmaT]  = normalize(Target, 2);
+
+% Optional: Split train/validation
+idx = randperm(N);
+trainIdx = idx(1:round(0.8*N));
+valIdx   = idx(round(0.8*N)+1:end);
+
+XTrain = InputNorm(:, trainIdx);
+YTrain = TargetNorm(:, trainIdx);
+XVal   = InputNorm(:, valIdx);
+YVal   = TargetNorm(:, valIdx);
+
+% Define network
+
+numInputFeatures = size(Input, 1);   % = numParams + vectorLength
+outputSize       = size(Y, 1);       % length of your 1D vector
+
+layers = [
+    featureInputLayer(numInputFeatures)
+    
+    fullyConnectedLayer(256)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(512)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(256)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(outputSize)
+    % No activation (linear output) for regression
+];
+
+net = dlnetwork(layers);
+
+% Training options
+
+options = trainingOptions('adam', ...
+    'MaxEpochs', 800, ...
+    'MiniBatchSize', 32, ...           % adjust based on your N
+    'InitialLearnRate', 1e-3, ...
+    'LearnRateSchedule','piecewise', ...
+    'LearnRateDropPeriod',200, ...
+    'LearnRateDropFactor',0.5, ...
+    'ValidationData',{XVal, YVal}, ...
+    'ValidationFrequency',50, ...
+    'Plots','training-progress', ...
+    'Verbose',false);
+
+%% train
+
+net = trainnet(XTrain, YTrain, net, "mse", options);
+
+%% Prediction/inference
+
+% New sample: P_new and X_init_new
+InputNew = [P_new; X_init_new];
+InputNewNorm = (InputNew - muIn) ./ sigmaIn;   % use same stats
+
+YpredNorm = predict(net, InputNewNorm);
+Ypred     = YpredNorm .* sigmaT + muT;         % denormalize
+

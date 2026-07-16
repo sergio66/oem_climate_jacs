@@ -1,0 +1,43 @@
+a) make rtp file with 83 ECM/49 regr profiles, randomly changed scanang and spres
+b) run KCARTA to make jacs
+c) run SARTA to make SARTA jacs
+d) put together SARTA and KCARTA jacs
+e) use NN to turn sarta jacs into kcarta jacs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+PRELIMINARY
+
+Use
+  /home/sergio/git/matlabcode/REGR_PROFILES_SARTA/REGR49_PROFILES_for_kCARTA_breakouts_for_SARTA/regr49_1013.op.rtp
+with KCARTA
+  /home/sergio/git/kcarta_gen/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/set_rtp.m
+to make WV,T,O3,CO2,CH4 jacs at t = 2002 (370 ppm), 2012 (392 ppm), 2022 (412 ppm)
+
+Then also use SARTA to do the same jacs.
+
+Compare and see how to "fix" the sarta jacs
+
+a) driver_make_rtpfile.m
+   puts together 83 ECM profiles and 49 REGR profiles
+   then randomizes scanang/spres .. using skewed distributon for spres
+   add in d/dt for CO2/CH4/N2O/T/WV for 5 steps (5 years apart 2002:5.5:2022)
+
+b) KCARTA jacs dome in /home/sergio/git/kcarta_gen/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/ and copied to
+   DATA/v1/KCARTA/
+
+c) sarta jacs : see clustmake_sartajacs.m, writes out to
+   DATA/v1/SARTA
+   
+d) put together sarta and kcarta jacs
+     loop_driver_compare_sarta_kcarta_jacs.m    calls    driver_compare_sarta_kcarta_jacs.m
+   writes out to
+   DATA/v1/COMBINED
+   %% this makes DATA/v1/COMBINED/sarta_kcarta_1.mat ... DATA/v1/COMBINED/sarta_kcarta_660.mat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The DNN nets
+
+e) look at STEMP and build NN to fix the jacs! using eg
+     driver_nn_stemp.m
+

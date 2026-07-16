@@ -1,0 +1,220 @@
+This is same as ReadmeGrok3
+
+but is the direct Y predicton
+
+% Data: P [numParams x N], X [1 x N], Y [1 x N]
+
+numParams = size(P,1);
+N = size(P,2);
+
+% Normalization
+[Pnorm, muP, sigP] = normalize(P, 2);
+[Xnorm, muX, sigX] = normalize(X, 2);
+[Ynorm, muY, sigY] = normalize(Y, 2);
+
+% Input = P + X
+Input = [Pnorm; Xnorm];        % [numParams+1, N]
+
+% Train/Val split
+idx = randperm(N);
+trainIdx = idx(1:round(0.8*N));
+valIdx   = idx(round(0.8*N)+1:end);
+
+XTrain = Input(:, trainIdx);
+YTrain = Ynorm(:, trainIdx);     % ← Direct target (no residual)
+
+XVal   = Input(:, valIdx);
+YVal   = Ynorm(:, valIdx);
+
+%% Define Network
+layers = [
+    featureInputLayer(numParams + 1)
+    
+    fullyConnectedLayer(128); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(256); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(128); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(64);  reluLayer
+    
+    fullyConnectedLayer(1)    % Direct scalar output
+];
+
+net = dlnetwork(layers);
+
+%% Training
+options = trainingOptions('adam', ...
+    'MaxEpochs', 800, ...
+    'MiniBatchSize', 32, ...
+    'InitialLearnRate', 1e-3, ...
+    'LearnRateSchedule','piecewise', ...
+    'LearnRateDropPeriod',150, ...
+    'LearnRateDropFactor',0.5, ...
+    'ValidationData',{XVal, YVal}, ...
+    'Plots','training-progress', ...
+    'Verbose',false);
+
+net = trainnet(XTrain, YTrain, net, "mse", options);
+
+%% Save Model
+Model.net = net;
+Model.muP = muP; Model.sigP = sigP;
+Model.muX = muX; Model.sigX = sigX;
+Model.muY = muY; Model.sigY = sigY;
+
+save('MyScalarNN_Direct.mat', 'Model');
+disp('Non-residual model saved.');
+
+%% prediction function predictScalarNN_Direct.m
+
+function Y_pred = predictScalarNN_Direct(P_new, X_init)
+    persistent Model
+    
+    if isempty(Model)
+        load('MyScalarNN_Direct.mat', 'Model');
+        disp('Direct ScalarNN model loaded.');
+    end
+    
+    Pnorm = (P_new - Model.muP) ./ Model.sigP;
+    Xnorm = (X_init - Model.muX) ./ Model.sigX;
+    
+    Input = [Pnorm; Xnorm];
+    
+    Ynorm_pred = predict(Model.net, Input);
+    Y_pred = Ynorm_pred * Model.sigY + Model.muY;
+end
+
+%% usage
+Y_pred = predictScalarNN_Direct(P_new, X_init);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PYTHON
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
+import numpy as np
+import pickle
+
+# ========================== Data Preparation ==========================
+# Assume P, X, Y are numpy arrays
+# P.shape = (N, numParams)
+# X.shape = (N, 1)
+# Y.shape = (N, 1)
+
+P = P.astype(np.float32)
+X = X.astype(np.float32).reshape(-1, 1)
+Y = Y.astype(np.float32).reshape(-1, 1)
+
+# Normalization
+P_mean, P_std = P.mean(axis=0), P.std(axis=0) + 1e-8
+X_mean, X_std = X.mean(), X.std() + 1e-8
+Y_mean, Y_std = Y.mean(), Y.std() + 1e-8
+
+P_norm = (P - P_mean) / P_std
+X_norm = (X - X_mean) / X_std
+Y_norm = (Y - Y_mean) / Y_std
+
+# Combine P and X
+Input = np.hstack([P_norm, X_norm])   # shape: (N, numParams + 1)
+
+# Train/Val split
+indices = np.random.permutation(len(Input))
+train_size = int(0.8 * len(Input))
+train_idx, val_idx = indices[:train_size], indices[train_size:]
+
+X_train = torch.tensor(Input[train_idx], dtype=torch.float32)
+Y_train = torch.tensor(Y_norm[train_idx], dtype=torch.float32)
+X_val   = torch.tensor(Input[val_idx],   dtype=torch.float32)
+Y_val   = torch.tensor(Y_norm[val_idx],   dtype=torch.float32)
+
+train_loader = DataLoader(TensorDataset(X_train, Y_train), batch_size=32, shuffle=True)
+
+# ========================== Define Model ==========================
+class ScalarNet(nn.Module):
+    def __init__(self, input_size):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_size, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128),
+            
+            nn.Linear(128, 256),
+            nn.ReLU(),
+            nn.BatchNorm1d(256),
+            
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128),
+            
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            
+            nn.Linear(64, 1)
+        )
+    
+    def forward(self, x):
+        return self.net(x)
+
+model = ScalarNet(input_size = Input.shape[1])
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+# ========================== Training ==========================
+for epoch in range(800):
+    model.train()
+    for batch_x, batch_y in train_loader:
+        optimizer.zero_grad()
+        pred = model(batch_x)
+        loss = criterion(pred, batch_y)
+        loss.backward()
+        optimizer.step()
+    
+    # Validation
+    if epoch % 50 == 0:
+        model.eval()
+        with torch.no_grad():
+            val_pred = model(X_val)
+            val_loss = criterion(val_pred, Y_val)
+        print(f'Epoch {epoch:3d} | Val MSE: {val_loss.item():.6f}')
+
+# ========================== Save Model ==========================
+torch.save({
+    'model_state_dict': model.state_dict(),
+    'P_mean': P_mean,
+    'P_std': P_std,
+    'X_mean': X_mean,
+    'X_std': X_std,
+    'Y_mean': Y_mean,
+    'Y_std': Y_std,
+}, 'scalar_nn_direct.pth')
+
+print("PyTorch model saved.")
+
+%% Pytorch inference
+
+def predict_scalar_nn(P_new, X_init):
+    checkpoint = torch.load('scalar_nn_direct.pth', map_location='cpu')
+    
+    model = ScalarNet(input_size=len(checkpoint['P_mean']) + 1)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    
+    P_new = np.array(P_new, dtype=np.float32).reshape(1, -1)
+    X_init = np.array(X_init, dtype=np.float32).reshape(1, 1)
+    
+    P_norm = (P_new - checkpoint['P_mean']) / checkpoint['P_std']
+    X_norm = (X_init - checkpoint['X_mean']) / checkpoint['X_std']
+    
+    Input = np.hstack([P_norm, X_norm])
+    Input_t = torch.tensor(Input, dtype=torch.float32)
+    
+    with torch.no_grad():
+        Y_norm_pred = model(Input_t)
+    
+    Y_pred = Y_norm_pred.numpy() * checkpoint['Y_std'] + checkpoint['Y_mean']
+    return Y_pred.item()
+
+
+# Usage
+Y_pred = predict_scalar_nn(P_new, X_init)
+

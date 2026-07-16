@@ -1,8 +1,28 @@
+Contents
+
+A) mkdir JUNK to put the jacs into
+B) anomaly 40 latbins
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A) mkdir JUNK to put the jacs into
+
+mkdir  /home/sergio/nogit/TILEJACS/AVG/SARTA
+ln -s /home/sergio/nogit/TILEJACS/AVG/KCARTA JUNK
+
 [sergio@taki-usr2 MakeJacskCARTA_CLR]$ ls -lt *.sbatch
--rw-rw-r-- 1 sergio pi_strow 1853 Jun 10 15:50 sergio_matlab_co2_ch4_n2o.sbatch
--rw-rw-r-- 1 sergio pi_strow 3542 Jun  5 22:11 sergio_matlab_anom40.sbatch
--rw-rw-r-- 1 sergio pi_strow 3500 Jun  5 05:43 sergio_matlab_anom.sbatch
--rw-rw-r-- 1 sergio pi_strow 2989 Jun  3 09:08 sergio_matlab_jobB.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 5688 May 27 17:22 sergio_matlab_chip.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 1969 Mar 19 07:59 sergio_matlab_anom40_put_together.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 2845 Mar 19 07:59 sergio_matlab_anom40_strowV3.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 1327 Mar 19 07:59 sergio_matlab_cleanscratch.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 1960 Mar 19 07:59 sergio_matlab_co2_ch4_n2o.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 3620 Mar 19 07:59 sergio_matlab_jobB.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 3592 Mar 19 07:59 sergio_matlab_anom40.sbatch
+-rw-rw-r-- 1 sergio pi_sergio 3033 Mar 19 07:59 sergio_matlab_anom.sbatch
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+B) anomaly 40 latbins
+----------------------
 
 1) sergio_matlab_co2_ch4_n2o.sbatch : is to make the column jacs at eg 370 : 5 : 415 ppm
 matlab -nodisplay -r "clust_make_co2_370_385_400_415_all; clust_make_co2_coljac_370_385_400_415; clust_make_co2_coljac_370_385_400_415v2.m exit"
@@ -95,7 +115,6 @@ If you are looking for .nml files you may find them in
 2) clust_do_kcarta_driver_anomaly_loop40.m
   writes temporary files to
   use_this_rtp = ['AnomSym/timestep_' num2str(iTimeStep,'%03d') '_16day_avg.rp.rtp'];
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 to make the Jacobians PLEASE READ ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/MakeProfs/Readme

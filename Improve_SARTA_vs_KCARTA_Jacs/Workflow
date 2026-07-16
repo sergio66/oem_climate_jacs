@@ -1,0 +1,86 @@
+LASSO
+
+LASSO stands for Least Absolute Shrinkage and Selection Operator. It's a type of regularised linear regression.
+Regular linear regression fits:
+  Y = b0 + b1*P1 + b2*P2 + ... + bn*Pn
+by minimising the sum of squared errors. With 300 parameters and only
+132 profiles it would wildly overfit — more unknowns than equations!
+
+LASSO adds a penalty on the size of the coefficients:
+minimise:  sum(Y - Y_pred)² + λ * sum(|bi|)
+
+The λ * sum(|bi|) term forces coefficients to be small. The magic is
+that LASSO tends to push unimportant coefficients to exactly zero —
+effectively removing those parameters entirely. This is what makes it
+a feature selector.
+
+The λ parameter controls sparsity:
+
+Small λ → many non-zero coefficients (less regularisation, like regular regression)
+Large λ → few non-zero coefficients (more regularisation, more aggressive selection)
+Cross-validation picks the best λ automatically
+
+A concrete example for your problem:
+
+Y = b1*X + b2*wavenumber + b3*P1 + b4*P2 + ... + b300*P300
+LASSO might return:
+b1=0.98, b2=0.15, b7=0.23, b45=0.11, all others=0
+Telling you only X, wavenumber, P7 and P45 matter — ignore the other 296!
+
+The key limitation — it's linear. So it will miss the
+sigmoid/nonlinear relationships you described for the tropospheric
+parameters. But it's still very useful as a first pass screen to
+eliminate obviously useless parameters before feeding the survivors
+into the DNN.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For now the workflow would be:
+Single channel (current):
+For each channel:
+    lasso_screen.m  →  train_dnn.m
+    
+The workflow is:
+lasso_screen.m  →  train_dnn.m  →  feature_selection.m
+     (screen)          (train)          (refine)
+
+Step 1 — lasso_screen.m:
+  Feeds all 300 P parameters
+  Outputs lasso_results.mat with selected feature indices
+  Narrows 300 → maybe 10-20 parameters
+
+Step 2 — train_dnn.m:
+  Load the selected indices from LASSO
+  Add just a few lines after your data load:
+
+matlabload('lasso_results.mat');
+% Use conservative 1SE selection
+P_selected = P_raw(:, selected_features_1se - 2);  % -2 because indices include X and wavenumber columns
+Features   = [X_raw, wavenumber, P_selected];
+nInputs    = size(Features, 2);
+
+Train DNN on the reduced feature set
+  Step 3 — feature_selection.m:
+ 
+  Permutation importance on the trained DNN
+  Confirms which of the LASSO-selected features the DNN actually uses
+  May eliminate a few more
+
+The index offset (-2) is because LASSO indices refer to columns of [X,
+wavenumber, P1...P300], so P parameters start at column 3. Want me to
+add this loading snippet cleanly into train_dnn.m?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Global multi-channel (future, once HPC is fixed):
+Stack all 2500 channels with wavenumber as feature
+    →  one lasso_screen.m across all channels
+    →  one train_dnn.m across all channels
+The single channel approach is fine for now while you're:
+
+Testing with limited profiles (132 independent)
+HPC is broken
+Figuring out which P parameters matter per channel type
+
+Once HPC is back and you have more diverse profiles, the global model
+becomes worth building. Does that match what you were thinking?

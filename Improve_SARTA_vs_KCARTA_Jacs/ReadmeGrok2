@@ -1,0 +1,282 @@
+Updated recommendation based on your sizes (vector length 500–3000, P ≈ 50 or less):
+
+A pure fully-connected network on such long vectors becomes
+inefficient (too many parameters, slow, prone to overfitting). A
+hybrid architecture works much better:
+
+Process the small P (parameters) with fully connected layers.
+Process the long X (initial vector) with 1D convolutions.
+Combine the two branches and predict the output vector Y.
+
+This is efficient and effective for your variable X–Y differences.
+
+%% Data prep
+% Shapes:
+% P: [numParams x N]     ≈ 50 x N
+% X: [vecLen x N]        500–3000 x N
+% Y: [vecLen x N]        target
+
+% Normalize separately (recommended)
+[Pnorm, muP, sigP] = normalize(P, 2);
+[Xnorm, muX, sigX] = normalize(X, 2);
+[Ynorm, muY, sigY] = normalize(Y, 2);
+
+InputP = Pnorm;
+InputX = Xnorm;   % keep separate for hybrid network
+Target = Ynorm;
+
+%% Define hybrid network (dlnetwork)
+vecLen = size(X, 1);
+numParams = size(P, 1);
+
+% --- Branch for small parameters P ---
+pBranch = [
+    featureInputLayer(numParams, 'Name','pInput')
+    fullyConnectedLayer(64, 'Name','pFC1')
+    reluLayer
+    fullyConnectedLayer(128, 'Name','pFC2')
+    reluLayer
+];
+
+% --- Branch for long vector X (1D Conv) ---
+xBranch = [
+    sequenceInputLayer(1, 'Name','xInput')   % 1 channel
+    convolution1dLayer(7, 32, 'Padding','same', 'Name','conv1')
+    batchNormalizationLayer
+    reluLayer
+    maxPooling1dLayer(2, 'Stride',2)
+    
+    convolution1dLayer(5, 64, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    maxPooling1dLayer(2, 'Stride',2)
+    
+    convolution1dLayer(5, 128, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+];
+
+% --- Combine branches ---
+combine = [
+    concatenationLayer(1, 2, 'Name','concat')   % or depthConcatenationLayer if needed
+    fullyConnectedLayer(256)
+    reluLayer
+    fullyConnectedLayer(vecLen)   % output same length as Y
+];
+
+% Build full layer graph
+lgraph = layerGraph(pBranch);
+lgraph = addLayers(lgraph, xBranch);
+lgraph = addLayers(lgraph, combine);
+
+lgraph = connectLayers(lgraph, 'pFC2', 'concat/in1');
+
+% Connect X branch output to concat (need to flatten)
+lgraph = addLayers(lgraph, fullyConnectedLayer(vecLen/4, 'Name','xFlatten')); % approximate
+lgraph = connectLayers(lgraph, 'relu_3', 'xFlatten');  % adjust name
+lgraph = connectLayers(lgraph, 'xFlatten', 'concat/in2');
+
+net = dlnetwork(lgraph);
+
+%% Easier alternative (still very good):
+Concatenate P (broadcasted) with X and use pure 1D CNN.
+% Broadcast P and concatenate as extra channels
+% For training: create multi-channel input [X; P_broadcasted]
+
+layers = [
+    sequenceInputLayer(1 + numParams, 'Name','input')  % X + P channels
+    
+    convolution1dLayer(9, 32, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(7, 64, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    maxPooling1dLayer(2)
+    
+    convolution1dLayer(5, 128, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(5, 64, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(3, 1, 'Padding','same')   % back to 1 channel
+    % or globalAveragePooling1dLayer + fullyConnected if needed
+];
+
+net = dlnetwork(layers);
+
+%% For the multi-channel versions, prepare input as
+% For each sample, input has 2+ channels: channel 1 = X, channels 2:end = P (repeated)
+
+%%Training code
+options = trainingOptions('adam', ...
+    'MaxEpochs', 600, ...
+    'MiniBatchSize', 16, ...      % small because of long sequences
+    'InitialLearnRate', 1e-3, ...
+    'LearnRateDropPeriod', 150, ...
+    'LearnRateDropFactor', 0.5, ...
+    'ValidationData', {XVal, YVal}, ...
+    'Plots', 'training-progress', ...
+    'ExecutionEnvironment', 'gpu');   % highly recommended
+
+net = trainnet(XTrain, YTrain, net, "mse", options);
+
+%% Residual learning, recommended
+Target = Y - X;        % learn the correction instead of absolute Y
+% Then at inference: Ypred = X_init + net_prediction
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Would you like me to give you the complete ready-to-run script for the
+best simple version (multi-channel 1D CNN + residual), including
+proper data formatting for sequenceInputLayer?
+
+Multi-Channel 1D CNN + Residual Learning
+
+clear; clc;
+
+% === YOUR DATA (replace with actual variables) ===
+% P : parameters   [numParams x N]
+% X : initial vec  [vecLen x N]
+% Y : target vec   [vecLen x N]
+
+numParams = size(P,1);
+vecLen    = size(X,1);
+N         = size(X,2);
+
+% Normalize separately
+[Pnorm, muP, sigP] = normalize(P, 2);      % parameters
+[Xnorm, muX, sigX] = normalize(X, 2);      % initial vectors
+[Ynorm, muY, sigY] = normalize(Y, 2);      % targets (for reference)
+
+% === Residual Learning: Predict correction Delta = Y - X ===
+DeltaNorm = Ynorm - Xnorm;                 % This is what the network will learn
+
+% === Create Multi-Channel Input (Channel 1 = X, Channels 2+ = P broadcasted) ===
+numChannels = 1 + numParams;
+
+XTrain = zeros(numChannels, vecLen, N, 'single');   % Channel x Length x Batch
+
+for i = 1:N
+    XTrain(1, :, i) = Xnorm(:, i);                    % Main signal
+    XTrain(2:end, :, i) = repmat(Pnorm(:, i), 1, vecLen);  % Broadcast parameters
+end
+
+% Target for training
+YTrain = DeltaNorm;   % shape: [vecLen x N]
+
+% Optional: Split into train/validation
+idx = randperm(N);
+trainIdx = idx(1:round(0.85*N));
+valIdx   = idx(round(0.85*N)+1:end);
+
+XTrainData = XTrain(:,:,trainIdx);
+YTrainData = YTrain(:,trainIdx);
+
+XValData   = XTrain(:,:,valIdx);
+YValData   = YTrain(:,valIdx);
+
+fprintf('Data prepared: %d channels, length=%d, %d training samples\n', ...
+        numChannels, vecLen, length(trainIdx));
+
+%% ====================== 2. DEFINE NETWORK ======================
+
+layers = [
+    sequenceInputLayer(numChannels, 'Name','input', 'Normalization','none')
+    
+    convolution1dLayer(9, 32, 'Padding','same', 'Name','conv1')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(7, 64, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    maxPooling1dLayer(2, 'Stride',2)
+    
+    convolution1dLayer(5, 128, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(5, 64, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    maxPooling1dLayer(2, 'Stride',2)
+    
+    convolution1dLayer(3, 32, 'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution1dLayer(3, 1, 'Padding','same', 'Name','outputConv')  % 1 channel output
+    ];
+
+net = dlnetwork(layers);
+
+analyzeNetwork(net);   % Optional: visualize
+
+%% ====================== 3. TRAINING OPTIONS ======================
+
+options = trainingOptions('adam', ...
+    'MaxEpochs', 800, ...
+    'MiniBatchSize', 16, ...           % Adjust based on GPU memory (8–32 typical)
+    'InitialLearnRate', 1e-3, ...
+    'LearnRateSchedule','piecewise', ...
+    'LearnRateDropPeriod', 200, ...
+    'LearnRateDropFactor', 0.5, ...
+    'ValidationData', {XValData, YValData}, ...
+    'ValidationFrequency', 50, ...
+    'Shuffle','every-epoch', ...
+    'Plots', 'training-progress', ...
+    'Verbose', true, ...
+    'ExecutionEnvironment', 'gpu');    % Change to 'cpu' if no GPU
+
+%% ====================== 4. TRAIN ======================
+
+disp('Starting training...');
+net = trainnet(XTrainData, YTrainData, net, "mse", options);
+
+%% ====================== 5. INFERENCE EXAMPLE ======================
+
+% === Example on a new sample ===
+% P_new : [numParams x 1]
+% X_init_new : [vecLen x 1]
+
+nputNew = zeros(numChannels, vecLen, 1, 'single');
+InputNew(1, :, 1) = (X_init_new - muX) ./ sigX;                    % normalize X
+InputNew(2:end, :, 1) = repmat( (P_new - muP)./sigP , 1, vecLen); % broadcast P
+
+DeltaPredNorm = predict(net, InputNew);               % predicted correction
+DeltaPred     = DeltaPredNorm .* sigY + muY;          % denormalize (approx)
+
+Y_pred = X_init_new + DeltaPred;                      % Final prediction
+
+% Plot result
+figure;
+plot(Y_pred, 'LineWidth',1.2); hold on;
+% plot(true_Y, '--');   % if you have ground truth
+legend('Predicted Y', 'Location','best');
+title('Predicted Vector');
+
+
+Key Advantages of This Version
+
+Residual learning → much more stable when differences (X–Y) vary a lot.
+Multi-channel 1D CNN → efficiently handles long vectors (500–3000) and injects parameters P everywhere.
+Memory efficient compared to fully connected networks.
+
+Tips for Best Performance
+
+Start with fewer epochs (200–300) and monitor validation loss.
+If overfitting → add dropoutLayer(0.1) after some ReLU layers.
+Very long vectors (>2000) → increase pooling or add another downsampling stage.
+GPU strongly recommended.
+
+Would you like any modifications, such as:
+
+Adding skip connections (U-Net style)
+Using dlarray custom training loop for more control
+Different filter sizes / more layers

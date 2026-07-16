@@ -1,0 +1,70 @@
+>>
+For now, can you give me the equivalent matlab code to rt_emulator.py?
+
+Good call bringing this up now rather than after you've sunk time into
+the CNN plumbing — one simplification first, then the code.
+
+Given what you pointed out about T/Q vertical structure being low-rank
+(especially aloft), I'm going to port this using per-variable EOF/PCA
+compression feeding a plain MLP, not a literal port of the 1D-CNN
+encoder. Two reasons: it's the better-motivated design given your
+point, and MATLAB's custom-training-loop API for 1D
+convolution/pooling has enough fiddly dimension/format handling that I
+can't verify it runs correctly without a MATLAB instance to test
+against — I'd rather hand you something reliable than something that
+looks plausible but breaks on a dimension mismatch. If you
+specifically want the CNN version ported too, say so and I'll write it
+with that caveat spelled out.
+
+I don't have MATLAB available in this environment to actually run it, so treat this as a first draft to debug against, not verified-working code — please run it through and flag anything that errors.
+
+A few notes on the translation:
+
+Requires Deep Learning Toolbox (for dlarray, fullyconnect, adamupdate,
+dlfeval, dlgradient) and Statistics and Machine Learning Toolbox (for
+pca). Check you have both licensed before running.
+
+pca() mapping from Python's sklearn.PCA: MATLAB's pca returns coeff
+(loadings), score (projected coefficients), and mu (the mean it
+subtracted) — this is a direct equivalent to sklearn's components_,
+transform() output, and mean_. I used explained (percent variance per
+component) to give you the cumulative-variance printout at the top,
+which answers the "how many EOFs do I actually need" question from
+earlier — check those printed numbers before trusting nPCA_T/Q/O3.
+
+Training loop is manual (dlfeval/dlgradient/adamupdate in an explicit
+loop over minibatches), rather than using trainNetwork or trainnet —
+this mirrors the PyTorch training loop from the Python version fairly
+directly and gives you full visibility into what's happening each
+step, which is probably easier to debug coming from Matlab than a
+black-box trainNetwork call would be.
+
+fullyconnect(X, W, b) expects X formatted 'CB' (channels × batch) —
+that's why you'll see ' transposes when building Xb/Yb each batch;
+MATLAB's dlarray convention here is the reverse of the row-major
+convention you'd default to.
+
+The decoder is fixed, not trained — decoderW/decoderB are set from the
+PCA fit once and never touched by adamupdate (they're simply not part
+of the params struct passed to it), same as finetune_decoder=False in
+the Python version.
+
+Take your time with this one — it's denser than the Python version in
+the linear-algebra bookkeeping (dlarray formats especially), which is
+exactly the kind of thing that's easier to reason about slowly than to
+have thrown at you all at once.
+
+>>>>
+
+Can you also get me the CNN version (or give me the lines of code and
+where to take out EOF code/ drop the CNN in)
+
+Here's the CNN version as a full file, plus a summary at the end of
+exactly which blocks differ, so you can also hand-graft pieces into
+your EOF version if you'd rather compare them side by side than
+maintain two files.
+
+Same caveat as before: I can't run MATLAB here, so this is unverified
+— the dlconv/dimension-squeezing part in particular is the piece most
+likely to need debugging, since it's the trickiest dlarray plumbing in
+the whole script.

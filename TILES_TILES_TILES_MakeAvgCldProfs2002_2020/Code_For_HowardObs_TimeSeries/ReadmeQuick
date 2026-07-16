@@ -182,12 +182,15 @@ for jj = 1 : 64
   end
 end
 
-4) now run eg driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m
+4) now run eg << driver_fix_thedata_asc_desc_solzen_time_001_504_64x72.m >> 
      so you can make ../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat
    this is good enough since Nmax == 600 ... so plans well ahead (504 = till 2024/06 and AIRS/Squa will end by 2027/09 so three more years so 23*3 = 69 more steps ==> total < 600)
      it makes
        /home/sergio/git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries//timestepsStartEnd_2002_09_to_2028_0012.mat
-       
+
+4b) Have to separately run off driver_loop_get_asc_desc_solzen_time.m after running off
+      cluster_loop_make_correct_timeseriesV2
+
 5) look at
        set_iQAX
        set_start_stop_dates    : wah = load('timestepsStartEnd_2002_09_to_2028_0012.mat'); tells you the timespans
@@ -224,6 +227,9 @@ radD = nan(4608,iNumTimeSteps,41,5);
 probably makes eg
 [sergio@chip-login1 Code_for_TileTrends]$ ls -lt ../DATAObsStats_StartSept2002_CORRECT_LatLon/chans41_timeseries.mat
 -rw-rw-r-- 1 sergio pi_strow 3776057549 Feb 26  2024 ../DATAObsStats_StartSept2002_CORRECT_LatLon/chans41_timeseries.mat
+
+7) Have to separately run off driver_loop_get_asc_desc_solzen_time.m (see 4b above) after running off
+      cluster_loop_make_correct_timeseriesV2
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -1,0 +1,45 @@
+In matlab if I am not happy with things, I can clear alll; clear func
+then restart the script within matlab itself. Instead of quitting and
+restarting. How o I do that in python?
+
+Python (and its ecosystem) doesn't have a true equivalent to clear all
+that reliably wipes everything and gives you a clean slate — this
+trips up a lot of people coming from Matlab, so it's a fair thing to
+ask about. The honest answer depends on what you're running in.
+
+If you're in a plain Python script (.py file) run from terminal:
+  There's no "restart in place." The normal workflow is: edit the file,
+  then rerun it — python my_script.py — which starts a fresh interpreter
+  process each time, so you get a genuinely clean slate
+  automatically. This is actually closer to Matlab's clear all in spirit
+  than anything you'd do inside a running session, since a full new
+  process guarantees no leftover state.
+
+If you're in Jupyter/IPython (notebook or console) — which is probably
+the closer match to how you use Matlab interactively:
+
+ %reset — clears all variables in the namespace, closest analog to
+  clear all. It'll ask "Once deleted, variables cannot be
+  recovered. Proceed?" — you can add -f to skip the prompt: %reset -f
+ 
+  This does not unload imported modules/functions the way Matlab's
+  clear functions does — Python's import caching is a different
+  mechanism, and reliably "unimporting" something is genuinely awkward
+  in Python (there's importlib.reload() for reloading a single module
+  after you've edited it, but it doesn't recursively reload things
+  that module depends on, and it's a known source of subtle bugs).
+  
+  Restart the kernel (Jupyter: Kernel → Restart, or the circular-arrow
+  button; IPython console: usually a keyboard shortcut or menu option)
+  is the actually reliable equivalent of "wipe everything, including
+  modules, and start over" — this spins up a fresh Python process
+  under the hood, same idea as rerunning a script.
+
+Practical recommendation given where you are: since you're going to be
+iterating on preprocessing/PCA/model code a lot over the next while,
+I'd suggest working in Jupyter (or JupyterLab, or a Jupyter-enabled
+editor like VS Code's notebook support) rather than a plain script for
+the exploratory phase — restart-kernel-and-run-all-cells becomes your
+clear all, and it's a one-click/one-shortcut action, closer to the
+Matlab habit you already have. Once the pipeline is solid, converting
+to a plain .py script for actual training runs is easy.

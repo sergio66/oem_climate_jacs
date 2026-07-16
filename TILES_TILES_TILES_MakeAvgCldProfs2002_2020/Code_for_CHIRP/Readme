@@ -1,0 +1,40 @@
+https://airs.jpl.nasa.gov/internal_resources/498/Taylor_CrIS_L1b_SSTM_OCT2022_20221005b.pdf
+The CrIS NASA L1B Product and Project
+L1B – IMG – CHIRP
+Joe Taylor
+
+CrIS L1B V3 products:
+S-NPP CrIS L1b NSR v3, SNPPCrISL1BNSR: https://doi.org/10.5067/OZZPDWENP2NC
+S-NPP CrIS L1b FSR v3, SNPPCrISL1B: https://doi.org/10.5067/ZCRSHBM5HB23
+JPSS-1 CrIS L1b FSR v3, SNDRJ1CrISL1B: https://doi.org/10.5067/LVEKYTNSRNKP
+
+IMG and IMG_COL v2 products:
+S-NPP CrIS IMG, SNDRSNCrISL1BIMG: https://doi.org/10.5067/NC505NHFIHCY
+JPSS-1 CrIS IMG, SNDRJ1CrISL1BIMG: https://doi.org/10.5067/A7SVIO2AAD0E
+S-NPP CrIS IMG_COL, SNDRSNCrISL1BIMGC: https://doi.org/10.5067/8ABZCV1TKE8D
+JPSS-1 CrIS IMG_COL, SNDRJ1CrISL1BIMGC: https://doi.org/10.5067/51CRDMSIA1YJ
+
+CHIRP v1 products:
+Inter-instrument product, SNDR13CHRP1: https://doi.org/10.5067/WIG2N5C20MRJ    <<<<< kinda slow link
+                                                                               <<<<< 240 granules whhose lat/lon change by orbit. NOT TILES
+									       eg https://sounder.gesdisc.eosdis.nasa.gov/data/CHIRP/SNDR13CHRP1.2/2023/122
+AIRS only, SNDR13CHRP1AQCal: https://doi.org/10.5067/G1DTUEAV5I18
+S-NPP CrIS only, SNDR13CHRP1SNCal: https://doi.org/10.5067/BS76XFNJVRXL
+JPSS-1 CrIS only, SNDR13CHRP1J1Cal: https://doi.org/10.5067/MK6ED0BPUBKJ
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+https://disc.gsfc.nasa.gov/datasets/SNDR13CHRP1_2/summary
+Shortname:SNDR13CHRP1
+Longname:Sounder SIPS: Sun Synchronous 13:30 orbit Climate
+Hyperspectral InfraRed Product (CHIRP): Calibrated Radiances from
+EOS-Aqua, S-NPP, JPSS-1/NOAA-20, V2
+DOI:10.5067/WIG2N5C20MRJ
+Version:2
+Format:NetCDF
+Spatial Coverage:-180.0,-90.0,180.0,90.0
+Temporal Coverage:2002-09-01 to  2026-06-11
+File Size:55 MB per file
+Data Resolution
+Spatial:13.5 km x 13.5 km
+Temporal:12 hours
+

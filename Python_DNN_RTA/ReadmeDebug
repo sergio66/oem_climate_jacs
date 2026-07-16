@@ -1,0 +1,494 @@
+PCA truncation-only RMSE: mean 0.086 K, max 0.400 K
+
+Good — that's the answer we needed. 0.086 K mean / 0.4 K max
+truncation floor is well below your 1 K observed RMSE, so the PCA
+basis isn't the bottleneck — the network is where the error is coming
+from. That's useful: it means more components won't buy you much, and
+the fix is on the training/architecture side.
+
+The next single most useful thing to check: is your train MSE also
+sitting near that ~1 K equivalent, or is it much lower than val? That
+tells us which of two different problems you have:'
+
+  Train loss also high (~similar to val) → underfitting. The network
+  isn't finding the mapping well enough even on data it's seen. Likely
+  causes: not enough capacity (try widening the trunk, e.g. 256→512,
+  or adding a layer), not enough epochs/too aggressive LR decay, or —
+  a common overlooked one — plain MSE on PCA coefficients implicitly
+  weights the first (highest-variance) components heavily and can
+  leave later ones badly fit. Try normalizing: divide each PCA
+  component's squared error by that component's own variance
+  (btPCA.coeffStd if you're standardizing coefficients, or just
+  var(targetCoeffs) per column) before averaging in the loss, so all
+  ~32 components get comparable pressure to fit well.
+
+  Train loss much lower than val → overfitting, plausible at 38k
+  samples with only 128-128 hidden units, but check before assuming it
+  — could also mean your train/val split is letting near-duplicate
+  profiles leak across the split. If overfitting: add dropout or
+  weight decay, reduce hidden width, or increase early-stopping
+  patience on val loss.
+
+Also worth a quick look regardless of which of those it is: plot
+channelRMSE vs. wavenumber. If the ~1 K error concentrates in specific
+spectral regions (line cores of strong CO2/O3/H2O absorption bands)
+rather than being flat across the spectrum, that's diagnostic on its
+own — those are the channels with the sharpest sensitivity to the
+atmospheric state, and they're the hardest for the network to nail
+regardless of over/underfitting. A flat, channel-independent ~1 K
+everywhere points more toward a systematic capacity/training issue; a
+spiky pattern concentrated in absorption cores points toward the
+network needing to work harder specifically where the physics is
+steepest.
+
+What does the train-vs-val comparison look like? The pieces from
+earlier in the script — you just haven't run the same reconstruction
+check on the training set that you ran on validation. Add this after
+your evaluation block (works for either the EOF or CNN version, since
+both save params and reuse forwardMLP/forwardCNN + btPCA):
+Also worth plotting while you're at it, to see if the error is spectrally structured or flat:
+
+    % --- training-set reconstruction error, same as your validation check ---
+    Xt = dlarray(single(Xtrain)', 'CB');            % EOF version
+    % Pt = dlarray(single(permute(profTrain,[2 3 1])), 'SCB'); Sb = dlarray(single(scalTrain)','CB'); % CNN version instead
+    
+    predCoeffsTrain = extractdata(forwardMLP(params, Xt))';      % swap for forwardCNN(params, Pt, Sb) in CNN version
+    btReconTrain    = decodeSpectral(btPCA, predCoeffsTrain, false);
+    btTrueTrain     = btRaw(trainIdx,:);
+    
+    channelRMSE_train = sqrt(mean((btReconTrain - btTrueTrain).^2, 1));
+    fprintf('Train BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE_train), max(channelRMSE_train));
+    fprintf('Val   BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE), max(channelRMSE));
+    
+    plot(wavenumbers, channelRMSE_train, 'b-', wavenumbers, channelRMSE, 'r-');
+    legend('train','val'); xlabel('wavenumber (cm^{-1})'); ylabel('RMSE (K)');
+    
+Compare the two mean numbers directly:
+
+  Close to each other (both ~1 K) → underfitting. Model isn't
+  capacity-constrained by memorizing train and failing to generalize —
+  it's just not fitting well even on data it's seen.
+
+  Train much lower than val (e.g. train 0.3 K, val 1.0 K) → overfitting/generalization gap.
+
+That plot will also help interpret the train-vs-val comparison — if
+certain channels blow up in val but not train, that's a
+generalization/coverage gap in specific spectral regions (possibly
+tied to particular atmospheric states underrepresented in your 38k
+profiles), which is a different fix than a global capacity increase.
+
+>>>>
+Train BT RMSE: mean 1.150 K, max 1.855 K
+Val   BT RMSE: mean 1.220 K, max 1.936 K
+
+Train and val being nearly identical (1.15 vs 1.22 K) confirms it:
+this is underfitting, not overfitting. The network isn't struggling to
+generalize — it's failing to fit even the data it's trained directly
+on. That rules out regularization/more-data fixes and points at
+capacity, training duration, or the loss itself.
+
+One likely culprit jumps out from the script: your target PCA
+coefficients aren't standardized. Look at this line:
+
+  targetCoeffs = encodeSpectral(btPCA, btRaw, false);   % <- standardize=false
+  
+PCA coefficients have wildly different natural scales — the 1st
+component (most variance) can be 10-100x larger in magnitude than the
+15th or 30th. Plain MSE on unstandardized coefficients means the loss
+is almost entirely dominated by getting the first couple of components
+right; the network has very little gradient pressure to fit the later
+components well, and those later components still matter for
+channel-level accuracy. This can produce exactly the kind of uniform,
+unstructured ~1 K floor you're seeing rather than a spiky,
+spectrally-localized error.
+
+Fix :  standardize both target and prediction:
+
+  targetCoeffs = encodeSpectral(btPCA, btRaw, true);   % standardize=true now
+
+Then at evaluation time, un-standardize before decoding back to BT:
+
+  predCoeffsVal = extractdata(forwardMLP(params, dlarray(single(Xval)','CB')))';
+  btReconVal    = decodeSpectral(btPCA, predCoeffsVal, true);   % standardize=true here too, matches training
+
+Do the same in the train-set reconstruction check you just ran.
+
+Second thing to check before adding capacity: did training actually
+converge, or did you just run out of epochs? Track and plot the loss
+curve — right now you're only printing every 5th epoch, so you can't
+see the shape:
+
+    trainLossHistory = zeros(numEpochs,1);
+    valLossHistory   = zeros(numEpochs,1);
+    % inside the epoch loop, after computing epochLoss and valLoss:
+    trainLossHistory(epoch) = epochLoss;
+    valLossHistory(epoch)   = valLoss;
+    % after the loop:
+    figure; plot(1:numEpochs, trainLossHistory, 'b-', 1:numEpochs, valLossHistory, 'r-');
+    legend('train','val'); xlabel('epoch'); ylabel('MSE (standardized coeff space)');
+
+If the curve is still visibly decreasing at epoch 30, just train
+longer (bump numEpochs to 100-200) before concluding you need more
+capacity — that's the cheaper thing to rule out first.
+
+If loss has clearly plateaued and standardizing coefficients doesn't
+close the gap, then it's genuinely a capacity issue — widen the trunk
+(128→256 or add a third hidden layer) and rerun.
+
+Try the standardization fix first — that's the most likely single
+lever given a uniform ~1 K floor with train≈val, and it's a two-line
+change. Let me know what train/val RMSE looks like after that.
+
+>>>>
+
+Increasing number of epochs helped, 
+STandardization messed things up
+
+Good, that confirms it was a convergence issue, not a capacity ceiling
+— nice. That's honestly the most likely outcome given train≈val was so
+close.
+
+On standardization backfiring — that can genuinely happen here, and
+it's worth knowing which of two things caused it:
+
+1. A wiring mismatch is the more common cause. Standardizing requires
+consistency in exactly two places: the targetCoeffs you train against,
+and the decodeSpectral(...) call at evaluation time. If you flipped
+standardize=true on the encode side but left the decode call at false
+(or vice versa), you're comparing/reconstructing on the wrong scale
+and everything degrades. Worth double-checking both calls use the same
+flag before concluding standardization itself is the problem.
+
+2. If the wiring is right, this is a real and known failure mode of
+standardizing PCA coefficients. The last several of your 32 components
+carry very little true signal — mostly noise, by construction (that's
+why they're last in variance order). Standardizing gives every
+component equal weight in the loss regardless of how much real
+information it holds, which forces the network to spend capacity
+chasing noise in weakly-informative components at the expense of
+fitting the dominant, physically meaningful ones well. With a network
+that was already borderline on capacity/convergence (which increasing
+epochs just confirmed), adding that burden can easily make things
+worse rather than better.
+
+>>>>
+
+Still not having luck bringing down the RMSE. Biases are good but std
+dev are >= 0.5 K. Any other suggestions (I have tried 3 hidden layers
+with 256 and 512 neurons, no significant change)
+
+A capacity increase doing essentially nothing (128→512 neurons, 2→3
+layers, no real movement) is itself diagnostic — it's telling you the
+bottleneck almost certainly isn't network capacity anymore. That's
+actually useful information: it means more layers/neurons is very
+unlikely to be the right next move, and you should stop spending time
+there. A few different directions worth checking, roughly in order of
+how cheap they are to test:
+
+1. Recheck the truncation floor for your current configuration, not
+the original one. You checked 0.086 K truncation floor a while back,
+but that was before the sigma-level rework and before channel
+subsetting. If you're now testing on the 1300-1700 cm⁻¹ band
+specifically, the truncation floor for that subset with that nPCA_BT
+could be different — a narrower band with sharper features doesn't
+necessarily compress as cleanly. This is the cheapest thing to rule
+back in or out:
+
+  %% this is in do_stats
+  btPCA_current = fitSpectralPCA(btRaw_currentConfig, nPCA_BT);
+  roundTrip = decodeSpectral(btPCA_current, encodeSpectral(btPCA_current, btRaw_currentConfig, false), false);
+  truncRMSE = sqrt(mean((roundTrip - btRaw_currentConfig).^2, 1));
+  fprintf('Current-config truncation floor: mean %.3f K\n', mean(truncRMSE));
+
+If this comes back near 0.5 K, you've found it — bump nPCA_BT, done.
+
+2. Fit a plain linear regression baseline from the same inputs to the
+same PCA-coefficient targets. This is the most informative test given
+where you are: it tells you whether the residual you're stuck at is a
+genuinely nonlinear relationship the network should be able to capture
+(in which case a linear fit does noticeably worse than your DNN), or
+whether the DNN is basically just rediscovering a near-linear fit and
+the ~0.5 K floor is something linear regression hits too — which would
+point away from "needs more capacity" entirely and toward missing
+information or noise.
+
+  % closed-form ridge regression, X: (nTrain x nFeatures), Y: (nTrain x nPCA_BT)
+  lambda = 1e-3;
+  Wridge = (Xtrain'*Xtrain + lambda*eye(size(Xtrain,2))) \ (Xtrain'*Ytrain);
+  predLinearVal = Xval * Wridge;
+  linRMSE = sqrt(mean((predLinearVal - Yval).^2, 'all'));
+  fprintf('Linear baseline val MSE (coeff space): %.5f\n', linRMSE);
+
+If linear regression gets you close to 0.5 K too, your DNN isn't
+underperforming — the ceiling is coming from somewhere else (see #3,
+#4).
+
+
+3. Check whether the bigger networks actually converged, or just
+stalled at a similar point. "No significant change" between 128 and
+512 neurons could mean the extra capacity genuinely isn't needed, or
+it could mean the bigger networks need more epochs / a lower learning
+rate to actually use that capacity, and you're comparing two
+under-trained runs. Plot the train loss curve for the 512-neuron run
+specifically — is it still visibly decreasing at your last epoch, or
+flat?
+
+  plot(1:numEpochs, trainLossHistory); xlabel('epoch'); ylabel('train MSE');
+
+Bigger networks often need a learning-rate schedule (decay learnRate
+by, say, 0.5x every N epochs when val loss plateaus) rather than a
+fixed rate the whole way through — worth adding if the curve looks
+like it's oscillating rather than settling.
+
+4. Check for label inconsistency: near-duplicate inputs with different
+outputs. If your RT forward model has any stochastic component, or if
+two profiles that are very close in your compressed feature space (X)
+correspond to meaningfully different radiances (Y), that puts a hard
+floor on any regression — network or linear — regardless of
+capacity. Quick check: find the nearest-neighbor pairs in X-space and
+look at the spread in their corresponding Y:
+
+  sampleIdx = randperm(size(Xtrain,1), 200);
+  nnIdx = knnsearch(Xtrain, Xtrain(sampleIdx,:), 'K', 2);  % 2nd column = nearest neighbor (excl self)
+  pairDiffY = Ytrain(sampleIdx,:) - Ytrain(nnIdx(:,2),:);
+  fprintf('Nearest-neighbor input pairs, output std: %.4f\n', std(pairDiffY(:)));
+
+If nearest neighbors in input space still differ substantially in
+output, that's your floor — no amount of network capacity fixes it,
+only better/denoised training data would.
+
+5. Consider whether view angle needs to interact multiplicatively
+rather than just being concatenated. Optical path length scales with
+secant(angle) multiplying the whole absorption profile — that's a
+multiplicative interaction between one scalar and every level of every
+gas profile, which a plain concatenated MLP has to learn indirectly
+and can struggle with even at high capacity. If you haven't tried it,
+an easy test is adding an explicit engineered feature — e.g., the
+profile scaled by secant, or secant × total column water vapor — as an
+extra input, rather than relying on the network to discover the
+interaction on its own.
+
+I'd start with #1 and #2 — they're both cheap (no retraining needed)
+and will tell you immediately whether you're chasing a capacity
+problem (you're not, if the answer to #2 is "linear does about as
+well") or something else entirely.
+
+
+>>>>
+
+Linear baseline val MSE (coeff space): 9.38987
+
+while a 3 layer DNN of 1024 neurons!!! produces
+Train BT RMSE: mean 0.218 K, max 0.696 K
+Val   BT RMSE: mean 0.617 K, max 1.485 K
+
+That train/val split (0.218 K vs 0.617 K) is the real story here, and
+it flips the diagnosis from where we were before: this is now clearly
+overfitting, not underfitting. Going from 256→1024 neurons drove train
+error down a lot (0.6ish → 0.218) while val stayed essentially flat
+(~0.6). That's the network using its extra capacity to fit
+training-set idiosyncrasies rather than the underlying physics —
+exactly the pattern that "more layers/neurons, no significant change"
+was already hinting at, just now unambiguous.
+
+First, make the linear baseline comparison apples-to-apples — right
+now you have linear MSE in PCA-coefficient space (9.39) and DNN RMSE
+in K (0.617), which aren't directly comparable. Decode the linear
+prediction the same way you decode the DNN's:
+
+  predLinearVal_BT = decodeSpectral(btPCA, predLinearVal, false);
+  linChannelRMSE = sqrt(mean((predLinearVal_BT - btTrueVal).^2, 1));
+  fprintf('Linear baseline val BT RMSE: mean %.3f K, max %.3f K\n', mean(linChannelRMSE), max(linChannelRMSE));
+
+If that comes back close to 0.617 K too, it confirms the DNN isn't
+actually buying you meaningful nonlinear gain over linear regression
+right now — all that capacity is just overfitting rather than
+capturing real nonlinearity. Worth knowing either way.
+
+Given the overfitting signature, here's what to try, roughly in order
+of effort:
+
+  Go back down in size, not up. 1024×3 on 38k samples was always going
+  to be capacity-rich; you already had a working, much smaller point
+  (128-256, 2 layers) with train≈val. The fix for overfitting is
+  essentially never "add more capacity" — go back to something like
+  128-192 wide, 2 layers, and put the effort into #2 and #3 instead.
+
+  Add early stopping via checkpointing on best val loss (from a couple
+  messages back) if you haven't wired it in yet — with train/val
+  diverging this much, you're very likely using a badly-overfit
+  final-epoch model when an earlier epoch would generalize
+  better. This is close to free and should be done regardless of
+  anything else.
+  
+  Add L2 weight decay or dropout. At 1024 neurons especially, some
+  regularization is close to mandatory. Dropout is easy to add to a
+  manual dlarray forward pass:
+
+    h1 = relu(fullyconnect(X, params.fc1_W, params.fc1_b));
+    h1 = h1 .* (rand(size(h1),'like',h1) > dropoutRate) / (1-dropoutRate);  % only during training
+
+  Start with dropoutRate = 0.2-0.3 on the hidden layers, none on the input or output.
+
+  Check for train/val leakage. Given your profiles were "chosen for
+  variability" rather than randomly sampled, it's worth confirming
+  your split doesn't have near-duplicate or highly-correlated profiles
+  landing on both sides — that would let a large network memorize
+  train-side twins of val-side profiles, inflating the apparent
+  overfit gap in a way regularization can't fix. The nearest-neighbor
+  check from a couple messages back, run between train and val sets
+  specifically, would catch this:
+
+    nnIdx = knnsearch(Xtrain, Xval, 'K', 1);
+    minDist = sqrt(sum((Xval - Xtrain(nnIdx,:)).^2, 2));
+    fprintf('Closest train-set neighbor distance for val samples: min %.4f, median %.4f\n', min(minDist), median(minDist));
+
+If some val samples have a near-zero-distance train twin, that's worth
+investigating.
+
+  If none of the above closes the gap much, you may be capped by
+  training-set diversity rather than model design — i.e., 38k profiles,
+  however well-chosen, may simply not cover the input space densely
+  enough for the network to generalize better than ~0.5-0.6 K in this
+  band. Since you own the RT code, targeted generation (more profiles
+  specifically in the regions where val error concentrates — check
+  channelRMSE vs wavenumber and also look at which validation profiles
+  have the worst error, not just which channels) is the most direct
+  lever left.
+
+Start with the linear-baseline decode and the checkpointing — those
+two will tell you a lot about which of #3/#5 is worth chasing next.
+
+>>>>
+
+Linear baseline val MSE (coeff space): 9.38987
+Linear baseline val BT RMSE: mean 2.268 K, max 4.189 K
+
+That's actually a very useful result, even though it looks like a bad
+number on its own: the linear baseline (2.27 K) is far worse than your
+DNN (0.62 K) — roughly 3.7x worse. That tells you clearly that the
+mapping is genuinely nonlinear, and your DNN is doing real,
+substantial work capturing that nonlinearity rather than just
+rediscovering a linear fit. That's good news for the modeling approach
+— it rules out "the DNN isn't buying you anything" as an explanation
+for the plateau.
+
+So where things actually stand: nonlinearity is confirmed necessary
+(linear fails badly), and capacity increases beyond a moderate size
+aren't helping and are now clearly overfitting (0.218 train vs 0.617
+val at 1024×3). That combination — needs nonlinearity, but more
+capacity just overfits — points toward the ceiling being data
+coverage/density, not model expressiveness. A moderately-sized DNN
+(128-256, 2 layers) is apparently already capturing most of the
+learnable nonlinear structure that 38k profiles can support; pushing
+capacity further just lets it memorize noise in that finite sample
+rather than learn more signal, because there isn't more extractable
+signal available at that data density.
+
+Given that, here's where I'd focus:
+
+Go back to a moderate-capacity network (128-192 wide, 2 layers) with
+checkpointing on best val loss — that's very likely close to your
+practical ceiling with the current dataset, and it'll train faster
+too, letting you iterate on the next items quicker.
+
+Look at where the error concentrates — both spectrally and by
+profile. Two things worth plotting:
+
+  channelRMSE vs wavenumber (as discussed before) — tells you if error
+  is spectrally localized (e.g. saturated line cores) vs. spread
+  evenly.
+  
+  Per-profile RMSE (average error across channels, one number per
+  validation profile) sorted/binned against physical properties —
+  surface pressure (terrain), surface temperature, humidity column,
+  view angle. If error concentrates in specific regimes (e.g. worst
+  over high terrain, or at extreme view angles), that's a direct
+  signal about where your 38k profiles are sparse, and exactly where
+  targeted RT-code generation would help most.
+
+If error turns out roughly uniform across both channels and profile
+types, that's more consistent with an information ceiling from overall
+sample density rather than a coverage gap in specific regimes — in
+which case more profiles anywhere (not just targeted) would likely
+help, since you're simply data-limited at 38k for this many effective
+degrees of freedom.
+
+One more cheap thing worth trying given the moderate-capacity
+regression already works reasonably: k-fold cross-validation (5-fold)
+on the 128-192/2-layer network, to get a more stable read on the true
+generalization error rather than relying on a single 80/20 split —
+useful before deciding whether 0.5ish K is really your floor or just
+this particular split's outcome.
+
+Given you have the RT code, #2's per-profile breakdown is probably the
+single most decision-useful next step — it tells you whether to spend
+effort generating more data (and where) versus accepting this as close
+to the practical ceiling for the current dataset size.
+
+>>>
+I think train width is fine
+Closest train-set neighbor distance for val samples: min 1.6589,
+median 5.9421, mean 6.4942, max 68.9252
+
+Good — that rules out leakage cleanly. A min distance of 1.66 (not
+near-zero) means no val sample has a near-duplicate twin sitting in
+train, so the overfitting gap you're seeing (0.218 vs 0.617 K) is a
+genuine generalization gap, not an artifact of an easy split. That's
+useful to have confirmed and crossed off.
+
+So, putting together everything so far:
+
+  Nonlinearity confirmed necessary (linear baseline 2.27 K vs DNN 0.62 K)
+  More capacity (256→1024, 2→3 layers) just overfits, doesn't improve val
+  No split leakage inflating the apparent gap
+  PCA truncation floor is not the bottleneck (0.086 K, established earlier)
+
+That combination points fairly clearly at data density/coverage being
+the limiting factor now, not architecture. The moderate network is
+already extracting close to what 38k profiles can support; bigger
+networks just memorize noise in that finite sample.
+
+Concrete next steps, in order:
+
+Settle on a moderate architecture with checkpointing + light
+regularization, and treat that as your working baseline rather than
+continuing to chase size:
+  128-192 wide, 2 layers, dropout ~0.2, checkpoint on best val loss
+  
+This won't push past ~0.5-0.6 K on its own, but it locks in a stable,
+non-overfit reference point to compare everything else against.
+
+Per-profile error breakdown — this is the highest-value next step
+given you own the RT code. Compute mean RMSE per validation profile
+(average over channels), then look at how that error correlates with
+profile properties:
+
+  profileRMSE = sqrt(mean((btReconVal - btTrueVal).^2, 2));  % (nVal x 1)
+
+  figure; scatter(surfPressure(valIdx), perProfileRMSE, 10, 'filled');
+    xlabel('surface pressure (hPa)'); ylabel('per-profile RMSE (K)');
+
+  figure; scatter(surfTemp(valIdx), perProfileRMSE, 10, 'filled');
+    xlabel('surface temperature (K)'); ylabel('per-profile RMSE (K)');
+
+Also worth trying against total column water vapor and view angle. If
+error clearly spikes in specific regimes (e.g. high terrain, very
+cold/dry cases, extreme angles), that tells you precisely where your
+38k profiles are sparse — and since you can run the RT model yourself,
+generating more profiles specifically in those regimes is a much more
+efficient use of effort than growing the dataset uniformly.
+
+If the error turns out roughly flat across all these variables (no
+regime stands out), that's evidence you're closer to an overall
+sample-density ceiling rather than a coverage gap — in which case more
+profiles anywhere, or accepting ~0.5-0.6 K as close to the practical
+floor for 38k profiles at this problem's dimensionality, are the
+realistic options.
+
+Try the per-profile scatter plots — that's the one that'll tell you
+whether to go generate more data (and where) or whether you're close
+to done here.
+
+
+.... CONTD on ReadmeDebug2 ....

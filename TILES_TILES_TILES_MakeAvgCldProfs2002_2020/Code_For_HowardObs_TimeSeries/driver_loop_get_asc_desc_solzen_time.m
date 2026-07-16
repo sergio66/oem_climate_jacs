@@ -1,10 +1,12 @@
+clear all
+
 adderpath
 
 iNumTimeSteps = 412;  % 2002/09 to 2020/06
 iNumTimeSteps = 457;  % 2002/09 to 2022/06
 iNumTimeSteps = 498;  % 2002/09 to 2024/06
 iNumTimeSteps = 502;  % 2002/09 to 2024/08
-iNumTimeSteps = 524;  % 2002/09 to 2025/08
+iNumTimeSteps = 525;  % 2002/09 to 2025/08
 
 disp('this looks at eg ../DATAObsStats_StartSept2002_CORRECT_LatLon/LatBin01/LonBin01/iQAX_3_summarystats_LatBin01_LonBin01_timesetps_001_524_V1.mat ..... ')
 
@@ -14,6 +16,7 @@ if ~exist(fsave)
   fprintf(1,'%s DNE, gathering the data to make it \n ',fsave)
 else
   fprintf(1,'%s aready exists, not saving \n ',fsave)
+  error('well the file already exists, right?????')
 end
 
 for ii = 1 : 72
@@ -46,11 +49,14 @@ for ii = 1 : 72
   fprintf(1,'\n');
 end
 
-clear a fname ii jj saver
+clear a fname ii jj saver JOB N N1 arrayID ee slurm* tempscratchdir dir_crodgers hostname sID sTempPath sizer RESTOREDEFAULTPATH_EXECUTED ans iDo2m JOB
+clear a RESTOREDEFAULTPATH_EXECUTED dir_crodgers ii jj 
+
 comment = 'see /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/driver_loop_get_asc_desc_solzen_time.m';
 %save asc_desc_solzen_time_412_64x72.mat comment thedata
 if ~exist(fsave)
-  saver = ['save ' fsave ]; eval(saver)
+  saver = ['save ' fsave ' thedata iNumTimeSteps'];
+  eval(saver)
 else
   fprintf(1,'%s aready exists, not saving \n ',fsave)
 end

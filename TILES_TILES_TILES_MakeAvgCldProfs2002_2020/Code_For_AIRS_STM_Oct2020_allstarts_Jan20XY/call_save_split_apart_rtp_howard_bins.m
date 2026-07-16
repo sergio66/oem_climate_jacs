@@ -1,3 +1,8 @@
+% git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_starts_Sept2002/driver_split_apart_rtp_howard_bins.m:153:call_save_split_apart_rtp_howard_bins
+% git/oem_climate_jacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_starts_Sept2002/driver_split_apart_rtp_howard_bins_startSept2002.m:122:call_save_split_apart_rtp_howard_bins_startSept2002
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 disp('making dirs if needed')
 for ii = 1 : 64
   dirii = ['DATA/LatBin' num2str(ii,'%02i') '/'];

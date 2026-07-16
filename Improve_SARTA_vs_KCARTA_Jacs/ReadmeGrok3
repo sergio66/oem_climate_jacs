@@ -1,0 +1,218 @@
+How about back to original question, but now X and Y are scalars,
+while P is still a vector of about 10-50 parameters :
+
+I have a 1D scalar called X that I want to train to be the same as
+another 1D truth scalar called Y given some input parameters P. I have
+N such sets of parameters P, truth/train scalars to be trained
+(X,Y,P). How do I build a DNN in Matlab to do this?
+
+Perfect — much simpler now!
+
+Since both X and Y are scalars, and P is a vector (10–50 parameters),
+this is a standard regression problem with two inputs: the parameter
+vector P + the scalar X.
+
+%% Recommended Solution: Fully Connected DNN (Residual Learning)
+
+%% ====================== 1. DATA PREPARATION ======================
+
+% Assume your data:
+% P : [numParams x N]     ← 10 to 50 rows
+% X : [1 x N]             ← initial scalar values
+% Y : [1 x N]             ← target scalar values
+
+numParams = size(P,1);
+N = size(P,2);
+
+% Normalize inputs and targets
+[Pnorm, muP, sigP] = normalize(P, 2);
+[Xnorm, muX, sigX] = normalize(X, 2);
+[Ynorm, muY, sigY] = normalize(Y, 2);
+
+% Combine inputs: P + X
+Input = [Pnorm; Xnorm];        % size: [numParams+1, N]
+
+% === Residual Learning (Strongly Recommended) ===
+Delta = Y - X;                       % Learn correction instead of absolute value
+DeltaNorm = Ynorm - Xnorm;
+
+% Optional train/validation split
+idx = randperm(N);
+trainIdx = idx(1:round(0.8*N));
+valIdx   = idx(round(0.8*N)+1:end);
+
+XTrain = Input(:, trainIdx);
+YTrain = DeltaNorm(:, trainIdx);     % Target = correction
+
+XVal   = Input(:, valIdx);
+YVal   = DeltaNorm(:, valIdx);
+
+%% 2. Define the Network
+
+layers = [
+    featureInputLayer(numParams + 1)   % P + scalar X
+    
+    fullyConnectedLayer(128)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(256)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(128)
+    reluLayer
+    batchNormalizationLayer
+    
+    fullyConnectedLayer(64)
+    reluLayer
+    
+    fullyConnectedLayer(1)             % Output scalar correction
+    ];
+
+net = dlnetwork(layers);
+
+%% Training options
+
+options = trainingOptions('adam', ...
+    'MaxEpochs', 1000, ...
+    'MiniBatchSize', 32, ...
+    'InitialLearnRate', 1e-3, ...
+    'LearnRateSchedule','piecewise', ...
+    'LearnRateDropPeriod', 200, ...
+    'LearnRateDropFactor', 0.5, ...
+    'ValidationData',{XVal, YVal}, ...
+    'ValidationFrequency',30, ...
+    'Plots','training-progress', ...
+    'Verbose',false, ...
+    'ExecutionEnvironment','auto');
+
+net = trainnet(XTrain, YTrain, net, "mse", options);
+
+%% 4. Prediction (Inference)
+
+% For a new sample
+P_new = ...;      % [numParams x 1]
+X_init = ...;     % scalar
+
+InputNew = [ (P_new - muP)./sigP ; 
+             (X_init - muX)./sigX ];
+
+DeltaPredNorm = predict(net, InputNew);
+DeltaPred     = DeltaPredNorm * sigY + muY;     % denormalize
+
+Y_pred = X_init + DeltaPred;                    % Final predicted scalar
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Complete Compact Script (Copy-Paste Ready)
+
+%% Full Compact Script
+[Pnorm, muP, sigP] = normalize(P,2);
+[Xnorm, muX, sigX] = normalize(X,2);
+[Ynorm, muY, sigY] = normalize(Y,2);
+
+Input = [Pnorm; Xnorm];
+DeltaNorm = Ynorm - Xnorm;
+
+layers = [
+    featureInputLayer(size(Input,1))
+    fullyConnectedLayer(128); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(256); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(128); reluLayer; batchNormalizationLayer
+    fullyConnectedLayer(64);  reluLayer
+    fullyConnectedLayer(1)
+];
+
+net = dlnetwork(layers);
+
+options = trainingOptions('adam','MaxEpochs',800,'MiniBatchSize',32,...
+    'InitialLearnRate',1e-3,'LearnRateDropPeriod',150,'LearnRateDropFactor',0.5,...
+    'ValidationData',{Input(:,valIdx), DeltaNorm(:,valIdx)},...
+    'Plots','training-progress');
+
+net = trainnet(Input(:,trainIdx), DeltaNorm(:,trainIdx), net, "mse", options);
+
+% Predict
+Y_pred = X_init + predict(net, [ (P_new-muP)./sigP ; (X_init-muX)./sigX ]) * sigY + muY;
+
+%% saving the trained NN and norm stats
+
+%% Save the model (after training)
+save('MyScalarNN_Model.mat', ...
+     'net', ...           % the trained dlnetwork
+     'muP', 'sigP', ...   % normalization for P
+     'muX', 'sigX', ...   % normalization for X
+     'muY', 'sigY', ...   % normalization for Delta/Y
+     'numParams', ...     % optional but useful
+     '-v7.3');            % good for larger networks
+
+disp('Model saved as MyScalarNN_Model.mat');
+
+2. Create a Clean Prediction Function (Recommended)
+call it predictScalarNN.m
+
+function Y_pred = predictScalarNN(P_new, X_init)
+% PREDICTSCALARNN  Load model and predict Y from P and X
+%   Y_pred = predictScalarNN(P_new, X_init)
+%   P_new  : [numParams x 1] or [numParams x M]
+%   X_init : scalar or [1 x M]
+
+persistent net muP sigP muX sigX muY sigY
+
+if isempty(net)
+    % Load model once
+    load('MyScalarNN_Model.mat', 'net', 'muP', 'sigP', ...
+                               'muX', 'sigX', 'muY', 'sigY');
+    disp('ScalarNN model loaded.');
+end
+
+% Normalize inputs
+Pnorm = (P_new - muP) ./ sigP;
+Xnorm = (X_init - muX) ./ sigX;
+
+% Combine
+Input = [Pnorm; Xnorm];
+
+% Predict correction (Delta)
+DeltaNorm = predict(net, Input);
+
+% Denormalize and apply residual
+Delta = DeltaNorm .* sigY + muY;
+Y_pred = X_init + Delta;
+
+end
+
+%% which you can use later, vers 1
+
+% Example usage for new data
+P_new = rand(25, 1);      % your 25 parameters
+X_init = 12.34;           % your initial scalar
+
+Y_pred = predictScalarNN(P_new, X_init);
+
+disp(['Predicted Y = ', num2str(Y_pred)]);
+You can also call it on multiple samples at once:
+matlabP_new = rand(25, 10);     % 10 different cases
+X_init = [10; 20; ... ];  % column vector
+Y_pred = predictScalarNN(P_new, X_init);
+
+%% ONE SCRIPT
+% After training - Quick save
+Model.net = net;
+Model.muP = muP; Model.sigP = sigP;
+Model.muX = muX; Model.sigX = sigX;
+Model.muY = muY; Model.sigY = sigY;
+Model.numParams = numParams;
+save('MyScalarNN_Model.mat', 'Model');
+
+load('MyScalarNN_Model.mat', 'Model');
+net = Model.net;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Why This Works Well
+
+Very fast and stable because output is scalar.
+Residual learning (Y = X + correction) is especially good when X is already a reasonable approximation of Y.
+Easy to tune (you can make the network deeper/wider if needed).

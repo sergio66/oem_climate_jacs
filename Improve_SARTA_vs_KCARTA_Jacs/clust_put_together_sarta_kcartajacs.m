@@ -1,4 +1,11 @@
-%% sbatch --array=1-200%512 --output='/dev/null/' sergio_matlab_chip.sbatch 2      since 40000/200 = 200
+%% combines SARTA jacs from clustmake_sartajacs.m with KCARTA jacs from git/kcarta+_gen/WORK/RUN_TARA/GENERIC_MANY_PROFILES?
+
+%{
+sbatch --array=1-200 --output='/dev/null/' sergio_matlab_chip.sbatch 2      since 40000/200 = 200
+watch "ls -lt DATA/40000profiles/KC_SA/both_coljac*.mat | wc -l"
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 addpath /umbc/rs/pi_sergio/WorkDirDec2025/matlabcode/matlibSergio/matlib/rtp_prod2_Aug11_2020/util
 addpath /umbc/rs/pi_sergio/WorkDirDec2025/matlabcode/CONVERT_GAS_UNITS/
@@ -12,10 +19,13 @@ mmw = mmwater_rtp(h,p);
 
 %% so that we can handloop through using "loop_clust_do_kcarta_driver.m" when cluster is dead; see sergio_matlab_chip.sbatch
 if ~exist('JOBB')
+  iPlot = -1;
   JOB = str2num(getenv('SLURM_ARRAY_TASK_ID'));
 else
+  iPlot = +1;
   JOB = JOBB;
 end
+
 if length(JOB) == 0
   JOB = 1;
   JOB = 11;  
@@ -95,44 +105,47 @@ for jj = 1 : length(ind)
   fchan = sajac.hx.vchan;
   ichan = sajac.hx.ichan;
 
-  plot(fchan,saRAD(jj,:),'b.-',fchan,kcRAD(jj,:),'r');   xlim([645 1645]);  
-  plot(fchan,saJ2(jj,:),'b.-',fchan,kcJ2(jj,:),'r');   xlim([645 1645]);
-  plot(fchan,saJ4(jj,:),'b.-',fchan,kcJ4(jj,:),'r');   xlim([645 1645]);
-  plot(fchan,saJ5(jj,:),'b.-',fchan,kcJ5(jj,:),'r');   xlim([645 1645]);
-  plot(fchan,saJ6(jj,:),'b.-',fchan,kcJ6(jj,:),'r');   xlim([645 1645]);
-  plot(fchan,saJT(jj,:),'b.-',fchan,kcJT(jj,:),'r');   xlim([645 1645]);
-  plot(fchan,saSKT(jj,:),'b.-',fchan,kcSKT(jj,:),'r'); xlim([645 1645]);    
-
-  title(num2str(jj))
-
-  pause(1);
+  if iPlot > 0
+    plot(fchan,saRAD(jj,:),'b.-',fchan,kcRAD(jj,:),'r');   xlim([645 1645]);  
+    plot(fchan,saJ2(jj,:),'b.-',fchan,kcJ2(jj,:),'r');   xlim([645 1645]);
+    plot(fchan,saJ4(jj,:),'b.-',fchan,kcJ4(jj,:),'r');   xlim([645 1645]);
+    plot(fchan,saJ5(jj,:),'b.-',fchan,kcJ5(jj,:),'r');   xlim([645 1645]);
+    plot(fchan,saJ6(jj,:),'b.-',fchan,kcJ6(jj,:),'r');   xlim([645 1645]);
+    plot(fchan,saJT(jj,:),'b.-',fchan,kcJT(jj,:),'r');   xlim([645 1645]);
+    plot(fchan,saSKT(jj,:),'b.-',fchan,kcSKT(jj,:),'r'); xlim([645 1645]);    
+    title(num2str(jj))
+  
+    pause(1);
+  end
 end
 
-figure(1); QAJ2  = find(fchan >= 720,1);    plot(1:jj,saJ2(:,QAJ2),'b.-',1:jj,kcJ2(:,QAJ2)); title('CO2 (b) sarta (r) kc')
-figure(2); QAJ4  = find(fchan >= 1280,1);   plot(1:jj,saJ4(:,QAJ4),'b.-',1:jj,kcJ4(:,QAJ4)); title('N2O (b) sarta (r) kc')
-figure(3); QAJ5  = find(fchan >= 2186.9,1); plot(1:jj,saJ5(:,QAJ5),'b.-',1:jj,kcJ5(:,QAJ5)); title('CO  (b) sarta (r) kc')
-figure(4); QAJ6  = find(fchan >= 1292.8,1); plot(1:jj,saJ6(:,QAJ6),'b.-',1:jj,kcJ6(:,QAJ6)); title('CH4 (b) sarta (r) kc')
-figure(5); QAJT  = find(fchan >= 1231.0,1); plot(1:jj,saJT(:,QAJT),'b.-',1:jj,kcJT(:,QAJT)); title('TZ (b) sarta (r) kc')
-figure(6); QASKT = find(fchan >= 1231.0,1); plot(1:jj,saSKT(:,QASKT),'b.-',1:jj,kcSKT(:,QASKT)); title('SKT (b) sarta (r) kc')
-
-figure(1); clf; colormap jet
-figure(2); clf; colormap jet
-figure(3); clf; colormap jet
-figure(4); clf; colormap jet
-figure(5); clf; colormap jet
-figure(6); clf; colormap jet
-figure(1); yyaxis left;  plot(fchan,nanmean(kcJ2-saJ2,1),fchan,nanstd(kcJ2-saJ2,[],1)); title('CO2'); xlim([645 845]);  plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcJ2,1)); xlim([645 845]); plotaxis2;
-figure(2); yyaxis left; plot(fchan,nanmean(kcJ4-saJ4,1),fchan,nanstd(kcJ4-saJ4,[],1)); title('N2O'); xlim([1200 1400]); plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcJ4,1)); xlim([1200 1400]); plotaxis2;
-figure(3); yyaxis left; plot(fchan,nanmean(kcJ5-saJ5,1),fchan,nanstd(kcJ5-saJ5,[],1)); title('CO '); xlim([2150 2250]); plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcJ5,1)); xlim([2150 2250]); plotaxis2;
-figure(4); yyaxis left; plot(fchan,nanmean(kcJ6-saJ6,1),fchan,nanstd(kcJ6-saJ6,[],1)); title('CH4'); xlim([1200 1400]); plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcJ6,1)); xlim([1200 1400]); plotaxis2;
-figure(5); yyaxis left; plot(fchan,nanmean(kcJT-saJT,1),fchan,nanstd(kcJT-saJT,[],1)); title('TZ '); xlim([645 1645]); plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcJT,1)); xlim([645 1645]); plotaxis2;
-figure(6); yyaxis left; plot(fchan,nanmean(kcSKT-saSKT,1),fchan,nanstd(kcSKT-saSKT,[],1)); title('SKT'); xlim([645 1645]); plotaxis2;
-           yyaxis right; plot(fchan,nanmean(kcSKT,1)); xlim([645 1645]); plotaxis2;
+if iPlot > 0
+  figure(1); QAJ2  = find(fchan >= 720,1);    plot(1:jj,saJ2(:,QAJ2),'b.-',1:jj,kcJ2(:,QAJ2)); title('CO2 (b) sarta (r) kc')
+  figure(2); QAJ4  = find(fchan >= 1280,1);   plot(1:jj,saJ4(:,QAJ4),'b.-',1:jj,kcJ4(:,QAJ4)); title('N2O (b) sarta (r) kc')
+  figure(3); QAJ5  = find(fchan >= 2186.9,1); plot(1:jj,saJ5(:,QAJ5),'b.-',1:jj,kcJ5(:,QAJ5)); title('CO  (b) sarta (r) kc')
+  figure(4); QAJ6  = find(fchan >= 1292.8,1); plot(1:jj,saJ6(:,QAJ6),'b.-',1:jj,kcJ6(:,QAJ6)); title('CH4 (b) sarta (r) kc')
+  figure(5); QAJT  = find(fchan >= 1231.0,1); plot(1:jj,saJT(:,QAJT),'b.-',1:jj,kcJT(:,QAJT)); title('TZ (b) sarta (r) kc')
+  figure(6); QASKT = find(fchan >= 1231.0,1); plot(1:jj,saSKT(:,QASKT),'b.-',1:jj,kcSKT(:,QASKT)); title('SKT (b) sarta (r) kc')
+  
+  figure(1); clf; colormap jet
+  figure(2); clf; colormap jet
+  figure(3); clf; colormap jet
+  figure(4); clf; colormap jet
+  figure(5); clf; colormap jet
+  figure(6); clf; colormap jet
+  figure(1); yyaxis left;  plot(fchan,nanmean(kcJ2-saJ2,1),fchan,nanstd(kcJ2-saJ2,[],1)); title('CO2'); xlim([645 845]);  plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcJ2,1)); xlim([645 845]); plotaxis2;
+  figure(2); yyaxis left; plot(fchan,nanmean(kcJ4-saJ4,1),fchan,nanstd(kcJ4-saJ4,[],1)); title('N2O'); xlim([1200 1400]); plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcJ4,1)); xlim([1200 1400]); plotaxis2;
+  figure(3); yyaxis left; plot(fchan,nanmean(kcJ5-saJ5,1),fchan,nanstd(kcJ5-saJ5,[],1)); title('CO '); xlim([2150 2250]); plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcJ5,1)); xlim([2150 2250]); plotaxis2;
+  figure(4); yyaxis left; plot(fchan,nanmean(kcJ6-saJ6,1),fchan,nanstd(kcJ6-saJ6,[],1)); title('CH4'); xlim([1200 1400]); plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcJ6,1)); xlim([1200 1400]); plotaxis2;
+  figure(5); yyaxis left; plot(fchan,nanmean(kcJT-saJT,1),fchan,nanstd(kcJT-saJT,[],1)); title('TZ '); xlim([645 1645]); plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcJT,1)); xlim([645 1645]); plotaxis2;
+  figure(6); yyaxis left; plot(fchan,nanmean(kcSKT-saSKT,1),fchan,nanstd(kcSKT-saSKT,[],1)); title('SKT'); xlim([645 1645]); plotaxis2;
+             yyaxis right; plot(fchan,nanmean(kcSKT,1)); xlim([645 1645]); plotaxis2;
+end
 
 saver = ['save DATA/40000profiles/KC_SA/both_coljac_' num2str(JOB) '.mat ind ichan fchan saJ2 saJ4 saJ5 saJ6 saJT saSKT saRAD  kcJ2 kcJ4 kcJ5 kcJ6 kcJT kcSKT kcRAD'];
 eval(saver)

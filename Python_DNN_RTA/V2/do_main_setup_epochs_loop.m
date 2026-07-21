@@ -9,7 +9,8 @@ ind_freq = find(freq0 >= 0980 & freq0 <= 1100);                                 
 ind_freq = find(freq0 >= 0600 & freq0 <= 0820);                                 %% TZ,CO2
 ind_freq = find(freq0 >= 0820 & freq0 <= 0980 | freq0 > 1100 & freq0 <= 1250);  %% window
 ind_freq = 1: 2645;                                                             %% all
-ind_freq = find(freq0 >= 0700 & freq0 <= 1640);                                 %% TZ,CO2, WV, O3
+ind_freq = find(freq0 <= 1640);                                                 %% all TZ,CO2, WV, O3
+ind_freq = find(freq0 >= 0700 & freq0 <= 1640);                                 %% low alt TZ,CO2, WV, O3
 
 freq          = freq0(ind_freq);
 emissivityRaw = emissivityRaw0(:,ind_freq);
@@ -43,8 +44,13 @@ fprintf('O3  EOF cum. variance kept: %.5f\n', sum(o3PCA.explainedVarRatio(1:nPCA
 %  3. Assemble full input feature matrix
 %  ------------------------------------------------------------------
 disp('Stage 3 : Assemble FOr DNN')
-X = [tEOF, qEOF, o3EOF, scalarTensor, emisEOF];   % (nSamples x nFeatures)
-Y = targetCoeffs;                                  % (nSamples x nPCA_BT)
+clear X Y
+if iScalar == 0
+  X = [tEOF, qEOF, o3EOF, scalarTensor, emisEOF];                   % (nSamples x nFeatures)
+elseif iScalar == 1  
+  X = [tEOF, qEOF, o3EOF, co2EOF, ch4EOF, scalarTensor, emisEOF];   % (nSamples x nFeatures)
+end  
+Y = targetCoeffs;                                                 % (nSamples x nPCA_BT)
 
 printarray(size(tEOF),'size(tEOF)')
 printarray(size(qEOF),'size(qEOF)')
@@ -70,6 +76,8 @@ valIdx   = idxPerm(nTrain+1:end);
 
 Xtrain = X(trainIdx,:);  Ytrain = Y(trainIdx,:);
 Xval   = X(valIdx,:);    Yval   = Y(valIdx,:);
+
+flag_bad_eof_profiles
 
 %% ------------------------------------------------------------------
 %  5. Build MLP parameters (manual dlarray custom-training-loop style)

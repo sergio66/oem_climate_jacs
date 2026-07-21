@@ -18,14 +18,16 @@ else
 end  
 btTrueVal     = btRaw(valIdx,:);
 
-channelRMSE = sqrt(mean((btReconVal - btTrueVal).^2, 1));  % (1 x nChannels), Kelvin
-fprintf('Validation BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE), max(channelRMSE));
+channelRMSE_NNval = sqrt(mean((btReconVal - btTrueVal).^2, 1));  % (1 x nChannels), Kelvin
+fprintf('Validation BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE_NNval), max(channelRMSE_NNval));
+figure(1); colormap jet; clf
 plot(freq,nanmean(btReconVal),'b',freq,nanmean(btTrueVal),'r')
-figure(1); colormap jet;
-  yyaxis left;  plot(freq,nanmean(btReconVal - btTrueVal),'b',freq,nanstd(btReconVal - btTrueVal,[],1),'r')    
-  yyaxis right; plot(freq,nanmean(btReconVal),'k')
+  yyaxis left;  plot(freq,nanmean(btReconVal - btTrueVal),'b',freq,nanstd(btReconVal - btTrueVal,[],1),'r')
+    ylabel('bias/std [k]')
+  yyaxis right; plot(freq,nanmean(btReconVal),'k'); hold on; plot(freq,nanmean(btTrueVal),'color',[1 1 1]*0.6); hold off
     legend('mean(KC-calc)','std(KC-calc)','mean(KC)','location','best')
-title('Validation')
+    ylabel('actual mean [k]'); xlabel('Waveumber cm-1')
+title('NN : Validation')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -49,18 +51,20 @@ else
 end
 btTrueTrain     = btRaw(trainIdx,:);
 
-channelRMSE_train = sqrt(mean((btReconTrain - btTrueTrain).^2, 1));
-fprintf('Train BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE_train), max(channelRMSE_train));
-fprintf('Val   BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE), max(channelRMSE));
+channelRMSE_NNtrain = sqrt(mean((btReconTrain - btTrueTrain).^2, 1));
+fprintf('Train BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE_NNtrain), max(channelRMSE_NNtrain));
+fprintf('Val   BT RMSE: mean %.3f K, max %.3f K\n', mean(channelRMSE_NNtrain), max(channelRMSE_NNtrain));
 
-figure(2); colormap jet;
-  yyaxis left;  plot(freq,nanmean(btReconTrain - btTrueTrain),'b',freq,nanstd(btReconTrain - btTrueTrain,[],1),'r')    
-  yyaxis right; plot(freq,nanmean(btReconTrain),'k')
+figure(2); clf; colormap jet;
+  yyaxis left;  plot(freq,nanmean(btReconTrain - btTrueTrain),'b',freq,nanstd(btReconTrain - btTrueTrain,[],1),'r')
+    ylabel('bias/std [k]')  
+  yyaxis right; plot(freq,nanmean(btReconTrain),'k'); hold on; plot(freq,nanmean(btTrueTrain),'color',[1 1 1]*0.6); hold off
     legend('mean(KC-calc)','std(KC-calc)','mean(KC)','location','best')
-title('Training')    
+    ylabel('actual mean [k]'); xlabel('Waveumber cm-1')    
+title('NN : Training')    
 
-figure(3)
-plot(wavenumbers, channelRMSE_train, 'b-', wavenumbers, channelRMSE, 'r-');
+figure(3); clf
+plot(wavenumbers, channelRMSE_NNtrain, 'b-', wavenumbers, channelRMSE_NNval, 'r-');
 legend('train','val'); xlabel('wavenumber (cm^{-1})'); ylabel('RMSE (K)');
 title('RMSE : Training and Validation')
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,23 +81,24 @@ fprintf('PCA truncation-only RMSE: mean %.3f K, max %.3f K\n', mean(truncRMSE), 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-dbt = -2:0.1:+2;
+dbt = -5:0.1:+5;
 if length(freq) == 2645
   i1231 = 1520;
 else
   i1231 = floor(length(freq)/2);
 end
-figure(4); plot(trainIdx,btReconTrain(:,i1231) - btTrueTrain(:,i1231),'b.',valIdx,btReconVal(:,i1231) - btTrueVal(:,i1231),'r.')
+figure(4); clf; plot(trainIdx,btReconTrain(:,i1231) - btTrueTrain(:,i1231),'b.',valIdx,btReconVal(:,i1231) - btTrueVal(:,i1231),'r.')
   legend('bias Train','bias Val','location','best');
-figure(5); plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt))
-figure(5); plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt),dbt,hist(btReconVal(:,i1231) - btTrueVal(:,i1231),dbt))
-figure(5); plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt)/length(trainIdx),...
+figure(5); clf; plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt))
+figure(5); clf; plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt),dbt,hist(btReconVal(:,i1231) - btTrueVal(:,i1231),dbt))
+figure(5); clf; plot(dbt,hist(btReconTrain(:,i1231) - btTrueTrain(:,i1231),dbt)/length(trainIdx),...
                 dbt,hist(btReconVal(:,i1231) - btTrueVal(:,i1231),dbt)/length(valIdx))
            grid; set(gca,'yscale','log') 
   legend('hist Train','hist Val','location','best');
   title('histogram Actual-Reconstruct')
+  xlabel('dbt [K]'); ylabel('Normalized hist = h(x)/nsamples')
   
-figure(6)
+figure(6); clf;
 badTrain = abs(btReconTrain(:,i1231) - btTrueTrain(:,i1231)); badTrain = find(badTrain == max(badTrain),1);
 badVal   = abs(btReconVal(:,i1231) - btTrueVal(:,i1231));     badVal = find(badVal == max(badVal),1);
 plot(freq,btTrueTrain(badTrain,:),'b',freq,btReconTrain(badTrain,:),'c',freq,btTrueVal(badVal,:),'r',freq,btReconVal(badVal,:),'m')
@@ -101,30 +106,47 @@ plot(freq,btTrueTrain(badTrain,:) - btReconTrain(badTrain,:),'b',freq,btTrueVal(
   legend('btTrueTrain - btReconTrain','btTrueVal - btReconVal');
   ylabel('Worst difference [K]')
 
-figure(6)
+figure(6); clf
 badTrain = abs(btReconTrain(:,i1231) - btTrueTrain(:,i1231)); badTrain = find(badTrain >= 0.75*max(badTrain));
 badVal   = abs(btReconVal(:,i1231) - btTrueVal(:,i1231));     badVal = find(badVal >= 0.75*max(badVal));
 badTrain = abs(btReconTrain(:,i1231) - btTrueTrain(:,i1231)); badTrain = find(badTrain >= 2);
 badVal   = abs(btReconVal(:,i1231) - btTrueVal(:,i1231));     badVal = find(badVal >= 2);
-plot(freq,btTrueTrain(badTrain,:),'b',freq,btReconTrain(badTrain,:),'c',freq,btTrueVal(badVal,:),'r',freq,btReconVal(badVal,:),'m')
-plot(freq,btTrueTrain(badTrain,:) - btReconTrain(badTrain,:),'b',freq,btTrueVal(badVal,:) - btReconVal(badVal,:),'r')
-  legend('btTrueTrain - btReconTrain','btTrueVal - btReconVal');
-  ylabel('Worst difference [K]')
-
+if length(badTrain) > 0 & length(badVal) > 0
+  plot(freq,btTrueTrain(badTrain,:),'b',freq,btReconTrain(badTrain,:),'c',freq,btTrueVal(badVal,:),'r',freq,btReconVal(badVal,:),'m')
+  plot(freq,btTrueTrain(badTrain,:) - btReconTrain(badTrain,:),'b',freq,btTrueVal(badVal,:) - btReconVal(badVal,:),'r')
+    legend('btTrueTrain - btReconTrain','btTrueVal - btReconVal');
+    ylabel('Worst difference [K]')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-figure(8);
+figure(8); clf
 [nn nx ny nmean nstd] = myhist2d(px.stemp(trainIdx),btReconTrain(:,i1231) - btTrueTrain(:,i1231),200:5:350,-5:0.25:+5);
-  errorbar(200:5:350,nmean,nstd); plotaxis2;
+  errorbar(200:5:350,nmean,nstd); plotaxis2; title('training 2dhist');  xlabel('SKT')
 
 mmw = mmwater_rtp(h,p);
 [nn nx ny nmean nstd] = myhist2d(mmw(trainIdx),btReconTrain(:,i1231) - btTrueTrain(:,i1231),0:5:120,-5:0.25:+5);
-  errorbar(0:5:120,nmean,nstd); plotaxis2;
+  errorbar(0:5:120,nmean,nstd); plotaxis2; title('training 2dhist');  xlabel('mmw')
 
 [nn nx ny nmean nstd] = myhist2d(p.scanang(trainIdx),btReconTrain(:,i1231) - btTrueTrain(:,i1231),0:5:60,-5:0.25:+5);
-  errorbar(0:5:60,nmean,nstd); plotaxis2;
+  errorbar(0:5:60,nmean,nstd); plotaxis2; title('training 2dhist');  xlabel('scanang')
 
-[nn nx ny nmean nstd] = myhist2d(emissivityRaw(trainIdx,i1231),btReconTrain(:,i1231) - btTrueTrain(:,i1231),0:0.05:1,-5:0.25:+5);
-  errorbar(0:0.05:1,nmean,nstd); plotaxis2;
+[nn nx ny nmean nstd] = myhist2d(emissivityRaw(trainIdx,i1231),btReconTrain(:,i1231) - btTrueTrain(:,i1231),0:0.01:1,-5:0.25:+5);
+  errorbar(0:0.01:1,nmean,nstd); plotaxis2; title('training 2dhist');  xlabel('EMISSIVITY')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+figure(9); clf
+[nn nx ny nmean nstd] = myhist2d(px.stemp(valIdx),btReconVal(:,i1231) - btTrueVal(:,i1231),200:5:350,-5:0.25:+5);
+  errorbar(200:5:350,nmean,nstd); plotaxis2; title('validation 2dhist');  xlabel('SKT')
+
+mmw = mmwater_rtp(h,p);
+[nn nx ny nmean nstd] = myhist2d(mmw(valIdx),btReconVal(:,i1231) - btTrueVal(:,i1231),0:5:120,-5:0.25:+5);
+  errorbar(0:5:120,nmean,nstd); plotaxis2; title('validation 2dhist');  xlabel('mmw')
+
+[nn nx ny nmean nstd] = myhist2d(p.scanang(valIdx),btReconVal(:,i1231) - btTrueVal(:,i1231),0:5:60,-5:0.25:+5);
+  errorbar(0:5:60,nmean,nstd); plotaxis2; title('validation 2dhist');  xlabel('scanang')
+
+[nn nx ny nmean nstd] = myhist2d(emissivityRaw(valIdx,i1231),btReconVal(:,i1231) - btTrueVal(:,i1231),0:0.01:1,-5:0.25:+5);
+  errorbar(0:0.01:1,nmean,nstd); plotaxis2; title('validation 2dhist');  xlabel('EMISSIVITY')
 

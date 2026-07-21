@@ -1,0 +1,384 @@
+>>>>
+
+yes I'm curious to see this 'cos I can't picture it right now. I did
+work on a PINN for a short while, I dumped out ODs but when checking
+dI/dt = -I + B (fir a nadir or angle = 0 sounder) realized this was
+working on;ly in areas where lapse rate as defined by dT/dz was
+negative ie the tropopause. It started failing in the stratosphere
+where dT/dz > 0. It a little more tricky than that, had to use the
+Shcwatzchild solution for one finite layer rather than th derivative
+form of Schwartzchild eqn of radiative tranfer for an infinitesimal
+layer (since I am obviously working with finite layers here)
+
+Good, that's exactly the trap the finite-layer solution avoids — and
+it's worth being precise about why. The differential form dI/dz = -I +
+B is a local relation; integrating it naively (or worse, differencing
+it) runs into exactly the instability you hit, because it doesn't know
+it's supposed to be integrated analytically over a homogeneous
+layer. The finite-layer solution you're describing is the standard
+closed-form integral of that same equation assuming constant (or
+linear-in-τ) Planck function within the layer:
+
+  I_out = I_in * t_k + B_k * (1 - t_k)          where t_k = exp(-tau_k / mu)
+
+This is unconditionally stable regardless of lapse-rate sign — it
+doesn't care whether you're in the troposphere or stratosphere,
+because it's not stepping a derivative, it's applying the exact layer
+solution directly. This is what I'll use for composition.
+
+One structural thing worth flagging before the code: tau has to be
+per-channel, not a single scalar per layer, since absorption differs
+channel-to-channel even within one band. So the network's output isn't
+"one number per layer" — it's a vector of optical depths across all
+channels in the band, per layer. Composition then loops over layers,
+and at each layer does an elementwise (per-channel) blend.
+
+<< see layer_composition_rt0.m >>
+
+Walking through the shape of it:
+
+  tauNet is deliberately small (64 neurons, 2 layers) — it only ever
+  has to learn one layer's local physics from 11 numbers at a time,
+  which is a much easier regression than anything you've been
+  fighting, given the earlier finding that per-layer/local problems
+  are well-behaved once dimensionality matches data volume.
+
+  stableSoftplus enforces τ ≥ 0 — this is non-negotiable physically (a
+  raw linear output could go negative, which is nonsense for optical
+  depth), and I used the numerically stable form rather than a bare
+  log(1+exp(x)), which overflows for large x.
+
+  composeRTUpward is where your finite-layer solution lives, and it's
+  the only place actual radiative transfer physics happens — it's
+  fixed, not learned, exactly like you'd want. The learned piece
+  (tauNet) never sees or produces a radiance; it only ever produces
+  the one physical quantity you've told me is genuinely local and hard
+  to represent globally.
+
+  The downwelling term is a placeholder (flat 250 K), flagged
+  explicitly — that's the corner I cut to keep this a "does the
+  composition even work" prototype rather than a complete RT
+  solver. Once the upward-only version trains sensibly, swapping in a
+  real downward pass (same loop structure, reversed direction,
+  accumulating from TOA to surface) is a mechanical extension, not a
+  redesign.
+
+  This entire thing is end-to-end differentiable through dlgradient —
+  the for k=1:nLayers loop, exp, cat, elementwise multiplies are all
+  ordinary dlarray operations, so backprop flows from the TOA loss all
+  the way back through every layer's tauNet call automatically. That's
+  the mechanism that lets you train on radiance-only labels and still
+  recover physically meaningful per-layer optical depths.
+
+Given the "does it even run" uncertainty I flagged, I'd suggest
+testing composeRTUpward in isolation first — call it once with
+random/placeholder params and confirm the output shape is
+(nChannelsBand × batch) and finite (no NaN/Inf), before wiring in the
+training loop.
+
+
+>>>>
+
+It was indeed the finite form being integrated upwards through the
+stratosphere that caused the problem. Remember what I said that only
+the TOA radiance from SARTA training has to be correct ...  it can be
+doing something almost, but not completely, correct in between. The
+SARTA training comes from ratios of convolved layer to space
+transmitances which when you take lgs, give effective optical depths
+of the type you are trying to get above. So will the code you just
+wrote, work? or test and see?
+
+Straight answer: as written, no — it likely won't fix the
+layer-by-layer problem, for exactly the reason you just
+named. Training against TOA radiance only gives you one scalar
+constraint per channel per profile. There are many different
+τ_k(k=1...N) layer sequences that compose to the same correct TOA
+radiance — the composition is many-to-one. Nothing in the loss I wrote
+distinguishes among them. So tauNet is free to converge to a solution
+that nails TOA, while still being "almost but not completely correct"
+layer-by-layer — which is precisely the SARTA failure mode you're
+trying to escape, just now wearing a neural network instead of a
+regression. I gave you a differentiable composition, but I didn't give
+you anything that breaks the non-uniqueness, and that's the actual
+hard part of this problem. Worth saying plainly rather than letting
+you find that out after a training run.
+
+Testing it as-is is still worth doing — it'll tell you whether the
+composition mechanics even work (finite, stable, no NaNs, trains
+without diverging), which is a necessary first step regardless. But go
+in expecting the TOA fit to look great and the per-layer values to
+still be suspect, and treat that as confirming the diagnosis, not as a
+failure of the code.
+
+To actually break the degeneracy, you need a second source of
+constraint. Given what you have access to, two realistic options:
+
+1. Regularize toward SARTA's own current per-layer optical depths as a
+prior, rather than letting tauNet roam freely. SARTA's layer values
+are already close — your whole premise is that SARTA is a good
+approximation with only small internal layer errors. So add a penalty
+term:
+
+  loss = MSE(R_TOA_predicted, R_TOA_true) + lambda * mean((tau_k_predicted - tau_k_SARTA).^2)
+
+This tells the network: "match KCARTA at TOA, but don't wander from
+SARTA's layer values unless the TOA mismatch actually requires it."
+That directly targets your stated goal — find where SARTA's internal
+layers are wrong — instead of letting the optimizer find an arbitrary
+alternate solution that also happens to hit TOA.
+
+2. If you can generate them, intermediate-level radiances are the real
+fix, not a workaround. If KCARTA (or even a modified SARTA run) can
+give you "radiance as if the atmosphere above level k were the only
+thing present, with level k as an opaque surface" for a handful of
+levels (say every 10th layer) — that directly supervises the
+composition at multiple points along the path, not just at the very
+top. Even 5-10 extra intermediate constraints per profile would
+collapse a huge amount of the degeneracy. This is more RT-code work
+than option 1, but it's the more rigorous fix.
+
+Cheapest first step, given your time constraint: add #1 (a few lines —
+compute SARTA's existing per-layer τ for the same predictors, add the
+regularization term to modelGradientsLayerRT) and test that. It
+directly uses information you already have (SARTA's own current layer
+coefficients), costs nothing new to generate, and is the more
+defensible thing to try before investing in intermediate-radiance
+generation.
+
+Want me to add that regularization term to the loss function?
+
+>>>>
+
+When I gave up on the PINN, I was acually going to make the next step
+--- ensure that at random layers for random profiles, the radiance
+agress with KCARTA radiance at that layer for that channel for that
+profile. But I kinda stopped. Also, SARTA does not output OD, just TOA
+radiance (and/or jacobians).  So maybe we should try your code first,
+then jump to trying 1 or 2. Technocally I can do (1) very accurately
+by dumping out KCARTA ODs at every layer for every profile and conving
+them to the instrument I am intesresd in
+
+Testing the composition code first is reasonable as a mechanics check
+(does it run, is it stable, does the TOA fit converge at all) — but
+given what you just described, I'd actually skip straight past both
+option 1 and option 2 as I described them, because dumping true
+per-layer KCARTA optical depths, convolved to the instrument, is
+strictly better than either. It gives you direct, unambiguous ground
+truth at every layer, which eliminates the non-uniqueness problem
+entirely rather than mitigating it — you're not regularizing toward an
+imperfect prior (option 1) or sparsely constraining a few intermediate
+levels (option 2), you have the real answer everywhere. That collapses
+this back to a genuinely well-posed supervised regression: local
+predictors → local target, no composition loop needed during training
+at all (you'd only need composition again at inference time, to get
+TOA radiance/Jacobians from the fitted per-layer model).
+
+One thing worth confirming explicitly before you build the training
+set, since it's the single most consequential detail and an easy place
+to get it subtly wrong: when you convolve KCARTA's monochromatic layer
+optical depths to the instrument SRF, are you convolving transmittance
+(or radiance) and then taking -ln() of the convolved result — versus
+convolving optical depth directly and averaging? These are not the
+same thing, because exp(-tau) is nonlinear (Jensen's inequality bites
+you) — directly SRF-averaging monochromatic OD over-weights the
+strong-absorption line cores relative to what the instrument actually
+sees, and gives you a biased "effective OD" that doesn't correspond to
+any physically consistent transmittance. This is exactly the
+"effective transmittance" formalism that SARTA's own layer-to-space
+predictands were built around historically (Susskind/Strow-era
+formulation) — I'd bet you already know this cold given you helped
+write it, but it's worth stating explicitly since it's the one step
+that would quietly reintroduce the same kind of "close but not quite
+right" error you're trying to eliminate if it slipped.
+
+Given that, here's how I'd sequence it:
+
+  Quick sanity test of the composition code — confirm it runs, is
+  numerically stable, output shape is right, no NaNs. This machinery
+  is still useful later (Jacobians, inference-time TOA reconstruction
+  from the fitted per-layer model), so it's not wasted even though
+  it's not the training path anymore.
+
+  In parallel, dump the convolved KCARTA effective-OD training set for
+  one band, one channel subset — profiles × layers, each row your
+  existing 10 local predictors + the convolved effective-OD target.
+
+  Fit tauNet directly and supervised against that — drop the TOA
+  composition loss entirely, it's just MSE(tauNet(predictors_k),
+  effectiveOD_KCARTA_k). Given profiles × layers ≈ millions of rows
+  against only 10-11 input dimensions, this is squarely in the
+  well-conditioned regime your earlier diagnostics identified.
+
+  Once that's fit, run it through the (already-tested) composition
+  code to reconstruct TOA radiance and confirm it lands near KCARTA —
+  that's your validation that the per-layer fit is correct, not just
+  self-consistent.  Compare the fitted layer values directly against
+  SARTA's own — that's the actual deliverable you're after (where
+  SARTA's layers deviate from truth).
+
+Want me to rewrite layer_composition_rt.m as the direct supervised
+version (drop the TOA loss, target = your convolved effective OD), so
+it's ready once the training set is dumped?
+
+>>>>
+
+Doing it correctly ie convolving transmitance and then -log();
+actually layer2space transmittance and then ratioing two adjacent
+layers to get effective OD of a layer
+
+Good — that's exactly the right formulation, and it's worth stating
+why explicitly since it closes the loop on the Jensen's-inequality
+issue: transmittance itself (unlike OD) is a smooth, bounded,
+well-behaved function of wavenumber even across line cores, so
+SRF-convolving it directly is safe. Taking the ratio of two adjacent
+levels' convolved transmittances isolates just that layer's
+contribution, and -log() of that ratio gives you the correct effective
+OD — all nonlinearity handled at the transmittance stage, before any
+log is taken. This is the standard construction, and it's the right
+target.
+
+Given that, here's the direct supervised version — composition loop
+dropped entirely, since your target now supervises every layer
+individually and there's no more non-uniqueness to fight.
+
+<< layer_od_supervised_fit.m >>
+
+A few things worth flagging on this version:
+
+  Split by profile, not by row — reused the exact lesson from your
+  original leakage check, one level down. If you split by (profile,
+  layer) row instead, adjacent layers of the same profile would leak
+  across train/val, since they're highly correlated (similar
+  predictors, similar target) — that would quietly overstate how well
+  this generalizes.
+
+  Non-finite effOD entries get dropped, not zeroed. Some
+  layers/channels will likely have Tconv numerically indistinguishable
+  from 1 (essentially transparent layer, near-zero OD — fine) or from
+  0 (fully opaque, ratio blows up — needs clipping upstream in your
+  convolution step, before it ever reaches this script). I left the
+  floor/clip decision to you since it depends on your actual Tconv
+  numerics, but flagged the check so you see the scale of the problem
+  before it silently corrupts training.
+
+  stableSoftplus enforces OD ≥ 0 on the network output, same reasoning
+  as before — non-negotiable physically.
+
+  The composition code from the previous message
+  (layer_composition_rt.m) isn't wasted — once this per-layer model is
+  trained and validated against KCARTA truth, that composition
+  function is exactly what you'd reuse to reconstruct TOA radiance or
+  Jacobians from the fitted layer values, and to compare against
+  SARTA's actual output end-to-end.
+
+Given you already have the correct transmittance-ratio methodology
+worked out, the main remaining unknown is just whether the
+reshaping/row-assembly here matches how you'll actually have the
+KCARTA dump structured — happy to adjust once you've got a first
+version of predictorsAll/effOD_All built and see what shape naturally
+falls out of your convolution step.
+
+>>>>
+
+Well hold on you're moving faster than me --- I'll probaly start with
+the first file layer_composition_rt0.m since generating mono
+ODs/layer2space convolving and finding ratio to get effective OD will
+take a few days
+
+That's the right call given the time cost — start with what you can
+test today, and let the effective-OD dump run in the background rather
+than blocking on it. Good place to pause and let me know what actually
+happens when you run layer_composition_rt.m.
+
+Since you flagged this earlier — go in expecting the mechanics test to
+look something like: TOA fit converges reasonably, but if you have any
+way to peek at the per-layer τ values against SARTA's own (even
+informally), they'll likely drift from something physically sensible
+in exactly the way you predicted, because nothing in that loss
+constrains individual layers. That's not a bug to chase if you see it
+— it's the expected signature of the non-uniqueness problem, and it's
+the reason the effective-OD dump is worth the few days it'll take.
+
+Worth double-checking as you wire it up: the composition loop's
+dimension handling (cat(1, layerFeaturesAll{k}, layerIdxEncoded), the
+Planck broadcasting in planckRadianceVec, the dlarray/stripdims
+handling anywhere it shows up) is the part I'd bet is most likely to
+throw a dimension-mismatch error on first run, given the pattern of
+bugs you've been finding in this conversation — not physics bugs, just
+MATLAB dlarray plumbing. If something breaks, paste the error and
+we'll trace it the same way we did the earlier ones.
+
+>>>>
+
+Looking at layer_composition_rt.m, is it for fixed nlayers = 100? or
+you can send in profiles with different numbers of layers, which is
+what I have?
+
+As written, it assumes fixed nLayers — the for k = 1:nLayers loop
+bound and layerTempAll (nLayers x batch) both require every profile in
+a batch to have the same layer count. It won't handle your actual
+variable-N profiles directly.
+
+Worth noting though: this is actually a case where you don't need
+sigma-grid interpolation at all, and arguably shouldn't use it. The
+whole reason you moved to local per-layer predictors was to stop
+smoothing away exactly the kind of local structure global EOF
+compression discards — re-interpolating onto a fixed grid here would
+partially undo that. Since each layer's optical depth only depends on
+that layer's own local predictors (not on where it sits relative to a
+fixed reference grid), there's no structural reason the network needs
+a common grid at all.
+
+Fix: pad to a common nLayersMax within each batch, and mask the
+padding layers to be physically transparent (τ=0) rather than
+interpolating anything. A τ=0 layer passes radiance through completely
+unchanged (t_k = exp(0) = 1, so I = I*1 + B*0 = I), which is exactly
+correct — it's equivalent to "no atmosphere here," which is physically
+true for a profile whose real levels stop above nLayersMax. Native
+pressures/temperatures are used unmodified for every real layer.
+
+    nLayersMax = 100;   % pad up to this; real N varies 75-100 per your terrain discussion
+    
+    % per-profile: layerFeaturesAll{k} and layerTempAll(k,:) for k > actualN(profile)
+    % get set to values that force tau=0 -- simplest is a dedicated mask, applied
+    % AFTER tauNet rather than relying on the input features alone to force tau=0:
+    
+    function tau = forwardLayerODMasked(params, layerFeatures, validMask)
+        % layerFeatures: (11 x batch); validMask: (1 x batch), 1=real layer, 0=padding
+        raw = fullyconnect(relu(fullyconnect(layerFeatures, params.tau_fc1_W, params.tau_fc1_b)), ...
+                            params.tau_fc2_W, params.tau_fc2_b);
+        raw = fullyconnect(raw, params.tau_fc3_W, params.tau_fc3_b);
+        tau = stableSoftplus(raw);
+        tau = tau .* validMask;   % force tau=0 for padded/nonexistent layers -- physically "no atmosphere"
+    end
+
+Inside composeRTUpward, pass validMask(k,:) through at each layer's
+tauNet call, built once per profile as validMask(k,i) = (k <=
+actualN(i)). Padded layers then contribute nothing to the composed
+radiance regardless of what garbage sits in their input features
+(you'd just fill those with zeros or the last valid layer's values —
+doesn't matter, since they're multiplied out).
+
+This sidesteps interpolation loss entirely for the
+layer-composition/effective-OD work, while your existing sigma-grid
+pipeline stays exactly as-is for the global EOF radiance network. Want
+me to fold this masking into the full script?
+
+>>>>
+
+Good, I did not want interpolation and you confirm the code as earlier written was for 100 layers
+
+Confirmed, yes — as originally written it assumed a fixed nLayers for
+every profile in a batch, no masking, which is exactly the
+interpolation-adjacent behavior you correctly didn't want here. The
+mask-based fix from my last message (tau .* validMask, forcing padded
+layers to τ=0 so they pass radiance through unchanged) gets you
+variable-N support without interpolating anything — real layers use
+their own native predictors and temperatures untouched, padding layers
+are physically inert rather than fabricated.
+
+Sounds like a good place to leave it for now, given you're about to be
+heads-down on the KCARTA dump for a few days. Come back whenever —
+whether that's wiring in the masking, debugging whatever the
+composition loop throws on first run, or once the effective-OD data is
+ready to swap into the supervised version.

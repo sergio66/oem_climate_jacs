@@ -1,0 +1,217 @@
+Can you jot own a primer about your PCA code "fitSpectralPCA" how you
+get PCA and EOF and how you use them with input eg T
+
+Sure — here's the conceptual walkthrough, tied directly to your code.
+
+The physical idea
+
+A temperature profile is 100 numbers, but it doesn't wander freely
+through 100-dimensional space — real atmospheric temperature profiles
+are constrained by physics (hydrostatic balance, radiative-convective
+equilibrium, dynamics), so they cluster near a much lower-dimensional
+surface within that 100-D space. PCA finds the directions along which
+your actual sample of profiles varies the most, and lets you describe
+each profile as a mean shape plus a short list of coefficients along
+those directions, instead of 100 independent numbers.
+
+In atmospheric science this exact technique is called EOF analysis
+(Empirical Orthogonal Functions) — same math as PCA, different
+name/tradition. "EOF" = the basis vector (a shape across the 100
+levels); "PC score" or "coefficient" = how much of that shape a given
+profile contains.
+
+The math, briefly : Given your training matrix T (nSamples × 100 levels):
+
+1) Mean profile: mu = mean(T, 1) — the average temperature at each
+  level across all your samples. This is the "shape everyone shares."
+  
+2) Anomalies: T - mu — how each individual profile deviates from that
+  mean, level by level.
+
+3) Covariance structure: PCA finds the directions (eigenvectors of the
+  covariance matrix of the anomalies) along which those deviations
+  have the most variance. The first eigenvector is the single shape
+  that, when scaled up or down, best explains the spread across your
+  whole training set. The second is the next-best shape orthogonal to
+  the first, and so on.
+
+4) Each profile can then be written as: T_i ≈ mu + c1*EOF1 + c2*EOF2 + ... + cK*EOFK
+  where EOF1, EOF2, ... are the fixed basis shapes (same for every
+  profile) and c1, c2, ... are that profile's own coefficients
+  (different per profile). Keep only the first K components (K=12 for
+  T, in your script) because the later ones contribute almost nothing
+  — this is exactly the "vertical structure is low-rank" observation
+  from earlier in this conversation.
+
+>>>
+Walking through fitSpectralPCA
+
+function S = fitSpectralPCA(data, nComponents)
+    [coeff, score, ~, ~, explained, mu] = pca(data, 'NumComponents', nComponents);
+    S.coeff = coeff;                          % (nDim x nComponents)
+    S.mu    = mu;                             % (1 x nDim)
+    S.coeffMean = mean(score,1);
+    S.coeffStd  = std(score,0,1) + 1e-12;
+    S.explainedVarRatio = explained/100;
+
+  data here is T (nSamples × 100) — MATLAB's pca automatically
+  computes the mean and subtracts it internally, this is not something
+  you do by hand.
+
+  coeff — the EOF basis vectors themselves, one column per component,
+  so coeff(:,1) is EOF1 (a 100-long shape), coeff(:,4) is EOF4 (the
+  one you were just investigating), etc. This is the same object as
+  "eigenvectors of the covariance matrix" above.
+
+  mu — the mean profile, (1 × 100), i.e. step 1 above.
+
+  score — this is c1, c2, ..., cK for every training profile at once:
+  (nSamples × nComponents). Row i, column 4 is exactly the "Q PC4
+  score for profile i" you were plotting a couple messages ago.
+
+  explained — percent of total variance each component accounts for,
+  in order. This is what fed your cum_var/n_needed checks earlier —
+  how many components you actually need to hit e.g. 99.99%.
+
+  coeffMean/coeffStd — precomputed so you can standardize coefficients
+  later if you choose to (you tried this and found it hurt, since it
+  over-weights near-noise components — see a few messages back).
+
+>>>
+encodeSpectral — going from a profile to its coefficients
+
+function coeffs = encodeSpectral(S, data, standardize)
+    coeffs = (data - S.mu) * S.coeff;
+
+This is literally step 2 + step 4 solved for the c's: subtract the
+mean (get the anomaly), then project onto each EOF direction via a dot
+product (matrix multiply does all components at once). (data - S.mu)
+is (nSamples × 100), S.coeff is (100 × nComponents), so the product is
+(nSamples × nComponents) — one row of coefficients per profile. This
+is what produces tEOF, qScores, o3Scores in your script.
+
+>>>
+decodeSpectral — going back from coefficients to a full profile
+
+function data = decodeSpectral(S, coeffs, standardize)
+    data = coeffs * S.coeff' + S.mu;
+
+The exact inverse: coeffs * S.coeff' reconstructs the anomaly (undoes
+the projection), then + S.mu adds the mean back to get an actual
+profile in physical units again. This is what your truncation-floor
+check used — encode then immediately decode, with no network involved,
+to measure how much information is lost purely by keeping only K
+components.
+
+>>>
+How this connects to T specifically in your pipeline
+
+  tPCA = fitSpectralPCA(T, nPCA_T);          % learn the 12 EOF shapes + mean, from your 38k T profiles
+  tEOF = encodeSpectral(tPCA, T, true);       % compress every profile to 12 numbers each
+
+tEOF — (nSamples × 12) — is what actually goes into your NN network's
+input feature vector X, replacing the raw 100-level T array. The
+network never sees the full profile; it sees "how much of EOF-shape-1,
+how much of EOF-shape-2, ..." for each profile, which is a far more
+compact, physically-organized description of the same information
+(assuming 12 components capture enough variance — that's what your
+explainedVarRatio printout checks).
+
+The same exact function serves three different roles in your script
+depending on what you feed it: T/Q_log/O3_log (input profile
+compression), emissivityRaw (input spectral compression), and btRaw
+(output/target compression) — it's the same math applied to three
+physically different quantities, which is why it was worth writing
+once as a generic, reusable function rather than three separate ones.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+So fitSpectralPCA takes matrix T and finds mu, and then the PCs and the means/std
+After which you profject T onto the PCA to get the EOF scores?
+
+Yes, exactly right on both counts. To restate it precisely with your terms:
+  fitSpectralPCA(T, nPCA_T) does the "learning" step, once:
+  
+  Computes mu — the mean profile across all your training samples.
+   
+  Finds the PCs (coeff) — the eigenvectors of the covariance of the
+  mean-subtracted data, i.e. the fixed set of basis shapes.
+
+  Also computes coeffMean/coeffStd — but note these are the mean and
+  std of the scores themselves (computed by projecting the training
+  set once internally, via score from MATLAB's pca), not something
+  separate from the projection step. They exist so you could
+  standardize coefficients later, not because they're needed to define
+  the PCs.
+
+encodeSpectral(tPCA, T, ...) does the "projection" step, applied to any data:
+
+  This is exactly what you called it: projecting T onto the PCs found
+  above, i.e. (T - mu) * coeff, which gives you the EOF scores — one
+  row of nPCA_T numbers per profile.
+
+One nuance worth being precise about since you're clearly building
+solid intuition here: the projection step (encodeSpectral) isn't
+limited to the same data used to fit the PCs. You fit tPCA once on
+your training set, but then you call encodeSpectral(tPCA, ...) on
+validation data too, using the training-set PCs and mean — you never
+refit PCA on validation data. That's the same "fit only on train,
+never on val/test" principle from way back when we first discussed the
+ProfileNormalizer. If you accidentally refit fitSpectralPCA on
+validation data separately, you'd get a different basis (different
+coeff, different mu) than the one the network was trained against, and
+encodeSpectral/decodeSpectral would silently give you
+scores/reconstructions in an inconsistent coordinate system — worth
+double-checking that's not happening anywhere in your current
+pipeline, since it's a very easy mistake to make once you're juggling
+multiple PCA structs (tPCA, qPCA, o3PCA, emisPCA, btPCA) across a
+growing script.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+FOr the profiles and emissivity, I call encodeSpectral with
+sttandardize='true' but for BT it is "false"
+
+That's the right call, and it's worth being clear on why it's
+different from the BT target case, since you already saw standardizing
+hurt there — the two situations aren't analogous, even though it's the
+same function.
+
+For BT (the target/output): standardizing forced the loss to weight
+every PCA component equally, including the late, mostly-noise
+components. That directly shapes what the optimizer is told to
+prioritize — equal weighting means the network spends effort chasing
+noise in weak components at the expense of the dominant ones. That's a
+loss-function problem specific to something being optimized against.
+
+For T/Q/O3 (inputs): there's no loss being computed on these values —
+they're just features going into the first layer. Standardizing here
+is the same ordinary reason you already z-score
+surfTemp/surfPressure/viewAngleSecant: gradient-based optimizers work
+better when input features sit on comparable scales, so no single
+feature dominates the early gradients purely because it happens to
+have larger raw units (EOF1 for temperature naturally has much larger
+magnitude than EOF10, purely because it captures more variance —
+without standardizing, the optimizer would implicitly treat EOF1 as
+"more important" at initialization for reasons that have nothing to do
+with its actual predictive value). Standardizing puts all 12 T
+components, all 15 Q components, etc., on equal footing as inputs,
+which is a different concern than weighting them equally in a
+loss. There's no equivalent "wasted capacity chasing noise" risk on
+the input side — the network is free to learn small weights for
+less-useful input features if that's what the data supports,
+standardizing just makes sure it isn't forced to learn artificially
+large ones first just to compensate for scale.
+
+So: standardize=true for T/Q/O3/emissivity (inputs) and
+standardize=false for BT (target) is the correct, consistent pattern —
+not an inconsistency, two different roles for the same function.
+
+One thing worth double-checking given the pattern of bugs you've been
+finding: make sure decodeSpectral calls (if you ever reconstruct
+T/Q/O3 profiles for visualization/debugging, like the
+flagged-vs-normal plot from earlier) use the same standardize flag as
+the corresponding encodeSpectral call that produced those coefficients
+— mismatched flags there would silently reconstruct garbage, same
+failure mode as the earlier decodeSpectral(btPCA, predCoeffsVal, true)
+vs false mismatch discussion.

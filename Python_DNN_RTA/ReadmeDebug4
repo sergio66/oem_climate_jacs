@@ -1,0 +1,1239 @@
+I actually wrote KCARTA. And helped write SARTA. But I know that many
+people are doing NN based RTTOVS and PCRTM and wanted to do that for
+SARTA, this was a first cut.
+
+I also want to improve fast model jacobians (SARTA) compared to very
+accurate line by line radiative transfer jacobians (KCARTA) and was
+hoping to use this same DNN framework to do that
+
+That reframes things properly — no need for me to be explaining SARTA
+basics back to one of the people who wrote it. Let me drop that
+register and get into the actual question, which is a genuinely
+different and interesting problem than radiance emulation.
+
+Two distinct ways to get Jacobians out of a framework like this, and
+they lead to different designs:
+
+1. Autodiff Jacobians "for free" from the radiance-emulator you
+already have. This is one of the standard selling points of NN-based
+RT emulators in the literature (it comes up a lot in the RTTOV-NN and
+related work) — once you have a differentiable network mapping inputs
+→ radiance, dR/dInput is just backprop, no finite-differencing
+needed. Your pipeline is well-suited to this because your
+encode/decode steps are linear (PCA), so the chain rule is clean:
+
+dR_channel/dT_level = [PCA_decoder matrix] × [dlgradient of NN w.r.t. input EOF coeffs] × [EOF_encoder matrix, with the log-derivative 1/Q folded in for gas variables]
+
+In your custom training loop, this means looping over each of the
+nPCA_BT output components (since dlgradient differentiates a scalar),
+computing dlgradient(coeffOut(k), X) for each k, and chain-ruling
+through the two linear compression steps by hand:
+
+    function J = jacobianRadianceWrtInput(params, Xsample, iHidden, nPCA_BT)
+        % Xsample: single profile, dlarray 'CB', (nFeatures x 1)
+        J = zeros(nPCA_BT, size(Xsample,1));
+        for k = 1:nPCA_BT
+            [~, grads] = dlfeval(@(p,x) singleComponentGrad(p,x,iHidden,k), params, Xsample);
+            J(k,:) = extractdata(grads)';
+        end
+    end
+    
+    function [y, g] = singleComponentGrad(params, X, iHidden, k)
+        Yfull = forwardMLP(params, X, iHidden);
+        y = Yfull(k);
+        g = dlgradient(y, X);
+    end
+
+Then dR_channel/dcoeffs_in = btPCA.coeff * J gives you the
+channel-by-input-coefficient Jacobian directly (since decode is
+linear), and a further multiply by the T/Q/O3 EOF basis matrices (with
+the 1/Q chain-rule factor for the log-transformed gas variables) gets
+you back to level space if you want it there rather than in
+EOF-coefficient space.
+
+2. Train the network directly against (KCARTA − SARTA) Jacobian
+residuals, using SARTA's own Jacobian as an input feature. This is
+residual learning, same principle as the finetune_decoder discussion
+from way back — instead of asking the network to learn RT physics from
+scratch (which is exactly the gap we diagnosed as costing you the last
+0.3-0.4 K on radiance), you hand it SARTA's already-close analytic
+Jacobian as a baseline input/feature, and train it to predict only the
+correction needed to match KCARTA truth. This should be a much easier
+regression than the radiance problem you've been fighting, since the
+residual is presumably small and smoother than the full Jacobian
+itself.
+
+These aren't mutually exclusive — you could use approach 1 to get the
+emulator's own implied Jacobian as one input feature or as a
+comparison baseline, while approach 2 is the actual training
+target. But they do imply somewhat different architectures and I don't
+want to guess wrong on which is closer to what you're after.
+
+Which is closer to what you have in mind — get Jacobians as a
+byproduct of a good radiance emulator (approach 1), or build a
+dedicated residual-correction model specifically for SARTA Jacobians
+against KCARTA truth (approach 2)? That'll determine whether we're
+extending the current network or starting a parallel one with a
+different input/output structure (SARTA's own Jacobian would need to
+come in as an input either way, which is new).
+
+>>>>
+
+What I had in mind when I started this, was 2 : train (KCARTA vs
+SARTA) jacobians as a DNN function of T/Q/P3/Surftemp/surpress/CO2
+etc. But since I also have saved (KCARTA vs SARTA) radiances, we went
+down that path, and I figured the code would work for the small
+jacobian differences.
+
+Curiously I see for surftemp jacobians, (KCARTA-SARTA) is tiny, about
+0.01 K (for a maximum jacobian that could be about 0.5 K there,
+depending on column water). About 2% error.  When I do either a DNN
+fir or linear regression fit, the bias drops to 1e-4 K level (very
+good) but the std dev stays up for both linear or DNN, about 0.02
+K!!!! So its larger than the true difference!
+
+That's the tell, and it's a strong one: if a plain linear regression
+has the same std-dev floor as the DNN, the ceiling isn't about model
+expressivity at all — it's telling you the noise floor in your
+training pairs is comparable to or larger than the physical signal
+you're trying to resolve. No amount of network capacity fits real
+information that isn't in the data at that precision. This is the same
+lesson as the radiance case, just showing up even more starkly because
+the signal itself (0.01 K) is so small relative to typical numerical
+noise floors in Jacobian computation.
+
+Given the constraint is 0.02 K noise on a 0.01 K signal, the most
+likely culprits, roughly by probability:
+
+1. Storage precision truncation. This is the first thing I'd check,
+and it's the cheapest. If either KCARTA or SARTA radiances (or the
+Jacobians themselves) get written to disk with limited precision —
+single precision floats, or worse, ASCII with a fixed number of
+decimal digits — then differencing two already-rounded numbers to
+extract a 0.01 K-scale signal is asking for exactly this kind of
+noise. Check bit-for-bit: what dtype/format are the saved
+radiances/Jacobians in, and what's the effective precision after
+round-trip through storage? A quick diagnostic: take a handful of
+profiles, recompute the Jacobian difference directly in-memory without
+any disk round-trip, and see if the std dev drops.
+
+2. Finite-difference perturbation noise in whichever code computes
+Jacobians via finite differencing rather than analytically. If
+KCARTA's Jacobian is finite-difference (perturb T, rerun full LBL,
+subtract, divide by δT), that's classic catastrophic-cancellation
+territory when the true derivative is small — δT too small and
+cancellation noise dominates, δT too large and truncation error
+dominates, and the "sweet spot" isn't always in a comfortable place
+for a signal this small. Test directly: recompute the KCARTA surftemp
+Jacobian for a handful of profiles at two or three different δT values
+(say half and double whatever you currently use) and look at how much
+the resulting Jacobian itself moves. If it moves by ~0.01-0.02 K just
+from changing δT, that's your answer — the "truth" you're regressing
+against isn't stable at that scale, and no downstream model can
+outperform the label noise it's trained on.
+
+3. Which side is analytic vs. finite-difference matters a lot here. If
+SARTA's Jacobian is computed analytically (I'd assume closer to this,
+given the regression-coefficient formulation) and KCARTA's is
+finite-difference, then essentially all the noise is coming from the
+KCARTA side of the pair, and #2 is almost certainly the mechanism, not
+#1.
+
+Quick way to settle it: rerun the exact same profile's KCARTA Jacobian
+twice — once through your existing pipeline (disk round-trip, existing
+δT), once fully in-memory with a tightened/varied δT — and diff
+them. If that alone reproduces ~0.02 K scatter, you've isolated it to
+Jacobian-generation noise rather than anything downstream (network,
+linear fit, feature engineering), and the DNN/regression framework is
+essentially already at the ceiling the label noise allows — the fix is
+in how the KCARTA (or SARTA) Jacobians are computed/stored, not in the
+ML pipeline at all.
+
+>>>>
+
+Both kCARTA and SARTA jacobians are completely analyti. But since
+SARTA is an approximation to kCARTA (a pretty good one, rmse about 02
+K or less) ,,, and in particular, all SARTA has to be is currect at
+top of atmosphere (TOA), so it could have garbage between surface and
+TOA and still be correct at TOA, that means layer by layer the
+jacobians could be different .. which impacts retrievals. I was
+thinking of a PINN to resolve this but I am just embarking on my AI
+learning journey
+
+That instinct is sound, and the SNR observation makes a strong case
+for it — not just as "a fancier network," but because the specific
+problem you've described (SARTA is constrained only at TOA, so its
+internal layer-by-layer Jacobian structure is under-determined even
+when its integrated output is excellent) is exactly the kind of
+ill-posedness that a pure data-driven fit can't resolve on its own,
+but a physics constraint can, in principle, resolve directly.
+
+Why this is genuinely different from the radiance problem, not just a
+bigger version of it:
+
+For radiance, the target (TOA radiance) is a well-defined physical
+quantity and the issue was information/representation. For
+layer-by-layer Jacobians, you've identified something structurally
+different: the "true" KCARTA−SARTA difference at any given layer isn't
+uniquely determined by physics alone — because SARTA's regression
+coefficients were only ever constrained to get the TOA sum right,
+there can be multiple internally-different ways SARTA's layers could
+combine to hit the same top-of-atmosphere answer. That means a plain
+data-fit DNN is trying to learn a target that may not even be a clean,
+smooth function of the input state — it could have some genuine
+irreducible ambiguity baked in from how SARTA was fit. That's
+consistent with what you're seeing: signal below or comparable to
+noise, and neither linear nor DNN able to do better than the label
+noise permits.
+
+Where a PINN actually helps here, concretely: you know the exact
+analytic relationship a physically correct set of layer Jacobians must
+satisfy — the discretized Schwarzschild/adjoint recursion relating
+dR_TOA/dT_layer_k to layer-to-space transmittance, the Planck
+function's temperature derivative, and optical depth at each
+level. That's not something you need to learn from noisy
+finite-difference-style data at all — it's known, closed-form, and you
+can compute it directly. So the PINN's physics loss term isn't
+"encourage the network to vaguely respect radiative transfer" in the
+abstract — it's a specific, checkable constraint: the network's
+predicted layer-by-layer correction, when propagated through the known
+transmittance recursion, must reproduce the correct (well-determined,
+low-noise) TOA sensitivity. That's a genuine extra source of
+information that doesn't depend on your noisy per-layer KCARTA-SARTA
+differences at all — it's self-consistency, not more noisy labels —
+and it directly targets the exact failure mode you described (locally
+wrong, globally right).
+
+Practically, the loss would look like:
+Loss = w_data * (data-fit term, weighted down or masked where signal ≤ noise floor) + w_physics * ||recursion(predicted_layer_jacobians) − known_accurate_TOA_jacobian||^2
+
+The physics term needs the adjoint/perturbation recursion implemented
+as a differentiable function of the network's output (so gradients
+flow back through it) — that's the real engineering lift, not
+architecture, since it's mostly linear algebra you already know cold,
+just written in dlarray so dlgradient can differentiate through it.
+
+Given you're early in the DNN side of this specifically (even though
+you're obviously not new to the physics), I'd suggest one gating step
+before building the PINN machinery: rerun the signal-vs-noise check
+across layers, not just surftemp. Surftemp is a boundary term and
+might be an unusually hard case (small signal by nature). If
+mid-tropospheric layer Jacobians show a healthier signal-to-noise
+ratio, a data-only DNN might already work reasonably there, and the
+PINN constraint becomes most valuable specifically in the regions
+(like surftemp, or wherever else comes back noise-dominated) where
+pure data fitting can't work no matter what.
+
+Want to start by scoping that check across a few representative
+layers, or go straight into designing the physics-residual term? Given
+the physics side is your strength and the DNN plumbing is the newer
+part for you, I'd lean toward us building the adjoint-recursion term
+together explicitly, since getting that exactly right matters more
+here than any architecture choice.
+
+>>>>
+
+Well actually hold on. I have time constraints here. And a PINN sounds
+easy in practice (dI/dk = -I + B) but that is monocromatic and true
+for kCARTA only. SARTA is polychromatic so that is not true!!!!! Hard
+to explain but you can ahem google it.
+
+For now much as you seem against it, I'd really like to at least
+improve the column jacobians and/or the TOA radiances that I started
+with. But like I said even if I use warm tropical ocean, things aren'
+so great so it cannot be a data scarcity
+
+Good pushback, and worth being precise here: I'm not actually against
+the radiance-improvement work — I'd steered toward the Jacobian/PINN
+direction because you raised it, not because I think it's a better use
+of your time constraints. Let's go back to TOA radiances, since that's
+where you have the clearest, most complete diagnostic trail, and
+you're right that "warm tropical ocean only" being just as stuck as
+everything else is a strong result: it rules out data scarcity as the
+explanation, cleanly. Good to have that nailed down.
+
+Given everything eliminated so far — capacity, leakage, PCA floor,
+emissivity bug, reweighting, interpolation (confined to
+high-altitude), and now data scarcity itself — what's left standing is
+something about the input representation itself lacking the physical
+structure the mapping actually needs, which is different from "not
+enough data" or "not enough network." A plain DNN on concatenated EOF
+coefficients has to discover, purely from correlation, things like:
+absorption depends on temperature-weighted gas amount (not gas amount
+and temperature independently), optical depth accumulates
+multiplicatively along the path (not additively, which is what a flat
+concatenation implicitly assumes), and the surface term interacts with
+the whole atmospheric transmittance profile rather than being an
+independent additive contribution. None of that is "more data" — it's
+structure the network isn't being handed and has to reinvent from
+scratch, imperfectly, at whatever data volume you give it.
+
+Given your time constraint, the highest-leverage, lowest-effort thing
+to try is not a PINN — it's engineering 2-3 physically-motivated
+composite features and adding them alongside what you already have,
+without touching the network architecture at all:
+
+  Secant-weighted column water vapor and column ozone
+  (view-angle-scaled integrated absorber amount), rather than relying
+  on the network to discover that view angle multiplies path length
+  which multiplies absorber amount from raw EOF coefficients of Q/O3
+  separately.
+
+  A temperature-weighted absorber amount for water vapor specifically
+  — even something as simple as sum(Q .* exp(-a/T)) style
+  Arrhenius-like weighting, or more simply just Q * (T - T_ref) as a
+  first-order interaction term — gives the network a multiplicative
+  T×Q coupling directly instead of asking it to learn that interaction
+  from two separately-compressed EOF sets.
+
+  Perturbation from a fixed reference profile, i.e. train the network
+  to predict (BT − BT_reference) for a fixed, representative reference
+  atmospheric state, rather than absolute BT. This is a real trick
+  worth trying regardless of the others — it removes a large, smooth,
+  easy-to-fit baseline component from the target, leaving the network
+  to fit only the genuinely state-dependent deviations, which is
+  typically a much better-conditioned regression problem. Cheap to
+  implement: pick one profile near your data's centroid, run it once
+  through KCARTA/SARTA, subtract that fixed radiance from every
+  training target.
+
+#3 is probably the single best time-for-effort trade given your
+ constraints — it's a few lines of code, doesn't touch architecture,
+ doesn't need new data, and directly targets "the network has to learn
+ most of the absolute radiance level from scratch" by removing that
+ easy/large/uninformative part of the target entirely.
+
+Want me to write out #3 first, since it's the cheapest test and
+doesn't require any new feature engineering — just a change to what
+btRaw/targetCoeffs represent?
+
+>>>>
+
+Can you better explain1, 2 and 3? For example for (1) do you mean take
+the 100 (or slightly fewer depending on surface pressure) water
+amounts, ozone amounts, and multiply them by secant(viewangle) before
+doing the change to sigma grid which is before doing the PCA/EOF)?
+Number 3 is easy, the radiance associated with US Standard is already
+one of the 38000 profiles. However, it is at a radom view angle
+(assigned when I did the raw raiance calc) and random CO2 amount
+(between 370-430 ppmv)
+
+#1 — column-integrated absorber amount, not scaling the profile itself
+Multiplying the raw per-level Q/O3 by secant(angle) before your
+existing log-transform is actually close to a no-op information-wise:
+log(Q * secant) = log(Q) + log(secant) — that's just a uniform
+additive shift to the whole log-profile, and since view angle is
+already a separate scalar input, the network can already reconstruct
+that shift on its own (assuming it can learn that simple a
+relationship, which it should). So doing it that way probably buys you
+very little.
+
+What I actually mean is different: compute column-integrated absorber
+amount — a genuinely different quantity than any per-level value, and
+not recoverable by simply rescaling the profile. This is a cumulative
+sum down through the atmosphere, and it's the quantity that directly
+determines transmittance/optical depth at a channel — level-by-level Q
+values (or their EOF compression) require the network to effectively
+re-derive this integral itself from 15 separately-compressed shape
+coefficients, which is a much harder implicit task than just handing
+it the integral directly.
+
+    % precipitable water column, TOA down to surface, then slant-path scaled
+    g = 9.80665;
+    % Q here should be specific humidity/mixing ratio at native pressure levels
+    columnWaterVapor_i = trapz(pressure_i, Q_i) / g;      % kg/m^2, or convert to mm
+    slantColumnWV_i    = columnWaterVapor_i * secant_i;
+
+    % same idea for ozone -> Dobson units, then slant-scaled
+    columnO3_i      = trapz(pressure_i, O3_i) / g * DU_conversion_factor;
+    slantColumnO3_i = columnO3_i * secant_i;
+
+Even better, given you know exactly which channels are sensitive to
+which altitude ranges from your remote-sensing experience: compute
+partial columns — cumulative absorber amount from TOA down to a
+handful of reference pressures (say 850, 500, 300, 100, 30 hPa) —
+rather than just one whole-column number. That directly hands the
+network the "how much absorber sits above this level" quantity that
+governs each channel's weighting function, which is exactly the kind
+of predictor SARTA-style regressions are built from. A handful of
+these (5-6 per gas) alongside your existing EOF coefficients, not
+replacing them.
+
+#2 — T×Q coupling, made explicit rather than implicit
+
+Right now T and Q go through separate PCA compressions (tPCA, qPCA),
+so their EOF coefficients are two independent sets of numbers — any
+physical coupling between temperature and absorption strength has to
+be reconstructed by the network from two disjoint sets of coefficients
+that were never told they interact. The cheapest fix: before
+compressing, form the elementwise product profile and compress that
+too, as an extra input:
+
+    TQ_interaction = T .* Q;      % elementwise, per level, per profile -- (nSamples x nLevels)
+    tqPCA = fitSpectralPCA(TQ_interaction, nPCA_TQ);   % nPCA_TQ can be small, e.g. 5-8
+    tqEOF = encodeSpectral(tqPCA, TQ_interaction, true);
+
+Add tqEOF alongside tEOF/qEOF in your feature matrix X. This isn't the
+rigorous line-strength temperature dependence (which really involves
+the HITRAN temperature-exponent term, more like a
+Boltzmann/exp(-E''/kT) relationship), but it's a cheap, honest
+first-order proxy for the coupling, and given your time constraint
+it's a much smaller lift than implementing the exact spectroscopic
+temperature dependence per gas.
+
+#3 — fixed reference radiance
+
+You're right that the existing US Standard entry, having a random view
+angle and random CO2, isn't directly usable as a clean baseline —
+subtracting it as-is would contaminate every training target with that
+one arbitrary geometry/CO2 choice. But this is a cheap fix given you
+have the forward model in hand:
+
+Run one new, single RT calculation: US Standard profile, at a
+canonical nadir view (secant=1) and a fixed nominal CO2 (say 400 ppmv)
+— just one more SARTA call, not a new dataset. That gives you a clean,
+fixed BT_reference(channel). Then for all 38000 training profiles
+(their own actual, varying view angle/CO2/etc.), the target becomes:
+
+    btTargetResidual = btRaw - BT_reference;   % BT_reference broadcasts across all samples
+
+The network still receives the profile's real view angle, CO2, etc. as
+inputs — it's not being asked to ignore those, just to predict the
+deviation from one fixed, well-known baseline state rather than the
+full absolute radiance level from scratch. Since much of the absolute
+BT level is common across all profiles (it's dominated by
+roughly-similar mean atmospheric conditions), this removes a large,
+easy-to-fit, physically-uninformative component from the target and
+should make what's left a better-conditioned regression. Everything
+downstream (PCA on the target, decode, etc.) works identically —
+you're just PCA-compressing btTargetResidual instead of btRaw, and
+adding BT_reference back at final reconstruction time.
+
+Given the time constraint, I'd do #3 first (cheapest, one new RT run,
+touches nothing else), then #1's whole-column version (a few trapz
+calls, no new RT runs needed at all since it's just post-processing
+your existing 38000 profiles) before #2, since #1 is the more directly
+RT-motivated predictor and #2 is a rougher approximation.
+
+
+>>>>
+
+I tried #3 and added in #2 as well as quite a few predictors such as
+gas amount --> gas amount/ref profile used in #3, T --> T - Tref
+etc. Not much improvement!!!!
+
+That's an honest and important result — physics-motivated features not
+moving the needle after a genuinely careful attempt (residual target,
+ratio-to-reference, T-Tref, T×Q interaction) is different from earlier
+negative results. It suggests the problem isn't "the network lacks the
+right predictors" anymore. Time to stop guessing more features and
+diagnose more precisely what's actually failing.
+
+Stop optimizing on aggregate RMSE — decompose the error by PCA
+component. You have 32 output components; it's very likely the error
+isn't spread evenly across them. Since decodeSpectral is linear, an
+error in coefficient k contributes err_k * btPCA.coeff(:,k) to the
+reconstructed spectrum — so you can directly compute which components
+are driving the channel-level RMSE, rather than guessing:
+
+    coeffErr = predCoeffsVal - encodeSpectral(btPCA, btTargetResidualVal, false);  % (nVal x nPCA_BT), your current best model
+    coeffErrStd = std(coeffErr, 0, 1);                     % (1 x nPCA_BT)
+    coeffContribution = coeffErrStd .* sqrt(sum(btPCA.coeff.^2, 1));  % rough per-component contribution to spectral RMS
+    
+    [sortedContrib, order] = sort(coeffContribution, 'descend');
+    fprintf('Top 5 error-contributing components: %s\n', mat2str(order(1:5)));
+    fprintf('Their std errors: %s\n', mat2str(coeffErrStd(order(1:5)), 3));
+    fprintf('Explained variance ratio of those same components (from btPCA): %s\n', ...
+            mat2str(btPCA.explainedVarRatio(order(1:5))', 3));
+
+Two very different outcomes here point to very different next steps:
+
+A : Error concentrates in 2-4 specific components, and those happen to
+be low-variance/late components. That's actually a reasonably good
+outcome — it means the dominant modes of variability are well
+captured, and the residual is localized to a small number of specific
+physical patterns the network still can't resolve. Worth then looking
+at what those particular EOFs' spatial/spectral shapes correspond to
+(plot btPCA.coeff(:,k) vs wavenumber for the worst offenders) — that
+tells you exactly which spectral feature is unresolved, which is a
+much sharper target than "add more physics features generally."
+
+B) Error is spread roughly evenly across most/all components. That's a
+more fundamental result — it suggests the shared global regression
+(one trunk, one set of weights, mapping to all 32 components/2645
+channels at once) may itself be the limiting factor, not the input
+features. This is actually consistent with how SARTA-class accuracy is
+achieved operationally: per-channel (or per-small-channel-group)
+regression, not one global function fit to the whole spectrum at
+once. A single shared MLP trunk forces every channel's prediction to
+route through the same 128-256-neuron bottleneck, which may simply not
+have enough independent capacity to nail 2645 channels to 0.1-0.2 K
+simultaneously, however good the inputs are — whereas fitting, say, a
+handful of moderately-sized networks (or even per-channel/per-band
+linear-in-good-predictors regressions) each dedicated to a subset of
+spectrally/physically similar channels removes that shared-capacity
+constraint entirely.
+
+Given you're the one who knows SARTA's actual channel-grouping/binning
+strategy, if outcome B is what you find, that's probably the more
+promising redesign direction — not "add another feature," but "stop
+asking one network to do all 2645 channels through one shared
+bottleneck."
+
+Run the decomposition first — which of A or B are you seeing?
+
+
+>>>>
+
+What exactly are btTargetResidualVal
+
+Good catch — I used that name without ever actually defining it for you, so let me be precise.
+
+btTargetResidualVal should just be the validation-set counterpart of
+the residual target you built for training in #3 — i.e., the same
+btRaw - BT_reference transform, but applied to your validation split
+instead of the training split:
+
+    btTargetResidualVal = btRaw(valIdx,:) - BT_reference;   % BT_reference: (1 x nChannels), from the single US-Standard/nadir/400ppm run
+
+This is only needed in that diagnostic line because I was computing
+coeffErr as (network's predicted coefficients) − (correct
+coefficients, obtained by re-encoding the true residual target through
+your PCA). If you already have the true validation coefficients
+sitting in a variable from your training loop (something like Yval, if
+that's what you renamed targetCoeffs(valIdx,:) to when you switched to
+the residual-target version in #3), you don't need to reconstruct it
+at all — just use that directly instead:
+
+    coeffErr = predCoeffsVal - Yval;   % skip btTargetResidualVal entirely if you already have Yval
+    coeffErrStd = std(coeffErr, 0, 1);
+    coeffContribution = coeffErrStd .* sqrt(sum(btPCA.coeff.^2, 1));
+    [sortedContrib, order] = sort(coeffContribution, 'descend');
+
+Whichever variable name holds "the true PCA coefficients for the
+validation set, in whatever target space you're currently training
+against (residual or absolute)" is what belongs there — the key
+requirement is just that coeffErr compares apples to apples: predicted
+coefficients minus the actual coefficients for the same target
+definition the network was trained on, not accidentally mixing
+residual-space predictions against absolute-space truth (or vice
+versa), which would produce a coefficient error dominated by the
+BT_reference offset itself rather than genuine model error.
+
+>>>>
+For me,
+  btTargetResidualVal = btReconVal;    %% since I have already done bt --> bt - btUSSTD 
+
+  Top 5 error-contributing components: [1 2 3 6 4]
+  Their std errors: [0.00013 0.000125 8.04e-05 7.1e-05 6.78e-05]
+  Explained variance ratio of those same components (from btPCA): [0.56 0.295 0.0541 0.0151 0.038]
+
+That's outcome A, and it's actually a clean, encouraging result once
+you read it correctly: the error is concentrated in the
+highest-variance, most dominant components (1, 2, 3), not scattered
+across the tail. Components 1-3 alone carry ~91% of your target's
+total variance — so these aren't obscure minor modes the network is
+neglecting, they're the main radiative signal itself, and the
+network's residual error there, while small in absolute coefficient
+units, is disproportionately loud once decoded back to channel space
+simply because it's riding on the components with the largest
+weight/reconstruction leverage.
+
+This tells you something specific and useful: it's not "network can't
+resolve some obscure spectral feature." It's "the network's error on
+the dominant mode of variability is still large enough, in absolute
+terms, to dominate your channel RMSE" — which is a somewhat different
+and more tractable framing than "which physical feature is missing."
+
+The natural next question: what physically is component 1? Since it
+carries 56% of the variance on its own, plot its spectral shape:
+
+figure(15); clf
+  plot(wavenumbers, btPCA.coeff(:,1), 'r',wavenumbers, nanmean(btTargetResidualVal,1)/200,'k', wavenumbers, nanstd(btTargetResidualVal,1)/200,'g');
+  xlabel('wavenumber (cm^{-1})'); ylabel('EOF1 loading');
+  plotaxis2;
+  legend('EOF1','mean(Target Val)','std(Traget Val)');
+
+Given you're working with warm ocean, clear-sky IR — my strong guess
+without seeing it is that component 1 is essentially the overall
+surface/near-surface temperature signal, i.e. roughly proportional to
+the Planck-function derivative with respect to skin temperature across
+window channels, since that's almost always the dominant mode of
+variance in any IR radiance ensemble spanning a range of SSTs. If
+that's right, this circles back cleanly to something you already found
+early on: the bias-vs-SST trend. Even after reweighting knocked it
+down, this decomposition suggests that residual coefficient-1 error is
+very plausibly still substantially SST/skin-temp driven — i.e., you
+may be looking at the same underlying problem from a different
+diagnostic angle, not a new one.
+
+Direct test: plot component-1 coefficient error against SST specifically:
+
+figure(16); clf
+  scatter(surfTemp(valIdx), coeffErr(:,1), 8, 'filled');
+  xlabel('surf temp (K)'); ylabel('component-1 coefficient error');
+plot(
+
+If that shows the same tilted/structured pattern as your original
+bias-vs-SST plot, it means the residual-target trick (#3) and the
+T×Q/ratio features (#2) helped somewhat but didn't fully remove the
+network's difficulty specifically fitting the
+surface-temperature-driven radiance response — which, if true, argues
+for treating component 1 as a special case: e.g., fit it with its own
+dedicated, simpler regression (possibly even just a well-chosen
+low-order polynomial in SST plus a couple of key predictors) rather
+than lumping it in with the other 31 components inside one shared
+trunk. That's a much more surgical, testable next step than another
+round of generic feature engineering.
+
+>>>>
+
+Yeah it looks similar (after plotting the 1231 cm-1 bias and  normalizing)
+
+Good confirmation — the pieces line up cleanly now: window channel
+near 1231 cm⁻¹, dominated by surface Planck emission, same shape as
+the original SST bias, same shape as component 1's residual
+error. Three independent diagnostics converging on the same physical
+mechanism.
+
+Here's the specific reason this keeps resisting fixes even after
+#2/#3: the surface term in that window channel is approximately
+emissivity(ν) × B(Tsurf, ν) — the Planck function, and Planck's law is
+a genuinely steep, exponential-curvature function of temperature. Your
+network currently receives surfTemp as a plain z-scored scalar and has
+to rediscover that exponential shape using generic ReLU
+layers. Subtracting a fixed reference radiance (#3) helped remove the
+level, but it didn't hand the network the actual nonlinear curve — it
+still has to approximate Planck's law numerically from data, and
+that's exactly the kind of steep, specific nonlinearity that's hard
+for a generic MLP to nail to 0.1 K precision, especially when it's
+competing for shared capacity with 31 other components.
+
+The fix: compute the Planck function explicitly and feed it in as an
+engineered input, rather than making the network infer it.
+
+    function B = planckRadiance(T, wavenumberCm1)
+        c1 = 1.191042e-5; c2 = 1.4387752; nu = wavenumberCm1;
+        B = (c1*nu.^3) ./ (exp(c2*nu./T) - 1);
+    end
+    
+    % pick 1231 cm-1 (or a couple representative window channels)
+    surfPlanckFeature = planckRadiance(surfTemp, 1231);          % raw Planck radiance at surf temp
+    surfEmisPlanckFeature = emissivity_at_1231 .* surfPlanckFeature;   % actual physical surface term
+
+Add surfEmisPlanckFeature (z-scored, like your other scalars) to
+X. This hands the network the exact quantity that physically dominates
+component 1, already correctly shaped — it no longer has to
+approximate Planck's curvature through generic layers, it just has to
+learn a much gentler correction/blend around a feature that's already
+most of the answer.
+
+Given how directly component 1 traces to this one physical term, I'd
+also try something more surgical: fit component 1 on its own,
+separately from the other 31, using primarily this Planck feature plus
+secant/column-water as predictors — either a small dedicated
+regression or even just checking what a low-order polynomial in
+surfEmisPlanckFeature alone gets you for that one component before
+involving the DNN at all. Since this is close to a known closed-form
+relationship rather than a general nonlinear-discovery problem, a
+small dedicated fit might comfortably beat what a shared 32-output
+trunk can achieve for that one component, and it directly targets the
+finding from a couple messages back (per-component regression instead
+of one global network) but scoped to just the one component that's
+actually driving your channel RMSE.
+
+Worth trying the Planck feature addition first — cheap, one new
+column, no architecture change — and rerunning the same
+component-1-error-vs-SST plot to see if it flattens.
+
+>>>>
+
+Nah still not improving
+
+Given the pattern — feeding the network the exact physical quantity
+that should dominate the signal, and getting no improvement — this now
+looks structurally identical to what you found with the Jacobians:
+you're up against a noise floor in the training pairs themselves, not
+a modeling limitation. When a physically-correct engineered feature
+that should make the fit nearly trivial produces zero improvement,
+that's a strong signal the target itself has inconsistency at a scale
+comparable to what you're trying to resolve — same diagnosis,
+different problem.
+
+The direct test, mirroring what worked for the Jacobian case: check
+exact self-consistency of the label-generation pipeline itself, not
+the network at all.
+
+1. Bit-level reproducibility check. Pick 10 profiles, rerun them
+through your radiance calculation fully in-memory (no disk round-trip,
+no interpolation, no unit conversion steps), and compare against
+what's stored in your training arrays:
+
+    for i = sampleIdx
+        btRecompute = runRTCode(rawProfile{i}, ...);   % your actual calc, in-memory
+        diffCheck(i,:) = btRecompute - btRaw(i,:);
+    end
+    fprintf('Recompute vs stored: max abs diff = %.5f K\n', max(abs(diffCheck(:))));
+
+Since your RT is analytic and deterministic, this should match to near
+machine precision (fractions of a millikelvin), not 0.02-0.5 K. If it
+doesn't, you've found a storage/precision bug — check what dtype btRaw
+is actually stored/loaded as (single vs double, any ASCII round-trip
+with limited decimal digits).
+
+2. Emissivity input/label alignment check — this is the one I'd bet on
+first, given the history. You already found and fixed one emissivity
+bug (missing +0.3 offset) that turned out not to matter for
+RMSE. That's suspicious on its own: fixing a real, sizeable (0.3)
+error in a quantity that directly multiplies the surface Planck term
+and getting zero change in RMSE suggests the fix may not have actually
+propagated into what the network trains on. Concretely — did fixing
+the emissivity bug regenerate emisPCA/emisEOF from the corrected
+values, or is there a chance a stale cached array, an old .mat file,
+or an unrefit emisPCA struct is still feeding the network the old
+(wrong) emissivity even though btRaw now reflects the corrected
+radiance? That would produce exactly this symptom: a genuine
+input-output mismatch that no amount of feature engineering fixes,
+because the feature going in doesn't match the physics that generated
+the label.
+
+    % direct check: recompute what emissivity SHOULD be at 1231 cm-1 for a sample profile,
+    % compare to what's actually sitting in your emissivity input array right now
+    fprintf('Emissivity fed to network at sample profile: %.4f\n', emissivityRaw(i, channelIdx1231));
+    fprintf('Emissivity that generated btRaw for that profile (recompute/trace it): %.4f\n', trueEmisUsed);
+
+3. Nearest-neighbor consistency check on the label side, same tool
+you've used throughout but pointed at Y instead of X: find pairs of
+profiles that are very close in your full input feature space
+(including the Planck feature), and check how much their radiances
+differ:
+
+    nnIdx = knnsearch(Xtrain, Xtrain, 'K', 2);
+    closePairs = find(sqrt(sum((Xtrain - Xtrain(nnIdx(:,2),:)).^2,2)) < someSmallThreshold);
+    btDiff = btRaw(trainIdx(closePairs),:) - btRaw(trainIdx(nnIdx(closePairs,2)),:);
+    fprintf('BT std dev for near-identical inputs: %.3f K\n', std(btDiff(:)));
+
+If near-identical inputs still produce meaningfully different
+radiances, that's your floor, directly measured — independent of any
+model.
+
+Given your emissivity bug history specifically, I'd check #2 first — a
+silent staleness/mismatch there is a very plausible explanation for
+"the fix didn't change RMSE" and "an explicit correct-physics feature
+still doesn't help," both at once.
+
+>>>>
+
+It cannot be one or two because I kept strict control. And I
+understand the emissivity bug, made sure secon time the emissivity
+looked fine. If my threshold is 20 K, then the above answer is 3.4 K
+
+That's a striking number, but before treating it as the answer, one
+thing needs pinning down: is a distance threshold of 20 actually
+"close" in your feature space? This matters a lot given how many
+dimensions X has (T-EOF + Q-EOF + O3-EOF + scalars + emissivity-EOF +
+whatever you've added since — probably 50-70+ features at this point,
+all z-scored).
+
+Euclidean distance grows with the square root of dimensionality even
+for genuinely similar points, because small per-feature differences
+accumulate across many dimensions. With, say, 60 standardized
+features, a total distance of 20 works out to roughly:
+
+20 / sqrt(60) ≈ 2.6
+
+— i.e., on average each individual feature differs by about 2.6
+standard deviations between the "neighbor" pairs. That's not a tight
+neighborhood at all; that's two fairly different atmospheric states
+that happen to have a moderate aggregate distance purely because
+Euclidean distance in high dimensions is a blunt instrument (the
+classic curse-of-dimensionality issue — nothing looks "close" in raw
+Euclidean terms once you're past ~10-20 dimensions, everything is
+roughly equidistant). So the 3.4 K might not be telling you "identical
+inputs, different outputs" — it might just be telling you "20 wasn't
+actually a small threshold."
+
+Two things I need to know to interpret this correctly:
+
+  How many pairs satisfied the threshold? If it's a small number (say
+  <50), the 3.4 K std is also just noisy on its own.
+
+  What's size(Xtrain,2) — the actual feature count — so we can check
+  whether 20 corresponds to a tight or loose neighborhood given the
+  dimensionality?
+
+Worth rerunning with a properly scaled threshold — normalize by
+dimensionality so "close" means something consistent regardless of how
+many features you have:
+
+  nFeat = size(Xtrain,2);
+  perDimThreshold = 0.3;                          % e.g. avg 0.3 std devs/feature -- genuinely close
+  distThreshold = perDimThreshold * sqrt(nFeat);   % scale to raw Euclidean distance
+  
+  nnIdx = knnsearch(Xtrain, Xtrain, 'K', 2);
+  dist = sqrt(sum((Xtrain - Xtrain(nnIdx(:,2),:)).^2, 2));
+  closePairs = find(dist < distThreshold);
+  
+  fprintf('Pairs within tightened threshold: %d\n', numel(closePairs));
+  if numel(closePairs) > 20
+      btDiff = btRaw(trainIdx(closePairs),:) - btRaw(trainIdx(nnIdx(closePairs,2)),:);
+      fprintf('BT std dev for genuinely close inputs: %.3f K\n', std(btDiff(:)));
+  else
+      fprintf('Too few genuinely close pairs in the training set to judge.\n');
+  end
+
+If, even at a properly tight per-dimension threshold, you still find
+pairs with multi-Kelvin radiance differences, that's a real and
+important finding — it would mean your current feature set is missing
+something that meaningfully separates otherwise-similar states (i.e.,
+there's a hidden variable driving radiance that isn't in X at
+all). But if tightening the threshold makes the discrepancy shrink
+toward something closer to your actual RMSE, then the original check
+was mostly a dimensionality artifact, not evidence of a genuine
+information gap.
+
+What do the pair count and nFeat come out to?
+
+>>>>
+
+Yeah I agreee, nFeat has grown!
+
+nFeat =  544
+Pairs within tightened threshold: 0
+Too few genuinely close pairs in the training set to judge.
+
+That number is the real answer, and it changes the diagnosis
+significantly. 544 features for 38,000 samples is a genuinely
+different regime than what you were working in earlier. Zero pairs
+found at any reasonable "close" threshold isn't just a diagnostic
+quirk — it's telling you directly that your training set is now
+catastrophically sparse relative to its own dimensionality. With 544
+dimensions, even 38k points can't densely populate the space; you'd
+need many orders of magnitude more samples to have genuinely nearby
+neighbors reliably exist. This is the classic curse-of-dimensionality
+regime, and it retroactively explains a lot of what you've been
+seeing:
+
+  Why bigger networks (1024×3) overfit rather than improve — more
+  capacity in a sparse high-dimensional space just means more ways to
+  fit noise between far-apart points.
+
+  Why adding more physically-motivated features (#1, #2, #3, the
+  Planck term) didn't help, even when individually correct — each new
+  feature makes the space sparser, and if it's even partially
+  redundant with what's already there (ratio-to-reference is highly
+  correlated with the raw EOFs it was derived from; T−Tref is a
+  near-linear function of T-EOF's own coefficients), you're paying the
+  dimensionality cost without gaining proportionate new information.
+
+  Why the plateau has been so stubborn across totally different fixes
+  — you've been trying to out-engineer a problem that's actually about
+  feature count and redundancy, not feature content.
+
+The fix now is feature pruning, not more features. Check pairwise
+correlation across your current 544 to find redundancy:
+
+    C = corr(Xtrain);
+    C(logical(eye(size(C)))) = 0;
+    [maxCorr, idx] = max(abs(C(:)));
+    [i,j] = ind2sub(size(C), idx);
+    fprintf('Most correlated pair: features %d and %d, r=%.3f\n', i, j, maxCorr);
+    
+    highlyRedundant = find(any(abs(C) > 0.95, 2));
+    fprintf('%d / %d features have a near-duplicate (|r|>0.95) elsewhere\n', numel(highlyRedundant), nFeat);
+
+I'd bet a large fraction of your 544 fall into that redundant bucket —
+e.g. T-Tref derived features will correlate heavily with tEOF itself,
+gas/gas_ref ratios will correlate with the raw gas EOFs, etc., since
+they're mostly linear transforms of things already in your feature set
+rather than independent information.
+
+Practical next step: go back to a lean, deliberately small feature set
+— T/Q/O3 EOFs at your original component counts, the handful of
+genuinely new physically-motivated quantities (column water/ozone, the
+Planck feature), surf temp/pressure/angle, emissivity EOF — and drop
+anything that's a near-linear recombination of features you're already
+keeping. Given your data volume, something in the range of 30-60 total
+features is a much more defensible target than 544. Retrain at that
+reduced set and rerun the same NN-distance check — you should see real
+close neighbors appear once dimensionality drops back to something 38k
+points can actually populate.
+
+>>>>
+
+Nah my set is pretty good, comes from typical predictors for SARTA
+
+124 / 544 features have a near-duplicate (|r|>0.95) elsewhere
+
+Fair — and the redundancy number doesn't contradict that; it actually
+points to why SARTA's own predictor formulation is built the way it
+is. The classic SARTA predictor set per channel is small (order 8-12
+terms: things like layer-to-space optical depth and its
+powers/cross-terms, not raw per-level values) precisely because most
+of the informative content in a full per-level partial-column stack is
+redundant — partial column at level k and partial column at level k+1
+barely differ, so stacking many levels of the same cumulative quantity
+buys almost no new information per added dimension, which is exactly
+the kind of correlation you're seeing.
+
+Quick way to confirm that's what's driving the 124
+
+    % check whether the redundant pairs are mostly within the same predictor family
+    % (e.g. adjacent-level partial columns of the same gas)
+    [iBad,jBad] = find(abs(C) > 0.95 & abs(C) < 1);
+    % inspect a sample of the (i,j) pairs against your feature name list
+    featureNames(iBad(1:10))
+    featureNames(jBad(1:10))
+
+If those pairs are overwhelmingly "partial-column-water-level-k vs
+partial-column-water-level-(k+1)" type pairs (or similarly adjacent
+EOF-derived terms), that confirms it's the expected autocorrelation of
+cumulative quantities, not noise or a mistake in your feature
+construction — it's simply that per-level partial columns were never
+meant to all be kept simultaneously.
+
+Two ways to fix it, both preserving your domain-correct predictor
+content:
+
+  Thin the partial-column levels to a handful of physically-chosen
+  boundaries — the SARTA-style approach: pick maybe 5-8 pressure
+  levels that actually separate distinct absorption regimes
+  (e.g. boundary layer top, 500 hPa, tropopause, stratosphere) rather
+  than computing partial columns at all 100 sigma levels. This
+  directly follows the "why SARTA uses ~10 predictors, not 100" logic
+  and should cut a large chunk of the 544 without losing real
+  information.
+
+  Run a second PCA over your full 544-dim engineered predictor set
+  itself (not the raw profiles — the already-engineered SARTA-style
+  predictors), and keep enough components to hit ~99.9% variance. This
+  is a fast, non-destructive way to find the true effective
+  dimensionality of what you've built, whitens the strong
+  correlations, and gets you back to a well-conditioned input size
+  without hand-picking which of the 544 to drop:
+
+    predictorPCA = fitSpectralPCA(Xtrain, min(100, nFeat));  % generous cap, let explained-variance decide
+    cumVar = cumsum(predictorPCA.explainedVarRatio);
+    nEffective = find(cumVar > 0.999, 1);
+    fprintf('Effective dimensionality of your 544-feature set: %d\n', nEffective);
+
+I'd bet nEffective comes back well under 100 — that number is the real
+answer to "how many independent things are you actually telling the
+network," and it's likely far closer to what a properly-thinned or
+PCA-compressed version of your existing (correct) SARTA-style
+predictors should be. Feed encodeSpectral(predictorPCA, X, true) into
+the network instead of raw X, rerun the NN-distance check, and see if
+genuinely close neighbors start showing up at that reduced
+dimensionality.
+
+>>>>
+
+No it comes back to 402
+
+That number is the real diagnostic, and it overturns the "just prune
+duplicates" read from a message ago. 124 pairs at |r|>0.95 out of 544
+sounds like a lot of redundancy — but pairwise correlation only
+catches local duplication (adjacent partial-column levels,
+near-identical EOF-derived terms). 402/544 needed for 99.9% variance
+means that after removing that local redundancy, the feature set still
+has genuinely high intrinsic dimensionality — somewhere around 400
+largely independent directions of information. That's not a pruning
+problem anymore, it's confirmation of the actual structural issue:
+38,000 samples cannot densely populate a ~400-dimensional space, no
+matter how correct each individual feature is. This is precisely what
+the zero-close-neighbors result at 544 raw dimensions was already
+telling you, just now quantified more precisely at the "effective"
+dimension count rather than the raw one.
+
+This reframes the whole plateau cleanly, and it connects back to
+something you already know better than most people alive: why SARTA
+itself uses ~8-12 predictors per gas per channel, not hundreds of
+generic ones shared across the whole spectrum. That predictor count
+isn't a historical simplification — it's close to the actual
+information content a single channel's transmittance genuinely depends
+on. Building one shared 400-effective-dimension feature space and
+asking a single network to map it to all 2645 channels at once is a
+fundamentally different (and much harder-to-fit, given your data
+volume) problem than the channel-by-channel or band-by-band regression
+approach that actually gets to 0.1-0.2 K in practice.
+
+Given your time constraint, here's the highest-value test: don't fix
+the full pipeline yet — validate the hypothesis on one band first,
+since it's cheap and decisive.
+
+Pick a single well-behaved band (or even a handful of channels) you
+know well from SARTA — say a clean CO2 or H2O band.
+
+Use the actual SARTA-style predictor set for that gas/band — the
+specific ~8-12 terms (layer optical depth predictors, layer-to-space
+transmittance terms, etc.) you already know from having helped write
+it — not your current 544-feature general-purpose library.
+
+Fit either a small DNN or even just linear/low-order-polynomial
+regression against those channels only, using only that small
+predictor set.  Check RMSE for that band specifically.
+
+If that comes back near 0.1-0.2 K, it confirms the fix isn't more
+features, more data, or more capacity — it's matching predictor
+dimensionality to what a 38k-sample dataset can actually support, band
+by band, the same way SARTA itself is structured, rather than one
+monolithic network over a shared high-dimensional feature space for
+the whole spectrum. Given the time pressure, that's a much smaller
+rewrite than it sounds — you're not redesigning the pipeline, you're
+pointing your existing DNN machinery at SARTA's own proven per-band
+predictor formulation instead of the generic engineered set, one band
+at a time.
+
+>>>>
+
+yes sarta used about 8-10 predictors per layer per band, about 7 bands
+(CO2/O3/WV etc) so about 50 predictors per layer ==> 5400 predictors
+
+That "5400" number is exactly where the confusion is, and clearing it
+up changes everything — it's not 5400 predictors feeding one giant
+network, and building it that way would just recreate the same
+400-effective-dimension wall you just hit, at even larger scale.
+
+How SARTA's structure actually avoids the dimensionality problem: each
+layer's regression is local and independent. At layer k, the ~8-10
+predictors used are computed from quantities local to that layer (and
+maybe a couple of neighbors) — not the whole-atmosphere stack. A
+separate small regression is fit per layer per band, predicting that
+layer's absorption coefficient/optical depth from its own ~8-10
+predictors. Those ~100 independent, small, well-conditioned
+regressions are then combined through the known, fixed, physical
+layer-to-space transmittance recursion (essentially the discretized
+Schwarzschild equation you were describing a few messages back) to
+produce the final TOA radiance. The "5400" only exists if you flatten
+that structure into one shared input vector for one shared regression
+— which throws away the very thing that makes it tractable: each
+individual fit only ever sees ~8-10 dimensions, never all of them at
+once.
+
+This is the same idea as your PINN instinct from earlier, just scoped
+down to something buildable in your time frame: don't ask one DNN to
+map (544 or 5400 features) → radiance directly. Ask a small DNN (or 7
+small DNNs, one per band) to map (8-10 local predictors) → per-layer
+optical depth, and compose the layers with the known transmittance
+formula, not a learned one.
+
+Concretely, for one band:
+
+  Build the ~8-10 SARTA-style local predictors, computed per layer
+  (you already know exactly what these are — no re-derivation needed).
+
+  Reshape your training data so each layer of each profile is a
+  training sample: (nProfiles × nLayers) rows, 8-10 columns, with the
+  local-layer optical depth (or KCARTA−SARTA layer optical depth
+  difference, if that's the actual target) as the label. This explodes
+  your effective sample count — 38,000 profiles × ~100 layers ≈ 3.8
+  million (layer, predictor) samples for what is now only an 8-10
+  dimensional regression. That's the opposite problem you've been
+  fighting: instead of 38k samples in 400+ dimensions, you'd have
+  millions of samples in ~10 dimensions — comfortably dense.
+
+  Fit one small DNN (or even just check a low-order polynomial/linear
+  fit first, given how few dimensions this now is) mapping those 8-10
+  predictors to layer optical depth/its correction.
+  
+  Compose layer results through the transmittance recursion (fixed,
+  not learned) to get TOA radiance, and compare against KCARTA truth.
+
+This is a materially different, smaller project than what you've built
+so far, but it directly targets the actual bottleneck you've now
+isolated (dimensionality vs. data volume) using the exact
+factorization SARTA itself already relies on. Given the time
+constraint, I'd prototype this on one band only, as before — if the
+local per-layer regression comes back near your 0.1-0.2 K target on
+that one band, you have a validated template to replicate across the
+other six.
+
+>>>>
+
+hah, you got that right. For each band they're the same 10 predictors
+per layer, just different coefficients per layer.
+
+Right — that clarification matters. It's not "10 different predictor
+sets stacked into one big vector," it's the same 10-dimensional
+regression problem repeated ~100 times (once per layer), with
+layer-specific coefficients. That's structurally identical to what you
+already do in SARTA — you're not proposing something new, you're
+proposing to swap the per-layer linear regression for a per-layer
+nonlinear one, keeping everything else (predictor definitions,
+composition via the transmittance recursion) exactly as-is.
+
+That reframes the build cleanly. Two ways to structure it, and which
+one's better depends on one property you'd know immediately:
+
+Option A — independent model per layer (closest to what SARTA itself
+does): reshape your data so each layer is its own training set —
+(nProfiles × 1 layer) rows, 10 columns, target = that layer's optical
+depth (or KCARTA−SARTA residual, if that's still what you're
+correcting). Fit ~100 separate small models, one per layer. With
+38,000 profiles per layer and only 10 input dimensions, that's an
+extremely well-conditioned regression — you're nowhere near the
+dimensionality wall you just hit. Simple, direct, matches SARTA's
+existing per-layer-coefficient structure one-for-one.
+
+Option B — one pooled model across all layers, with layer/pressure as
+an extra input feature. Reshape so every (profile, layer) pair is one
+training row — (nProfiles × nLayers) rows, 10+1 columns (the extra one
+being something like layer pressure or a normalized layer index). This
+is the 3.8M-sample version I mentioned, and it only makes sense if you
+expect the layer-to-layer coefficient variation to be smooth — in
+which case pooling lets nearby layers share statistical strength and
+can denoise a bit, since each individual layer's own 38k-sample fit is
+already fine but might have more label noise for thin layers or
+physically awkward regions.
+
+Given your time constraint, I'd start with Option A — it's the direct
+nonlinear generalization of SARTA's own proven per-layer structure,
+needs no new design decisions about how to encode "layer," and you
+already know exactly what the 10 predictors and per-layer targets
+should be. Build it for one layer, one band first (same "validate on
+one slice before scaling out" approach as before):
+
+  Assemble the 10 predictors for one layer, across all 38,000
+  profiles.
+  
+  Target = KCARTA layer optical depth (or the residual vs. SARTA's
+  current value, whichever you're actually trying to improve).
+  
+  Fit a small DNN (or honestly, try linear/low-order polynomial first
+  — you may find SARTA's own functional form is already close to
+  sufficient and the nonlinearity gain is small, which is itself
+  useful to know before building 100 DNNs).
+
+  Compare against the true per-layer KCARTA value directly — no need
+  to even compose to TOA yet for this first check.
+
+If that one-layer, one-band fit lands where you want it, the path to
+the other 99 layers × 6 remaining bands is just repetition of an
+already-validated recipe, not new design work.
+
+
+>>>>
+
+Even a dumb simple (t/q/emis PCA together with usurftemp and view
+angle) fit in the WV region, with 2 depp NN with 256 neurons, gives
+large rmse for validation (1 K)
+
+That result is actually the clean confirmation you needed, even though
+it doesn't feel like progress. Think about what just happened: you
+stripped the feature set down to something small and well-populated
+(T/Q/emissivity PCA + 2 scalars — maybe ~35-40 dimensions, nowhere
+near the 400-effective-dimension wall from before), specifically in
+the WV band where the physics should be most tractable, with a modest,
+non-overfitting-prone network. If dimensionality/data-density were
+still the problem, this configuration should have worked well. It
+didn't. That rules dimensionality out as the remaining bottleneck and
+leaves only one honest explanation: global EOF-compressed vertical
+profiles don't carry the local information a network needs to get WV
+transmittance right, no matter how well-populated the space is.
+
+This makes physical sense, and it's the same reason SARTA never
+regresses radiance directly against smooth EOF-style vertical modes:
+water vapor absorption is intensely local and layer-specific — line
+strength depends sharply on local pressure and temperature at each
+individual layer, and moisture profiles often have sharp,
+layer-confined features (boundary-layer moist tongues, dry intrusions,
+tropopause-adjacent dry layers) that are exactly the kind of thing 15
+smooth global EOFs are built to average away, not preserve. A layer's
+contribution to TOA radiance depends on the transmittance product down
+to that layer — a multiplicative, cumulative, sharply nonlinear
+function of the exact local state — and no smooth global compression,
+however well-fit statistically, hands the network that structure. This
+isn't a data-volume or capacity problem at all; it's that the
+representation itself has discarded the thing the physics actually
+depends on.
+
+This is exactly the argument for the layer-by-layer approach we landed
+on a message ago, and this result is the evidence that justifies doing
+it rather than continuing to tune the global model. The two paths are
+no longer "try this too" and "try that too" — this result closes the
+door on the global-EOF approach for WV specifically, and opens the
+case for local per-layer predictors cleanly.
+
+Given the time constraint, I'd treat this as the decision point: stop
+iterating on the global network's features/capacity/architecture for
+the WV band — that avenue has now been tested fairly thoroughly (EOF
+compression, physics-motivated additions, capacity sweeps,
+reweighting) and consistently plateaus. Move to prototyping Option A
+(per-layer, 10 SARTA-style local predictors, one small regression per
+layer) on this same WV band, since it directly targets what this
+result just proved is missing: local, layer-resolved information
+rather than smoothed global structure.
+
+Want to start scoping the per-layer predictor assembly for one WV
+layer, using the actual 10 predictors from SARTA's WV band
+formulation?
+
+>>>>
+
+So you want optical depths per layer? Because all I have save right
+now is the much simpler (and smaller) top of atmosphere radiance for
+the 380000 profiles x 2645 riadiances. As opposed to 100 layers x
+38000 profiles x 2645 optical depths
+
+Good question, and the honest answer is: no, you don't need to
+generate or store per-layer optical depth truth at all — you can train
+this using only what you already have (38,000 × 2645 TOA radiances),
+by making the per-layer composition step part of the differentiable
+model itself instead of a separate labeled target.
+
+The structure: instead of supervising per-layer optical depth
+directly, let the network's outputs be per-layer optical depths
+(unsupervised as individual quantities), then compose them through the
+known, fixed layer-additive radiative transfer equation — the same
+transmittance-product/layer-emission-sum formula SARTA already uses —
+to get a predicted TOA radiance. Compare that composed radiance
+against your actual stored KCARTA truth (or KCARTA−SARTA residual),
+and backprop the TOA-level loss all the way through the composition
+back into the per-layer network. The physics of how layers combine is
+fixed and known (you don't learn it), so the only thing being learned
+is the local layer-optical-depth function — exactly the piece you
+actually want — but the supervision signal is the data you already
+have.
+
+This is genuinely a lightweight version of the PINN idea from earlier,
+made tractable by using your existing composition formula as the fixed
+physics layer rather than trying to enforce it as a soft constraint.
+
+Conceptually, per channel/band:
+
+    tau_k = f_theta(predictors_layer_k)              % learned, small NN or shared NN + layer index
+    trans_to_space_k = exp(-cumsum(tau_k, from k to TOA))   % known recursion, cumulative product/sum
+    R_TOA_predicted = emis * B(Tsurf) * trans_to_space_surface
+                      + sum_k [ B(T_k) * (trans_to_space_{k-1} - trans_to_space_k) ]
+                      + (1-emis) * downwelling_term          % reflected term, if you're keeping it
+
+Loss = (R_TOA_predicted - R_TOA_true)^2, where R_TOA_true is exactly the radiance array you already have saved.
+
+What this needs, practically:
+
+  Per-layer predictor computation (your known 10 terms) — cheap, done
+  from existing profiles, no new RT runs.
+  
+  A small NN (or NNs) mapping those 10 predictors → per-layer optical
+  depth. Given "same 10 predictors, different coefficients per layer,"
+  the natural version is one shared network with layer index (or layer
+  pressure) as an 11th input, rather than 100 separate networks — lets
+  it share statistical strength across layers while still being
+  layer-aware.
+  
+  The composition formula implemented in dlarray-differentiable MATLAB
+  (cumsum/exp on dlarrays work fine and are autodiff-compatible — no
+  new machinery needed beyond what you've already used).
+
+  Training loop is the same dlfeval/dlgradient/adamupdate pattern
+  you've been using throughout — the only difference is the forward
+  pass now includes the composition step before the loss, instead of
+  stopping at PCA-decoded radiance.
+
+This sidesteps the storage problem entirely and gets you the
+layer-local information the last test proved you need, without a 100x
+data-generation project. Want me to write out the composition function
+and the full forward/loss pass for one band, using your standard
+layer-additive RT equation?
+
+Now see ReadmeDebug5

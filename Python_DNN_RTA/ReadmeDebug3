@@ -1,0 +1,885 @@
+>>>>
+
+I have not done augmentation yet. But I subsetted the profiles to be
+over ocean only (so emissivity varies by small amounts). That did not
+really make any improvements. In fact it showed a bias that depends
+mostly on surf temp (increasing slowly from 0.5 to 1.5 K, as surf temp
+increases from 230 K to 320 K ... yeah I know, the former should have
+ice but whatever). SO that gives a rmse of about 1 K
+
+That's a really informative result — a bias that grows monotonically
+and directionally with surface temperature (not just noisier at the
+extremes, but consistently biased in one direction) points at
+something different from pure random sparsity: this looks like
+regression-to-the-mean / shrinkage bias, a known behavior of
+MSE-trained regressors when the training distribution is imbalanced
+across a variable. When examples are sparse at one end of a range, the
+network — trained to minimize average squared error — has an incentive
+to pull its predictions at those sparse points toward the bulk of the
+distribution rather than fully committing to the correct extreme
+value, because doing so reduces average loss over the (much larger)
+dense middle even at some cost to the rare tails. That produces
+exactly this signature: small bias near the population mean, growing
+steadily as you move away from it.
+
+Your own aside — "230 K should have ice, but whatever" — is the
+tell. That means your ocean-only subset likely contains synthetic
+combinations (very cold SST paired with open-water emissivity) that
+are physically rare or nonexistent in reality, so there are
+correspondingly few training examples there. Same likely story at 320
+K — real open ocean essentially never gets that warm, so that's also a
+thin tail. Restricting to ocean-only may have actively worsened this
+too — cutting your training set down to a subset removes examples that
+might otherwise have helped interpolate across that range, so you
+traded away sample density in exchange for isolating the emissivity
+variable, and the SST-tail sparsity that was always somewhat present
+became more exposed.
+
+Quick check to confirm the density story before doing anything else:
+
+    figure; histogram(surfTemp(trainIdx), 30);
+    xlabel('surface temperature (K)'); ylabel('count');
+
+If that histogram shows a big dropoff below ~260 K and above ~305 K
+(physically expected for real ocean), that confirms it directly — your
+bias-vs-SST trend should visually track the inverse of this density
+curve.  Second thing worth ruling out, since it's cheap to check and
+could be compounding this: did you refit
+ProfileNormalizer/fitScalarStats/btPCA specifically on the ocean-only
+subset, or are you reusing stats fit on the original mixed land+ocean
+set? If the latter, the mean-subtraction in your z-scoring is now
+off-center relative to this subset's actual distribution, which can
+itself introduce a systematic offset. Quick check: compute mean
+predicted vs. mean true BT right at the population's median SST (not
+the tails) — if there's already a nonzero bias there, that's a
+stats-mismatch problem layered on top of the shrinkage effect; if bias
+is ~0 at the median and only grows toward the extremes, it's purely
+the density story.
+
+Given this diagnosis, the fix is the same one you were already
+planning — augment the sparse tails — but now you have a much sharper,
+evidence-backed target: specifically add training examples in the SST
+ranges the histogram shows are thin, rather than guessing. That also
+argues for reconsidering the ocean-only restriction — if you can,
+augmenting the original mixed dataset's sparse SST regions (using
+whatever real diversity you have access to, land or ocean, even if
+emissivity varies) may serve you better than working from a
+deliberately shrunk subset, unless you specifically need an ocean-only
+model for other reasons.  Does the SST histogram show the dropoff at
+the tails the way this predicts?
+
+>>>>
+
+Everything is redone. And yes there are far fewer < 273 K or > 305 K samples. I can quikly rerun and test
+
+Good — that's the right thing to test next, and worth being deliberate
+about what you check when you rerun, since this diagnosis makes a
+specific prediction you can falsify.  Before touching the data at all,
+it's worth trying one cheap thing first that directly counters
+shrinkage bias without needing new profiles: weight the loss by
+inverse sample density in SST (or bin count), so the network is
+penalized more for getting sparse-region predictions wrong, which
+pushes back against the "safe toward the mean" incentive that MSE
+otherwise creates:
+
+    nBins = 20;
+    edges = linspace(min(stempTrain), max(stempTrain), nBins+1);
+    [counts, ~, binIdx] = histcounts(stempTrain, edges);
+    sampleWeight = 1 ./ counts(binIdx)';        % inverse frequency
+    sampleWeight = sampleWeight / mean(sampleWeight);
+
+Then apply sampleWeight per-sample in the loss (weight each row's
+squared error before averaging across the batch — same mechanism as
+the per-component weighting from a while back, just applied per-sample
+instead of per-PCA-component). This is a same-data fix — worth trying
+before or alongside augmentation, since it's basically free to test
+and tells you how much of the bias is a training artifact (fixable by
+reweighting) versus a genuine information gap (only fixable by adding
+real data at those SSTs).
+
+If you do rerun with real augmented/reweighted data, the specific
+thing to check is whether the bias-vs-SST slope flattens, not just
+whether overall RMSE drops — a lower average RMSE with the same tilted
+bias pattern would mean you improved the dense middle without touching
+the actual shrinkage problem. Replot bias vs. SST specifically, same
+as before.
+
+Given you can quickly rerun — try the inverse-density sample weighting
+first since it needs no new data and directly targets the exact
+mechanism (MSE shrinkage) that the SST histogram + bias pattern points
+to. If that alone flattens the slope, you may not need augmentation at
+all for this particular symptom; if it only partially helps, that
+tells you how much of the remaining gap is a true information deficit
+versus a training-emphasis one.
+
+>>>>
+
+Where do I apply the weighting?
+
+Three changes to your loop: precompute per-sample weights once before
+training starts, slice out the batch's weights alongside Xb/Yb, pass
+them into modelGradients, and use them inside the loss instead of a
+plain mean. Here's exactly where each piece goes:
+
+Before the training loop (once, using trainIdx/stempTrain from before):
+
+    nBins = 20;
+    edges = linspace(min(stempTrain), max(stempTrain), nBins+1);
+    [counts, ~, binIdx] = histcounts(stempTrain, edges);
+    sampleWeightTrain = 1 ./ counts(binIdx)';
+    sampleWeightTrain = sampleWeightTrain / mean(sampleWeightTrain);   % (nTrainSamples x 1)
+
+Inside the batch loop — add one line right after Yb:
+
+    Xb = dlarray(single(Xtrain(batchIdx,:))', 'CB');
+    Yb = dlarray(single(Ytrain(batchIdx,:))', 'CB');
+    Wb = dlarray(single(sampleWeightTrain(batchIdx))', 'CB');   % (1 x batch) -- NEW
+    
+    [loss, grads] = dlfeval(@modelGradients, params, Xb, Yb, Wb, iHidden);   % Wb added
+
+Finally modify function modelGradients.m
+    function [loss, grads] = modelGradients(params, X, Y, W, iHidden)
+        Ypred = forwardMLP(params, X, iHidden);
+        err2 = (Ypred - Y).^2;              % (nPCA_BT x batch)
+        err2 = err2 .* W;                    % W broadcasts (1 x batch) across all nPCA_BT rows
+        loss = mean(err2, 'all');
+        grads = dlgradient(loss, params);
+    end
+
+That's the whole change. Validation loss stays exactly as you have it
+(plain mean, unweighted) — you want val loss to reflect true,
+unweighted average error so it's still a fair report of real-world
+performance; only the training objective should be reweighted, not the
+metric you judge it by.
+
+One check worth doing once this runs: watch train loss more carefully
+now — it may look "worse" than before at first, since you're now
+explicitly penalizing the rare-SST samples harder, which naturally
+pulls average training loss up even while the extremes get more
+accurate. That's expected and not a red flag on its own; the thing to
+actually look at is whether the bias-vs-SST plot flattens, same as
+before, not whether the raw MSE number went up or down.
+
+>>>>
+Done the wwighting ... but I'd say a small improvement, not much.
+
+A small gain from reweighting is itself informative, not just a
+disappointing result: it tells you the problem is mostly a genuine
+information deficit, not a training-emphasis problem. Reweighting only
+changes how hard the network tries to fit the examples it already has
+— it can't manufacture information that isn't there. If it barely
+moved the needle, that says the sparse-SST examples you do have aren't
+sufficient to pin down the correct mapping, no matter how much the
+loss function insists on them. That points you back toward
+augmentation as the primary lever, which is where you were already
+headed — this result is confirmation, not a dead end.
+
+One thing worth checking before you spend RT-code budget on
+augmentation, though: is there a physical variable missing from your
+inputs that correlates with SST in your dataset? The classic one for
+ocean scenes specifically is surface wind speed — ocean emissivity
+(and its angular dependence) is a real function of wind speed via
+sea-surface roughness/foam, not just SST, in physically-based ocean
+emissivity models (IREMIS-type, FASTEM, etc.). If your RT code's
+underlying emissivity model used wind speed to generate the training
+labels, but wind speed isn't one of your network's inputs, then two
+profiles with identical (T, Q, O3, SST, view angle) but different wind
+speed would have different true radiances that your network has no way
+to distinguish — which shows up as exactly this kind of residual
+bias/noise, and no amount of augmentation or reweighting fixes it,
+since the missing variable is what's actually needed. Worth a quick
+check: does your RT code take wind speed as an emissivity input, and
+if so, is it in your feature vector?
+
+If wind speed (or something similar) checks out as included, then
+augmentation targeting the confirmed-sparse SST bins is the right next
+move — and worth doing together with the reweighting you already have,
+not instead of it. They attack different parts of the same problem:
+reweighting maximizes what the network extracts from the sparse
+examples that exist, augmentation adds more of them. Combined, you'd
+expect a bigger effect than either alone.
+
+Is wind speed (or an equivalent roughness-related variable) part of
+your input set right now?
+
+>>>>>
+
+Yes it is!
+
+Good to know — but there's a subtlety worth checking: is wind speed
+included as an explicit scalar input to the network, or only
+implicitly present through the compressed emissivity spectrum
+(emisEOF)? Those aren't the same thing, and the difference likely
+matters here.
+
+If wind speed only enters via the emissivity spectrum you feed in, the
+network has to recover wind speed's effect indirectly from an
+8-component PCA compression of a spectrum where — by your own
+description — the wind-speed-driven variation is small ("emissivity
+varies by small amounts" over your ocean-only subset). That's a
+genuinely hard ask: view angle also affects the emissivity spectrum's
+shape, and angle's effect is typically much larger than wind speed's
+subtle roughness/foam contribution. If angle dominates the first few
+PCA modes, the wind-speed signal can end up thinned out or partially
+discarded in the components you kept, especially at only 8. So even
+though wind speed technically went into generating the labels, the
+network may not have a clean, direct channel to actually use it.
+
+Two things worth checking:
+
+  Is wind speed correlated with SST in your training set? If
+  cold-water cases in your data tend to be windier (physically
+  plausible — storm tracks, high-latitude conditions), then the
+  bias-vs-SST pattern you found earlier could partly be a wind-speed
+  effect wearing an SST costume — confounded rather than purely an
+  SST-density problem.
+    corr(surfTemp(trainIdx), windSpeed(trainIdx))
+
+  Add wind speed as its own explicit scalar input (alongside surf
+  temp, surf pressure, view angle), not just baked into the emissivity
+  spectrum:
+
+    scalarNames = {'surfTemp','surfPressure','viewAngleSecant','windSpeed'};
+
+This gives the network a direct, unlossy path to that variable rather
+than asking it to reconstruct a subtle effect from a truncated
+spectral compression. Cheap to test — same architecture, one more
+input column — and worth trying before or alongside the augmentation
+work, since if this closes part of the gap, it means some of what
+looked like "not enough data" was actually "the information exists but
+isn't reaching the network cleanly."
+
+Worth plotting bias vs. wind speed directly too, same way you did for
+SST, once it's in as an explicit input — that'll tell you fairly
+quickly whether this was a meaningful piece of the puzzle or a minor
+contributor.
+
+>>>
+
+Only implicily present in computed emissivity which is sent it to the EOF code
+Is corr R^2? I assume it is R, since it is -0.11
+
+ nanlinearcorrelation(p.stemp(trainIdx), p.wspeed(trainIdx))
+ nanlinearcorrelation.m : r,chisqr,numptsIN    = -0.107717     257766.609375       16875
+                        : polyfit   y = (-0.024415 +/- 0.001735) x + (13.002007 +/- 0.501012)
+ or
+ corr(p.stemp(trainIdx)', p.wspeed(trainIdx)')
+   -0.1077
+
+Right — MATLAB's corr returns Pearson's r, not R². So -0.11 is the
+correlation coefficient itself, and R² would be 0.0121 — meaning wind
+speed explains only about 1.2% of the variance in SST across your
+training set. That's a weak relationship, essentially negligible. Good
+news in one sense: it rules out the "wind speed and SST are
+confounded, so the SST bias pattern is secretly a wind-speed effect"
+hypothesis. They're behaving as close to independent variables in your
+dataset, so the bias-vs-SST trend you found is very likely real and
+specifically SST-related, not a proxy for something else.
+
+That said, independence from SST doesn't tell you whether wind speed
+matters on its own — it could still be adding meaningful, uncorrelated
+noise/signal that the network can't currently access cleanly. Since
+it's only reaching the network indirectly (baked into an 8-component
+PCA-compressed emissivity spectrum, competing with the generally
+larger view-angle effect on that same spectrum), it's a cheap,
+well-motivated thing to add explicitly regardless of the weak SST
+correlation:
+
+    scalarNames = {'surfTemp','surfPressure','viewAngleSecant','windSpeed'};
+
+Given the weak correlation result, I'd treat this as a secondary
+experiment rather than the main lever for the SST bias specifically —
+that problem still looks like it's about SST-sample density itself
+(which the reweighting partially, not fully, addressed, consistent
+with a genuine data gap). Adding wind speed explicitly is worth doing
+since it's nearly free and may pick up a small independent gain, but I
+wouldn't expect it to meaningfully move the SST bias trend you're
+chasing. The augmentation of sparse SST regions is still the step most
+directly targeted at what you've actually diagnosed.
+
+
+>>>>
+
+I'm still suspicious there is some missing physics. I noticed a bug in
+my ocean emissivity, so I'm rerunning the initial 38000 profiles. It
+would not have made a difference, just an offset of about 0.3 that was
+not added in.
+
+But given that using the ocean emissivities (wrong, ones, I know) but
+they were all about 0.6 with some spectral variation, did not really
+fix things ... any suggestions (other than windspeed)
+
+Good instinct to be suspicious — a genuinely flat, un-localized ~0.5-1
+K floor that doesn't respond to capacity, reweighting, or emissivity
+fixes is consistent with something that isn't a "the network needs
+more information" problem at all, but rather a noise floor baked into
+the training pairs themselves. A few concrete candidates beyond wind
+speed, roughly in order of how likely I'd bet on them given what
+you've described:
+
+1. Input/label mismatch — check whether the emissivity (and other)
+value fed to the network is exactly the value the RT code actually
+used. You just found one bug (missing +0.3 offset). Worth asking:
+could there be a different kind of bug — not a wrong value, but a
+recording mismatch — where the RT solver used one value internally but
+a slightly different value got logged into your training arrays? This
+is extremely easy to introduce (e.g., recording emissivity before
+vs. after some per-channel adjustment, or logging skin temperature
+while the RT run actually used a slightly different surface
+temperature for the Planck term). If the X your network sees isn't
+exactly what produced the Y, that's not a learnable relationship —
+it's irreducible noise, and it would show up exactly as you're
+describing: scattered everywhere, no single covariate to blame, immune
+to capacity/reweighting. Test: pick 20 profiles, manually trace one
+value (say surf skin temp) from what's stored in your training array
+all the way through to what's actually passed into the RT call, and
+confirm bit-for-bit it's the same number.
+
+2. RT solver numerical precision — check if your "truth" labels
+themselves are noisy. If the RT code uses any iterative/quadrature
+scheme (stream count, layer count, spectral convolution/ILS sampling),
+running the same profile twice with tightened convergence settings can
+reveal that the labels carry their own irreducible numerical
+noise. Test: take ~20 profiles, rerun through RT with meaningfully
+tighter tolerances (more streams/layers/finer spectral sampling), and
+compare to the original labels. If radiances shift by an amount
+comparable to your ~0.5-1 K RMSE, that's your floor — not a modeling
+problem at all, a data-precision one, and no amount of ML fixes it.
+
+3. Sigma-grid interpolation information loss on the input side. You
+checked PCA truncation loss on the output spectrum (0.086 K, clean) —
+but you haven't checked the equivalent for the input profiles going
+through sigma-grid interpolation. If a profile has a sharp
+boundary-layer inversion or humidity jump that happens to fall between
+two of your fixed sigma grid points, interpolation smooths it out — a
+real, silent loss of input information, and it would hit different
+profiles unpredictably depending on where their sharp features land
+relative to the fixed grid. That's exactly the kind of "scattered
+everywhere, no clean covariate" pattern. Test: for a sample of native
+profiles, interpolate to your 100-point sigma grid and then back onto
+the native levels, and compute the reconstruction error against the
+original — same idea as the PCA truncation check, applied to the
+vertical interpolation step instead.
+
+Given you have the RT code in hand, #2 is the cheapest and most
+decisive to test right now — it directly tells you whether you're
+chasing a learnable signal or a solver noise floor, in maybe 20
+reruns. Want to start there?
+
+>>>>
+
+Its clear sky, analytic solution across a layer. Been done and tested
+for 20+ years, and validated against other codes.  SO no issues
+there. No mismatches in the labels (though when I subsetted over ocean
+the was an index problem while plotting ... so no real SKT
+depenedence)
+
+However when I look at the Q and O3 eofs, there seem to be about 2000
+out of 18000 warm ocean profiles which seem to have an artifact at
+about "level" 4 (or the 4th component.)
+
+See <<< flag_bad_eof_profiles.m >>>
+
+That's exactly the kind of lead worth chasing hard — a localized
+artifact affecting ~11% of your training profiles, concentrated in one
+EOF component, is a very plausible explanation for a residual error
+that's been resistant to capacity, reweighting, and emissivity
+fixes. If ~2000 profiles are polluting the O3/Q PCA basis itself, that
+basis gets distorted globally — degrading reconstruction quality for
+all 18000 profiles, not just the flagged ones, which would neatly
+explain a scattered, broadly-distributed error that doesn't cleanly
+localize to any single covariate.
+
+Step 1 — pin down exactly which profiles and confirm the pattern. Get
+the actual (unstandardized) PC4 scores and look for the cluster
+directly:
+
+    qScores  = encodeSpectral(qPCA, Q_log, false);    % (nSamples x nPCA_Q)
+    o3Scores = encodeSpectral(o3PCA, O3_log, false);
+    
+    figure; scatter(surfTemp(trainIdx), qScores(:,4), 8, 'filled');
+    xlabel('surf temp (K)'); ylabel('Q PC4 score'); title('Q EOF component 4 vs SST');
+    
+    figure; scatter(surfTemp(trainIdx), o3Scores(:,4), 8, 'filled');
+    xlabel('surf temp (K)'); ylabel('O3 PC4 score');
+
+Then flag the outliers robustly (median/MAD is more resistant to the
+outliers themselves than mean/std would be):
+
+    med4 = median(qScores(:,4));
+    mad4 = mad(qScores(:,4), 1);
+    outlierMask = abs(qScores(:,4) - med4) > 6*mad4;
+    fprintf('Flagged %d / %d profiles as Q-PC4 outliers\n', sum(outlierMask), numel(outlierMask));
+
+Step 2 — look at the actual raw profiles, flagged vs. normal, overlaid:
+
+    flaggedIdx = find(outlierMask);
+    normalIdx  = find(~outlierMask);
+    sampleFlagged = flaggedIdx(randperm(numel(flaggedIdx), min(10,numel(flaggedIdx))));
+    sampleNormal  = normalIdx(randperm(numel(normalIdx), 10));
+    
+    figure; hold on;
+    for k = sampleFlagged', plot(Q_log(k,:), 1:nLevels, 'r-'); end
+    for k = sampleNormal',  plot(Q_log(k,:), 1:nLevels, 'b-'); end
+    set(gca,'YDir','reverse'); xlabel('log(Q)'); ylabel('sigma level index');
+    legend({'flagged','','','','','','','','','','normal'});
+
+You're looking for something visually obvious — a spike, a flat
+clipped region (hitting the 1e-12 floor from the log clip), a kink at
+a specific level, or a physically implausible jump. Given it's showing
+up in warm-ocean cases specifically, my first guess would be something
+in how humidity behaves near a strong, sharp tropical inversion or
+moist boundary-layer top — a real, sharp feature that's more common in
+warm/tropical profiles, landing awkwardly relative to your fixed sigma
+grid spacing and producing an interpolation artifact rather than a
+real physical signal.
+
+Step 3 — check whether it's an interpolation boundary issue. If you
+kept the native sigma range per profile (min/max before
+interpolation), check whether flagged profiles disproportionately
+needed extrapolation (interp1(...,'extrap')) rather than pure
+interpolation:
+
+    fprintf('Flagged: %.1f%% needed extrapolation\n', 100*mean(neededExtrap(flaggedIdx)));
+    fprintf('Normal:  %.1f%% needed extrapolation\n', 100*mean(neededExtrap(normalIdx)));
+
+(You'd need to have logged neededExtrap during the sigma interpolation
+step — if you didn't, it's worth adding and rerunning that step, since
+'extrap' silently producing bad values at profile edges is a classic,
+easy-to-miss source of exactly this kind of artifact.)
+
+Step 4 — the decisive test: retrain excluding the flagged profiles,
+and rerun your reconstruction-error check on the unflagged validation
+profiles only. If removing ~2000 contaminated profiles meaningfully
+drops RMSE even on the clean remaining data, that confirms the
+contamination-of-the-shared-basis hypothesis directly, and tells you
+the fix is data cleaning (or fixing whatever's producing the
+artifact), not more architecture/capacity work.
+
+What does the flagged-vs-normal profile overlay look like — is there a
+specific level or feature where they visibly diverge?
+
+%%%%
+
+One thing worth noting given your last message ("nothing out of the
+ordinary") — if the raw profile overlay plot didn't show anything
+visually distinguishing flagged from normal profiles, that's actually
+a meaningful result on its own: it suggests the PC4 outlier signature
+might not correspond to a visible physical/shape anomaly at all, but
+something more subtle — e.g. numerically small but
+systematically-signed differences that only stand out once projected
+onto that particular EOF direction, which wouldn't necessarily jump
+out in a raw-value overlay. Worth doing the extrapolation check
+regardless since it's cheap, but also worth pulling the actual Q_log
+values at the specific level(s) where PC4's loading vector
+(qPCA.coeff(:,4)) is largest — that tells you exactly which level(s)
+the flagged profiles differ at, even if the difference is too subtle
+to eyeball on a full-profile plot:
+
+    [~, peakLevel] = max(abs(qPCA.coeff(:,4)));
+    fprintf('PC4 loads most heavily on level %d\n', peakLevel);
+    figure; histogram(Q_log(flaggedIdx, peakLevel)); hold on;
+    histogram(Q_log(normalIdx, peakLevel));
+    legend('flagged','normal'); xlabel(sprintf('log(Q) at level %d', peakLevel));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+I reran the 38000 profiles with correct emissivity, as expected it really made no difference in the stats RMSE
+
+Useful negative result — ruling out the emissivity bug as the cause
+narrows things down further. Combined with everything else you've
+ruled out (PCA output truncation clean at 0.086 K, no train/val
+leakage, not capacity-limited, reweighting only marginal, RT solver
+validated/trusted, no obvious profile artifacts), you're running out
+of "obvious" candidates, which means it's worth checking one thing
+that's been assumed clean but never actually tested directly:
+information loss on the input side, from compressing T/Q/O3 down to
+sigma-grid + EOF coefficients.
+
+You checked the output truncation floor early on (0.086 K —
+great). You never ran the equivalent check for the inputs. This
+matters because if it's lossy, the network is being handed genuinely
+less information than the RT code used to generate the labels — and no
+amount of capacity, reweighting, or architecture change can recover
+information that was thrown away before the network ever saw it. That
+would produce exactly the pattern you've been chasing: errors
+scattered everywhere, correlating cleanly with no single covariate,
+immune to every network-side fix.
+
+Check 1 — EOF truncation loss on T/Q/O3, in physical units (you've
+only checked explained-variance-ratio so far, not actual
+reconstruction error):
+
+    Trecon  = decodeSpectral(tPCA,  encodeSpectral(tPCA,  T,      false), false);
+    Qrecon  = exp(decodeSpectral(qPCA,  encodeSpectral(qPCA,  Q_log,  false), false));
+    O3recon = exp(decodeSpectral(o3PCA, encodeSpectral(o3PCA, O3_log, false), false));
+    
+    fprintf('T  reconstruction RMSE: %.3f K\n', sqrt(mean((Trecon - T).^2, 'all')));
+    fprintf('Q  reconstruction relative RMSE: %.2f%%\n', 100*sqrt(mean(((Qrecon - Q)./Q).^2, 'all')));
+    fprintf('O3 reconstruction relative RMSE: %.2f%%\n', 100*sqrt(mean(((O3recon - O3)./O3).^2, 'all')));
+
+Check 2 — the sigma-grid interpolation itself (separate from EOF
+truncation): pick ~50 raw native profiles, interpolate to your fixed
+sigma grid, then interpolate back to the native levels, and compare to
+the original:
+
+  for i = sampleIdx
+    interpBack = interp1(refSigma, TsigmaGrid(i,:), rawPressure{i}/rawPressure{i}(end), 'linear','extrap');
+    nativeErr(i,:) = interpBack - rawT{i};
+  end
+  fprintf('Native-grid interpolation RMSE: %.3f K\n', sqrt(mean(nativeErr(:).^2)));
+
+If either check shows meaningful loss — especially watch O3, since
+it's the variable you flagged as having real independent variability
+and the sharpest vertical structure (peak altitude shifts) — that's a
+strong lead: bump nPCA_O3/nPCA_Q, or increase sigma-grid density, and
+retrain.
+
+If both come back clean (low, comparable to the 0.086 K output floor),
+that would rule out the input side too, and at that point I'd lean
+toward: (a) actually finish the wind-speed-as-explicit-input test,
+since that's still open, and (b) accept you may be near a genuine
+data-density ceiling and it's time to prioritize the profile
+augmentation work, since essentially every other lever has now been
+checked and ruled out one by one.
+
+>>>
+
+Native-grid interpolation RMSE: 7.809 K
+
+T  reconstruction RMSE: 0.239 K
+Q  reconstruction relative RMSE: 10.82%
+O3 reconstruction relative RMSE: 6.32%
+
+That number is the real finding here — 2.809 K from grid interpolation
+alone is far larger than anything else you've measured (bigger than
+the final observed RMSE, bigger than the EOF truncation numbers,
+bigger than the PCA output floor by two orders of magnitude). That's
+not a "could be tightened up a bit" result, that's a "something is
+likely actually wrong" result. Real atmospheric temperature profiles
+are smooth enough that 100-point interpolation should reconstruct them
+to a small fraction of a Kelvin, not multiple Kelvin — so before
+concluding it's a resolution problem, I'd suspect a bug in the
+interpolation itself first.
+
+Most likely candidates, roughly in order of probability given the size of the error:
+
+1. Non-monotonic sigmaSrc breaking interp1. interp1 assumes strictly
+increasing (or decreasing) x-values. If any native pressure array
+isn't cleanly monotonic TOA→surface (duplicate pressure values, an
+out-of-order level, or a units inconsistency causing near-ties),
+interp1 won't necessarily error — it can silently produce garbage in
+that region. Check directly:
+
+    badProfiles = 0;
+    for i = 1:numel(rawPressure)
+        if any(diff(rawPressure{i}) <= 0)
+            badProfiles = badProfiles + 1;
+        end
+    end
+    fprintf('%d / %d profiles have non-monotonic pressure\n', badProfiles, numel(rawPressure));
+
+2. Heavy reliance on 'extrap'. This is the flag we discussed adding a
+few messages back — if you haven't wired it in yet, now's the time,
+since extrapolation on a badly-behaved function (or reversed-order
+data, per #1) can blow up fast:
+
+    extrapFrac = zeros(numel(rawPressure),1);
+    for i = 1:numel(rawPressure)
+        sigmaSrc = rawPressure{i}/rawPressure{i}(end);
+        extrapFrac(i) = mean(refSigma < min(sigmaSrc) | refSigma > max(sigmaSrc));
+    end
+    fprintf('Mean fraction of grid points needing extrapolation: %.3f\n', mean(extrapFrac));
+    fprintf('Max fraction for any single profile: %.3f\n', max(extrapFrac));
+
+3. Find the actual worst offenders and look at them directly, rather than only the aggregate number:
+
+    profileRMSE = sqrt(mean(nativeErr.^2, 2));
+    [~, worstIdx] = sort(profileRMSE, 'descend');
+    
+    figure;
+    for k = 1:4
+        subplot(2,2,k);
+        i = worstIdx(k);
+        plot(rawT{i}, rawPressure{i}, 'b-o', interpBack_forProfile(i,:), rawPressure{i}, 'r-x');
+        set(gca,'YDir','reverse'); legend('native','regrid->back'); title(sprintf('profile %d, RMSE=%.2f K', i, profileRMSE(i)));
+    end
+
+This will make it immediately visually obvious whether it's a
+smooth-but-real interpolation gap (would look like a
+slightly-off-but-reasonable curve) versus a bug (would look like a
+wild spike, an offset, or a completely wrong shape — much more likely
+given the magnitude).
+
+Given the size of this error, I'd bet on a bug over a resolution issue
+— a genuinely-too-coarse grid on smooth atmospheric profiles more
+typically costs you fractions of a Kelvin, not multiple Kelvin. Run #1
+and #3 first; if the worst-offender plots show something clearly
+broken (not just "a bit smoothed"), that's your answer.
+
+
+>>>>
+
+problems in upper atmosphere (refsigma < 0.1)
+
+That narrows it down a lot, and it fits the physics perfectly: σ < 0.1
+is exactly the region where the hybrid coordinate is closest to a pure
+pressure coordinate and the pressure itself spans several orders of
+magnitude very rapidly with height (TOA can be ~0.01 hPa, σ=0.1 might
+be ~30-100 hPa depending on p_surf) — a region where p_native values
+are tightly bunched near zero in linear space but represent enormous
+physical range. A few concrete things likely going wrong there, worth
+checking in order:
+
+1. sigmaSrc spacing near zero is almost certainly wildly non-uniform,
+and interp1 linear interpolation between two widely-spaced native
+points near the top can badly misrepresent what's happening in
+between, especially since temperature/humidity structure near the
+tropopause and above can have real curvature (temperature inversions
+at the tropopause, sharp stratospheric warming) that a straight line
+between two sparse points won't capture. Check native point spacing
+directly:
+
+    ij = worstIdx(1);
+    sigmaSrc = rawPressure{ij}/rawPressure{i}(end);
+    disp(sigmaSrc(sigmaSrc < 0.15)')   % look at actual native sigma values up there
+
+If you see something like [0.0003, 0.09, 0.14, ...] — i.e. a big jump
+from near-zero straight to 0.09 — that's a genuine sparse-native-data
+problem in that region, not a bug, and linear interpolation across
+that gap is just inherently going to be poor.
+
+2. Your refSigma grid itself may not have enough points in that region
+either. You built it with linspace(0,1,100).^1.5, which concentrates
+points near σ=1 (the surface) — deliberately, since that's where you
+reasoned most structure lives. But that same weighting means σ<0.1 is
+comparatively sparse on your fixed grid too, potentially sparser than
+even the native points in that regime. Check:
+
+    sum(refSigma < 0.1)   % how many of your 100 reference points actually land up there?
+
+If that's a small number (say <10), your reference grid may simply be
+under-resolving the upper atmosphere — which somewhat contradicts the
+"T/Q is boring/low-rank aloft" reasoning from way back, but note that
+reasoning was about magnitude of variability, not about whether a
+coarse, unevenly-spaced grid can still misrepresent smooth-but-curved
+shape locally. Those are different things: low variability across
+profiles doesn't mean each individual profile's shape up there is
+trivial to represent with 5-8 points.
+
+3. Quick, targeted fix to test: switch the grid weighting, or use a
+two-piece density — more points near both the top and the bottom,
+fewer in the smooth middle troposphere, rather than only concentrating
+near σ=1:
+
+    % e.g. blend two power-law tails instead of one
+    n = 100;
+    lower = linspace(0,0.5,n/2).^0.5 * 0.2;    % denser near 0
+    upper = 1 - flip(linspace(0,0.5,n/2).^1.5) * 1.6;  % denser near 1
+    refSigma = unique(sort([lower, upper]));   % keep in [0,1], adjust scaling as needed
+
+(treat this as a starting sketch to tune, not a drop-in — the exact
+scaling needs adjusting so it still spans smoothly to exactly 0 and 1)
+
+4. Also worth checking — is this where log-pressure vs. linear-sigma
+interpolation actually diverges most? Early on I noted linear-in-σ and
+linear-in-p give identical results only if you interpolate
+consistently in one space — but "smooth in σ" and "smooth in ln(p)"
+are not the same claim. The upper atmosphere is the classic place
+where log-pressure interpolation is standard practice in atmospheric
+science specifically because pressure (and hence σ) changes so fast
+there that linear behavior in p/σ is a worse assumption than linear
+behavior in ln(p). Try switching just this region's interpolation to
+log-sigma:
+
+  vOut = interp1(log(max(sigmaSrc,1e-8)), values, log(max(refSigma,1e-8)), 'linear', 'extrap')
+
+I'd try #4 first — it's a one-line change and directly targets the
+known reason upper-atmosphere interpolation misbehaves in linear
+space. Then rerun the native-grid round-trip check and see how much of
+the 2.809 K drops.
+
+>>>>
+
+there are 22 reSigma points < 0.1. And far more in the sigmaSrc
+This is very high up ... I don't think this will be an issue except for very high altitude channels
+
+Fair assessment, and the numbers back you up — 22 reference points
+with even more native points in that region means the grid itself
+isn't obviously starved; the 2.809 K number is more likely a real
+feature of that specific region (curvature, log-pressure vs
+linear-sigma behavior) than a resolution bug. Worth confirming your
+instinct directly rather than assuming it:
+
+Test whether this interpolation issue actually explains any of your
+observed RMSE, or is a real-but-irrelevant finding. Identify which of
+your output channels are actually sensitive to σ<0.1 (upper
+stratosphere/TOA) — typically only a handful of strong CO2 band
+channels near their line centers, plus maybe some O3 channels, have
+weighting functions that peak that high; window channels and most
+H2O-sensitive channels peak much lower and won't care about this
+region at all:
+
+    % if you have per-channel weighting functions / Jacobians from your RT code,
+    % find where each channel's sensitivity peaks
+    [~, peakLevelIdx] = max(weightingFunctions, [], 2);   % (nChannels x 1), index into refSigma
+    highAltChannels = find(refSigma(peakLevelIdx) < 0.1);
+    
+    fprintf('%d / %d channels peak above sigma=0.1\n', numel(highAltChannels), nChannels);
+    fprintf('Mean RMSE, high-altitude-sensitive channels: %.3f K\n', mean(channelRMSE(highAltChannels)));
+    fprintf('Mean RMSE, all other channels: %.3f K\n', mean(channelRMSE(setdiff(1:nChannels, highAltChannels))));
+
+If you don't have weighting functions handy, a rougher proxy works too
+— CO2/O3 channels near their strongest absorption line centers (check
+against a HITRAN line list or just your band assignments) versus
+window/H2O channels.
+
+If the elevated RMSE concentrates specifically in that small
+high-altitude-sensitive channel subset, your instinct is confirmed:
+it's a real, fixable-but-minor issue affecting a few channels, not the
+main driver of your broader ~0.5-1 K plateau across most of the
+spectrum. Worth fixing eventually (log-sigma interpolation in that
+region, one-line change from before) but not the thing to chase for
+the bulk of your RMSE problem.
+
+If it turns out the elevated-RMSE channels don't line up with
+high-altitude sensitivity — i.e., the worst channels are ordinary
+tropospheric/window channels — then this interpolation issue is a red
+herring for the main problem, and it's basically confirmed that
+everything checkable on the data/pipeline side has come back clean
+(T/Q/O3/output PCA all fine, no leakage, not capacity-limited,
+emissivity bug fix made no difference, reweighting only marginal). At
+that point the augmentation work — which you diagnosed and scoped
+several messages back but haven't run yet — is genuinely the most
+promising remaining lever, since a real information gap in the joint
+distribution is the one hypothesis that's survived every test so far
+rather than being ruled out.
+
+>>>>
+
+I don't have weighting fcns handy ... but I know from my experience in
+remote sensing, this will not matter except for high altitude O3, T
+and WV. I'm seeing almost flat rmse (with slightly elevated paeks for
+the high altitude channels) so this is not the issue.
+
+That lines up with domain expectation, and closes the loop on the
+interpolation hypothesis — real, minor, localized to a few
+high-altitude channels, not the driver of the broad ~0.5-1 K plateau.
+At this point you've methodically ruled out essentially everything
+checkable in the pipeline itself:
+
+    PCA output truncation: clean (0.086 K floor)
+    
+    T/Q/O3 EOF truncation: reasonable, not the dominant error source
+    
+    Train/val split leakage: none
+    
+    Capacity: not the bottleneck (1024×3 overfits without closing the gap)
+    
+    Nonlinearity: confirmed necessary and being captured (DNN beats linear baseline by ~4x)
+    
+    Emissivity bug: fixed, no change
+    
+    Sample-density reweighting: small improvement, not a fix
+    
+    Sigma-grid interpolation: real but confined to a few high-altitude channels, not the main effect
+
+That's a genuinely thorough elimination process, and what's left
+standing is the hypothesis that's survived every test rather than
+being knocked out: a real information gap in the joint distribution of
+your 38k profiles — the same thing your per-profile RMSE-vs-covariate
+scatter plots pointed to a while back (scattered errors, no single
+clean culprit, consistent with sparse combinations rather than a bug
+or a single missing variable).
+
+Given that, the augmentation work — component-swapping/interpolation
+targeted at the density-sparse regions you already identified via k-NN
+distance, plus the RH-sanity-checked candidate generation code from
+earlier — is the step most likely to actually move the needle
+now. Everything else has been checked and either fixed with no effect,
+or confirmed as a real-but-marginal contributor.
+
+Worth running the augmentation now and rechecking the same
+NN-distance-vs-RMSE and bias-vs-SST diagnostics afterward, since those
+are the tools that'll tell you cleanly whether it worked — you've
+built a solid diagnostic toolkit over this conversation, and it's the
+right one to reuse for validating the fix, not just generating new
+numbers.
+
+>>>>
+
+Well not to blow your bubble but one of the options I have installed
+is to select ocean only scenes whose surface temps lie between 270-305
+K, and that is fitted better but I still cannot get the RMSE down to
+0.2 K (which is what all fast models such as the extremely well known
+SARTA that is used for official L2 retrievals, as well as eg PCRTM and
+RTTOVS have as their errors)
+
+No bubble burst — that's actually the most useful data point you've
+given yet, because it reframes the problem correctly. If a
+well-diagnosed, leak-free, non-overfit, non-underfit network still
+can't get below ~0.5 K in the easiest regime you have (dense ocean,
+moderate SST), you're not chasing a bug anymore — you're up against a
+real ceiling in how the problem is currently posed. And the benchmark
+you're comparing against (SARTA/PCRTM/RTTOV-class ~0.1-0.2 K) isn't
+achieving that with a bigger network or cleaner data — it's achieving
+it with a fundamentally different input representation, which is the
+piece your pipeline hasn't touched yet.
+
+Here's the core difference: operational fast models like SARTA don't
+regress radiance against raw (or EOF-compressed) T/Q/O3 profiles. They
+regress against physically-derived predictors constructed from the
+radiative transfer equation itself — things like path-integrated
+absorber amounts weighted by the local temperature dependence of the
+absorption coefficient, secant-weighted optical depth proxies,
+layer-to-space transmittance approximations, and
+reference-profile-relative perturbation terms. Instead of asking a
+regressor to discover the RT physics from raw state variables (which
+is what your EOF-compressed T/Q/O3 → radiance mapping is doing), they
+hand it predictors that are already most of the way toward linear in
+the actual quantity that matters (optical depth), because someone did
+the analytic work of writing out the first-order temperature/absorber
+dependence of the transmittance equation and using that as the
+regression input. This is why they can get away with per-channel
+linear or low-order polynomial regression and still hit 0.1-0.2 K —
+the nonlinearity your DNN is working hard to approximate numerically
+has already been substantially removed by the choice of predictor, not
+learned from data.
+
+That reframes your whole problem: the ~0.5 K plateau you're stuck at,
+even in clean data, is very plausibly the cost of asking a generic
+network to learn RT physics from scratch off raw atmospheric state,
+rather than being handed physics-informed features. This is a real,
+known gap between "black-box ML emulator" and "physically-motivated
+fast regression," and it's exactly the kind of gap that data volume,
+network depth, and reweighting can't close, because it's not a data or
+capacity problem — it's an information-representation problem.
+
+Concretely, what to try: engineer a handful of RT-motivated predictors
+alongside (or instead of) your EOF coefficients, e.g.:
+
+  Secant-weighted (view angle) integrated water vapor and ozone amount
+  above each level, rather than the raw per-level values
+  
+  A temperature-weighted absorber amount (since absorption
+  coefficients themselves depend on T — this couples T and gas amount
+  rather than treating them as independent EOF channels)
+  
+  Perturbation from a fixed reference/mean profile rather than
+  absolute values, which is closer to how these operational
+  regressions are actually posed (predict the deviation in radiance
+  from a reference-profile radiance, not the absolute radiance)
+
+This is a substantially different design direction than anything we've
+tried in this conversation so far, and it's rooted in decades of
+published fast-RT-model literature (Strow/Motteler et al. for SARTA
+specifically) rather than generic ML tuning. Given how specific and
+technical the actual predictor formulations are, I'd rather not
+reconstruct them from memory and risk getting the details wrong — want
+me to search for the published SARTA/RTTOV predictor-set literature so
+we're working from the actual documented formulations rather than my
+approximate recollection?
+
+

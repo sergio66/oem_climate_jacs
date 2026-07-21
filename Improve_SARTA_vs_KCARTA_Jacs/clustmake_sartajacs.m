@@ -1,4 +1,10 @@
 %% original code is in git/sarta_scatter_rtp_klayers_sergio/JACvers/MATLABCODE/
+%{
+sbatch --array=0001-1000%512 sergio_matlab_chip.sbatch 1
+sbatch --array=1001-2000%512 sergio_matlab_chip.sbatch 1
+watch "ls -lt DATA/40000profiles/SartaColJac_00001_20000/*.mat | wc -l; ls -lt DATA/40000profiles/SartaColJac_20001_40000/*.mat | wc -l;"
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 addpath_convolve
 addpath /home/sergio/git/kcarta_gen/MATLAB

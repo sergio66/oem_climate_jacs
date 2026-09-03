@@ -1,4 +1,4 @@
-function out = driver_get_timeseries_one_tile(latbin,lonbin,iNumYears,iDorA,iLorOorA,findtile)
+function out = driver_get_timeseries_dcc_one_tile(latbin,lonbin,iNumYears,iDorA,iLorOorA,findtile)
 
 %% iTileNum == Sergio = 1 -- 4608
 %%   so Latbin 01/Lonbin 01 == 0001
@@ -145,6 +145,8 @@ out.lonbin = lonbin;
 
 isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
 isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
+dir_isilon_find_howard_tiles
+isilonX = isilon_tiledir;
 
 hugedir = dir(isilonX);  %% 480 timesteps till Sep 2023
 theyear = [];

@@ -15,7 +15,8 @@ pall_gridbox_0011_16daytimestep_011_2013_06_10_to_2013_06_25.mat  pall_gridbox_0
 pall_gridbox_0011_16daytimestep_012_2013_06_26_to_2013_07_11.mat
 %}
 
-dirH = '/asl/isilon/airs/tile_test7/';
+dir_isilon_find_howard_tiles
+dirH = isilon_tiledir;
 %{
 data organized by YYYY_sTIMESTEP/GRIDBOX/tile_YYYY_sTIMESTEP_N00p00_E000p00.nc
 

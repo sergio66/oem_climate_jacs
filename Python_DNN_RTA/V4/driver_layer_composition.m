@@ -52,6 +52,23 @@ iFitChan = -1; %% all channels 645-2745
 iFitChan = -2; %% LW/MW channels 645-1645
 iFitChan =  1; %% WV MW channels 1230 - 630 cm-1
 
+iALOTMP = 0;  %% all fovs
+iALOTMP = 1;  %% land fovs
+iALOTMP = 2;  %% ocean fovs
+iALOTMP = 3;  %% tropical fovs
+iALOTMP = 4;  %% tropical+midlat fovs
+iALOTMP = 5;  %% polar fovs
+iALOTMP = 6;  %% tropical ocean fovs
+iALOTMP = 7;  %% tropical+midlat ocean fovs
+iALOTMP = 8;  %% polar ocean fovs
+iALOTMP = 9;  %% warm land  fovs where there are many samples ... hist(p.stemp(land) will tell you these limits)
+iALOTMP = 10; %% warm ocean fovs where there are many samples ... hist(p.stemp(ocean) will tell you these limits)
+
+iALOTMP = 1;  %% land fovs
+iALOTMP = 2;  %% ocean fovs
+iALOTMP = 10; %% warm ocean fovs where there are many samples ... hist(p.stemp(ocean) will tell you these limits)
+iALOTMP = 6;  %% tropical ocean fovs
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% ---- tau network parameters (shared across layers; layer index is an input) ----
@@ -67,7 +84,10 @@ iHidden = 2; iNN = 064;     %% depth of hidden layers, and number of neurons/lay
 iHidden = 2; iNN = hidden;  %% depth of hidden layers, and number of neurons/layer   seems good               rmse ~ 0.5 K
 
 nLayersMax = 100;   % pad up to this; real N varies 75-100 per your terrain discussion
+do_subset_all_profiles_and_simrads
+
 do_main_setup_epochs_loop
+epoch_loop
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

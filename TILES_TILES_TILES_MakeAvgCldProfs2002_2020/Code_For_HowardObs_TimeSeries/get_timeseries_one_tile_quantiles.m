@@ -100,7 +100,12 @@ out.lonbin = lonbin;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% BETTER TRY
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 480 timesteps till Sep 2023
+
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
+%disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
+
 theyear = [];
 thecount = [];
 for tt = 3 : length(hugedir)
@@ -133,8 +138,8 @@ for tt = 1 : 8 + (iNumYears-1)*23 + (23-8)
   tstep = savestep(tt); 
   latstr = strname(1:6);  %% eg S02p75
 
-  fname  = ['/asl/isilon/airs/tile_test7/' num2str(YYX,'%02d') '_s' num2str(tt,'%03d')    '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tt,'%03d') '_' strname '.nc'];
-  fname  = ['/asl/isilon/airs/tile_test7/' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '_' strname '.nc'];
+  fname  = [isilon_tiledir num2str(YYX,'%02d') '_s' num2str(tt,'%03d')    '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tt,'%03d') '_' strname '.nc'];
+  fname  = [isilon_tiledir num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '_' strname '.nc'];
 
   if ~exist(fname)
     fprintf(1,'%s DNE fname \n',fname)
@@ -158,8 +163,8 @@ for tt = 1 : 8 + (iNumYears-1)*23 + (23-8)
   tstep = savestep(tt); 
   latstr = strname(1:6);  %% eg S02p75
 
-  fname  = ['/asl/isilon/airs/tile_test7/' num2str(YYX,'%02d') '_s' num2str(tt,'%03d')    '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tt,'%03d') '_' strname '.nc'];
-  fname  = ['/asl/isilon/airs/tile_test7/' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '_' strname '.nc'];
+  fname  = [isilon_tiledir num2str(YYX,'%02d') '_s' num2str(tt,'%03d')    '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tt,'%03d') '_' strname '.nc'];
+  fname  = [isilon_tiledir num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '/' latstr '/tile_' num2str(YYX,'%02d') '_s' num2str(tstep,'%03d') '_' strname '.nc'];
 
   latstr = strname(1:6);  %% eg S02p75
 

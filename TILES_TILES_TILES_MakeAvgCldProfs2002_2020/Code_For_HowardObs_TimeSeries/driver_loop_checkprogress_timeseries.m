@@ -31,7 +31,8 @@ end
 if iCheckDone1 > 0
   fid1 = fopen('notdone.txt','w');
   fid2 = fopen('notdoneINFO.txt','w');
-  hugedir = dir('/asl/isilon/airs/tile_test7/');
+  dir_isilon_find_howard_tiles
+  hugedir = dir(isilon_tiledir);
   if ~exist('numALLdone')
     numALLdone = zeros(length(hugedir)-2,72,64);
   end

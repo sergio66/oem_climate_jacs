@@ -1,11 +1,10 @@
 %% to weight the samples -- remember if you do hist(p.stemp) the majority will be between 270-305 K, at least for ocean
 
-stempTrain = surfTemp;
+wavenumbersBand = wavenumbers';
+surfTemp = p.stemp';
 
 trainLossHistory = zeros(numEpochs,1);
 valLossHistory   = zeros(numEpochs,1);
-
-Y = targetCoeffs;
 
 for epoch = 1:numEpochs
     order = randperm(nTrainSamples);
@@ -20,12 +19,23 @@ for epoch = 1:numEpochs
         % Wb = dlarray(single(sampleWeight(batchIdx))', 'CB'); ;
         % [loss, grads] = dlfeval(@modelGradients, params, Xb, Yb, Wb, iHidden);
 
-
         % this code
         % layerFeaturesAll_batch: cell{nLayers}, each (10 x miniBatchSize), sliced from your precomputed per-layer predictor arrays for this batch's profiles
+	%layerFeaturesAll_batch = dlarray(single(squeeze(X(batchIdx,:,:))),'CB');
+
+        layerFeaturesAll_batch = cell(nLayersMax,1);
+        for k = 1:nLayersMax
+          layerFeaturesAll_batch{k} = dlarray(single(squeeze(X(batchIdx, k, :)))', 'CB');  % (10 x miniBatchSize)
+        end
+	
         % layerTempAll_batch:     (nLayers x miniBatchSize)
+	layerTempAll_batch     = dlarray(single(T(batchIdx,:))', 'CB');             % (nLayers x miniBatchSize).
+	
         % Rtrue_batch: dlarray 'CB', (nChannelsBand x miniBatchSize), your ACTUAL  stored KCARTA (or KCARTA-SARTA residual) radiance for this band
-        Rtrue_batch: dlarray(single( 'CB', (nChannelsBand x miniBatchSize),
+        Rtrue_batch    = dlarray(single(Ytrain(batchIdx,:))', 'CB');
+	surfTempBatch  = dlarray(single(surfTemp(batchIdx))', 'CB');                % (1 x miniBatchSize)
+	emisBatch      = dlarray(single(emissivityRaw(batchIdx,:))', 'CB');         % (nChannelsBand x miniBatchSize)
+	muBatch        = dlarray(single(1./viewAngleSecant_00(batchIdx))', 'CB');   % (1 x miniBatchSize)
 	
         [loss, grads] = dlfeval(@modelGradientsLayerRT, params, layerFeaturesAll_batch, ...
                                 layerTempAll_batch, surfTempBatch, emisBatch, muBatch, wavenumbersBand, Rtrue_batch);

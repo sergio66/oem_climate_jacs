@@ -63,12 +63,11 @@ date_stamp = ['2015_s283'];   %% example
 isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
 isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
 isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
+dir_isilon_find_howard_tiles
+isilonX = isilon_tiledir;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-hugedir = dir('/asl/isilon/airs/tile_test7/');         %% 417 timesteps till Nov 2020, 433 timesteps till Sep 2021, 457 timesteps till Sep 2022, 480 timesteps till Sep 2023, 528 timesteps till Sep 2025
-hugedir = dir('/umbc/rs/strow/asl/airs/tile_test7/');  %% 417 timesteps till Nov 2020, 433 timesteps till Sep 2021, 457 timesteps till Sep 2022, 480 timesteps till Sep 2023, 528 timesteps till Sep 2025
 hugedir = dir(isilonX);                                %% 417 timesteps till Nov 2020, 433 timesteps till Sep 2021, 457 timesteps till Sep 2022, 480 timesteps till Sep 2023, 528 timesteps till Sep 2025
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 iaFound = zeros(1,600);
 for ii = 3 : length(hugedir)
@@ -193,6 +192,7 @@ thesave = make_blank_thesave_struct(quants,dbt,4608);
   
 fn = ['/asl/isilon/airs/tile_test7/'        date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 fn = ['/umbc/rs/strow/asl/airs/tile_test7/' date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
+fn = [isilonX                               date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
 ianpts = 1:s.total_obs;
@@ -208,8 +208,6 @@ pause(1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 iCnt = 0;
-thedir0 = dir(['/asl/isilon/airs/tile_test7/'        date_stamp '/']);             %%%% 450 timesteps
-thedir0 = dir(['/umbc/rs/strow/asl/airs/tile_test7/' date_stamp '/']);             %%%% 450 timesteps
 thedir0 = dir([isilonX                               date_stamp '/']);             %%%% 450 timesteps
 
 iii0 = 3; iiiE = length(thedir0);
@@ -233,9 +231,7 @@ else
 end
 
 for iii = iii0 : iiiE     %% default 64 latbins << 3 : length(thedir0) >>
-  dirdirname = ['/asl/isilon/airs/tile_test7/'        date_stamp '/' thedir0(iii).name];  %%%% 64 latbins
-  dirdirname = ['/umbc/rs/strow/asl/airs/tile_test7/' date_stamp '/' thedir0(iii).name];  %%%% 64 latbins
-  dirdirname = [isilonX                               date_stamp '/' thedir0(iii).name];  %%%% 64 latbins    
+  dirdirname = [isilonX date_stamp '/' thedir0(iii).name];  %%%% 64 latbins    
   dirx = dir([dirdirname '/*.nc']);
   for jjj = jjj0 : jjjE   %% default 72 lonbins << 1 : 72 >>
     fname = [dirdirname '/' dirx(jjj).name];                                       %%%% 72 lonbins

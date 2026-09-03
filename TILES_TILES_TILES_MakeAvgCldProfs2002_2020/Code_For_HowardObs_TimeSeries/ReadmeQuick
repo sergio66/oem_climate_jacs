@@ -267,9 +267,15 @@ fi
 
   this is VERY FAST (of course, depending how many nodes you get on HPC)
      clust_tile_fits_quantiles.m JOB=1:4608 or clust_tile_fits_quantiles_loop72lons.m JOB = 1:64
-       set start/stop times via     set_start_stop_dates.m      eg
+  set start/stop times via     set_start_stop_dates.m      eg
+    first part is the ECNCOMPASSING TIMES
+      startdateMaster = [2002 09 01]; stopdateMaster = [2025 08 31]; i16daysSteps = 525;                       %% 2002/09 to 2024/08 = 23.00 years, 525 steps **********
+    second part is actual dtes you want to cover
          startdate = [2002 09 01]; stopdate = [2007 08 31]; % 05 years!
-
+         startdate = [2002 09 01]; stopdate = [2025 08 31];  % 23.0 years! %% AIRS 23 years
+         startdate = [2002 09 01]; stopdate = [2022 08 31];  % 23.0 years! %% AIRS 20 years for JGR 2025 paper
+         startdate = [2003 01 01]; stopdate = [2022 12 31];  % 20.0 years! %% AIRS 20 years for Ryan Measures
+         
     fdirpre      = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';   %% symbolic link to ./DATAObsStats_StartSept2002_CORRECT_LatLon -> /asl/s1/sergio/MakeAvgObsStats2002_2020_startSept2002_CORRECT_LatLon
     fdirpre_out  = '../DATAObsStats_StartSept2002_CORRECT_LatLon/';
     fnout = ['LatBin' num2str(lati,'%02d') '/LonBin' num2str(loni,'%02d') '/iQAX_3_fits_LonBin' num2str(loni,'%02d') '_LatBin' num2str(lati,'%02d') '_V1_'];
@@ -279,6 +285,11 @@ fi
     set_iQAX              %%% <<<< CHECK THIS, it is    lrwxrwxrwx 1 sergio pi_sergio 43 Mar 19 07:59 set_iQAX.m -> ../Code_For_HowardObs_TimeSeries/set_iQAX.m
     set_start_stop_dates  %%% <<<< CHECK THIS  it is    lrwxrwxrwx 1 sergio pi_sergio 55 Mar 19 07:59 set_start_stop_dates.m -> ../Code_For_HowardObs_TimeSeries/set_start_stop_dates.m
 
+    test with eg
+      clear all; iAllorSeason = +1; clust_tile_fits_quantiles
+
+  #########################
+  
   # run this with      kleenslurm; sbatch -p 2024 --array=1-4608%128 sergio_matlab_chip.sbatch 0,1 for clust_tile_fits_quantiles.m  
     
    ** run this      :  kleenslurm; sbatch -p high_mem --array=1-4608%128 sergio_matlab_jobB.sbatch 1   for clust_tile_fits_quantiles.m                          iAllorSeason = +1

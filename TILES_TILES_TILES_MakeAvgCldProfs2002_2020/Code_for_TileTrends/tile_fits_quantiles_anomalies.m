@@ -65,13 +65,7 @@ p = [-0.17 -0.15 -1.66  1.06];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(' ')
 %% %% see eg ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
-%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
-%% hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 526 timesteps till Aug 2025
-%% disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
-%% 
-%% fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
+%% dir_isilon_find_howard_tiles.m   in hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
 %% 
 %% iaFound = zeros(1,600);
 %% for ii = 3 : length(hugedir)
@@ -92,7 +86,6 @@ clear iQuiet
 %  iTimeStepNotFound = length(junk);  iaNoData = junk;
   
 fprintf(1,'there should be %3i Sergio processed files \n',maxN - iTimeStepNotFound);
-disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
 disp(' ' )
 %keyboard_nowindow
 

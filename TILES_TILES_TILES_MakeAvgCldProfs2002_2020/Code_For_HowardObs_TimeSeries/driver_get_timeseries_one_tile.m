@@ -145,6 +145,8 @@ out.lonbin = lonbin;
 
 isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
 isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
+dir_isilon_find_howard_tiles
+isilonX = isilon_tiledir;
 
 hugedir = dir(isilonX);  %% 480 timesteps till Sep 2023
 theyear = [];

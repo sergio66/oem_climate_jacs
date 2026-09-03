@@ -65,10 +65,8 @@ jj = 59; ii = 27;
 %% i16daysSteps = floor((change2days(stopdate(1),stopdate(2),stopdate(3),2002) - change2days(startdate(1),startdate(2),startdate(3),2002))/16)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
 
 iaFound = zeros(1,600);
 for ii = 3 : length(hugedir)

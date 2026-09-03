@@ -3,38 +3,40 @@
 %% see eg clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
 %% see eg cluster_loop_make_correct_timeseriesV2.m
 
-addpath /asl/matlib/aslutil/
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA
+adderpath 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-addpath /asl/matlab2012/airs/readers
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/science
-addpath /asl/matlib/rtptools
-addpath /asl/matlib/h4tools/
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/gribtools/
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/COLORMAP
-
-%addpath /home/strow/cress/Work/Rtp
-%addpath /home/strow/Matlab/Grib
-
-%addpath /home/sergio/MATLABCODE/CRIS_HiRes             %% for sergio_fill_ecmwf
-%addpath /home/strow/Git/rtp_prod2/grib                  %% for fill_ecm
-%addpath /asl/rtp_prod2/grib/                           %% for fill_ecmwf
-
-%addpath  /asl/packages/rtp_prod2/grib
-%addpath  /home/sbuczko1/git/rtp_prod2/grib
-
-%addpath /home/strow/git/rtp_prod2/grib
-addpath /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/GRIB
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS/Strow_humidity/convert_humidity/
+% addpath /asl/matlib/aslutil/
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/CLUSTMAKE_ERA
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% addpath /asl/matlab2012/airs/readers
+% addpath /asl/matlib/aslutil
+% addpath /asl/matlib/science
+% addpath /asl/matlib/rtptools
+% addpath /asl/matlib/h4tools/
+% addpath /asl/matlib/rtptools/
+% addpath /asl/matlib/gribtools/
+% addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
+% addpath /home/sergio/MATLABCODE
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/COLORMAP
+% 
+% %addpath /home/strow/cress/Work/Rtp
+% %addpath /home/strow/Matlab/Grib
+% 
+% %addpath /home/sergio/MATLABCODE/CRIS_HiRes             %% for sergio_fill_ecmwf
+% %addpath /home/strow/Git/rtp_prod2/grib                  %% for fill_ecm
+% %addpath /asl/rtp_prod2/grib/                           %% for fill_ecmwf
+% 
+% %addpath  /asl/packages/rtp_prod2/grib
+% %addpath  /home/sbuczko1/git/rtp_prod2/grib
+% 
+% %addpath /home/strow/git/rtp_prod2/grib
+% addpath /home/sergio/MATLABCODE/RTPMAKE/CLUST_RTPMAKE/GRIB
+% addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS/Strow_humidity/convert_humidity/
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 iAllChan = +1;  %% 2645 chans
@@ -62,7 +64,8 @@ jj = 59; ii = 27;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 480 timesteps till Sep 2023
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);  %% 480 timesteps till Sep 2023
 
 iaFound = zeros(1,600);
 for ii = 3 : length(hugedir)
@@ -106,7 +109,7 @@ if ~exist('iTimeStep')
 date_stamp = hugedir(iTimeStep).name;
 fprintf(1,'iTimeStep = %4i date_stamp = %s \n',iTimeStep,date_stamp);
 
-thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
+thedir0 = dir([isilon_tiledir date_stamp '/']);
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 all_72lonbins = struct;

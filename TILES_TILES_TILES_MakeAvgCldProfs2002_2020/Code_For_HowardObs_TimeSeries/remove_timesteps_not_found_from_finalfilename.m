@@ -7,7 +7,10 @@ if iQuiet < 0
   disp(' >>>> entering remove_timesteps_not_found_from_finalfilename.m')
 end
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% about 460 timesteps till Nov 2023
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
+%disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
 
 iaFound = zeros(1,600);
 for ii = 3 : length(hugedir)

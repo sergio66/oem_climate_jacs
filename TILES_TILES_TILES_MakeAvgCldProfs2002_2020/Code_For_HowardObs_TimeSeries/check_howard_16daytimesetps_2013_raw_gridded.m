@@ -1,12 +1,14 @@
+adderpath
+
 % addpath /home/motteler/shome/chirp_test
 % addpath /home/sergio/MATLABCODE/TIME
 % addpath /home/sergio/MATLABCODE/PLOTTER
 % addpath /asl/matlib/aslutil
 
-addpath /home/sergio/git/matlabcode/TIME
-addpath /home/sergio/git/matlabcode/PLOTTER
-addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/aslutil
-addpath /home/sergio/git/matlabcode/chirp_test
+% addpath /home/sergio/git/matlabcode/TIME
+% addpath /home/sergio/git/matlabcode/PLOTTER
+% addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/aslutil
+% addpath /home/sergio/git/matlabcode/chirp_test
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -21,9 +23,8 @@ ls -lt /asl/isilon/airs/tile_test7/2002_s008/N00p00/tile_2002_s008_* | wc -l    
 %clust_check_howard_16daytimesetps_2013_raw_griddedV2.m:64:isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
 %clust_check_howard_16daytimesetps_2013_raw_griddedV2.m:65:isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
 
-isilonX = '/asl/isilon/airs/tile_test7/';          %% on taki, before Apr 2025
-isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Apr 2025
-isilonX = '/umbc/rs/strow/asl/airs/tile_test7/';   %% on chip, after  Mar 2026
+dir_isilon_find_howard_tiles
+isilonX = isilon_tiledir;
 fn = [isilonX '/2013_s237/N00p00/tile_2013_s237_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
@@ -37,12 +38,10 @@ plot(hh,double(s.sol_zen(ianpts)),'o'); xlabel('hh'); ylabel('Solzen')
 pause(1)
 dbt = 180 : 1 : 340;
 iCnt = 0;
-%thedir0 = dir('/asl/isilon/airs/tile_test7/2013_s237/');
 thedir0 = dir([isilonX '/2013_s237/'])
 
 
 for iii = 3 : length(thedir0)
-  %dirdirname = ['/asl/isilon/airs/tile_test7/2013_s237/' thedir0(iii).name];
   dirdirname = [isilonX '/2013_s237/' thedir0(iii).name];  
   dirx = dir([dirdirname '/*.nc']);
   for jjj = 1 : length(dirx)

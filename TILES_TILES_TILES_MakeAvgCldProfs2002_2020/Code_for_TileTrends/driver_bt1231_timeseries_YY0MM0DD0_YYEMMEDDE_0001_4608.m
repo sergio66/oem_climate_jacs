@@ -1,14 +1,16 @@
 %% this is from clust_tile_fits_quantiles.m and tile_fits_quantiles.m
 
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /asl/matlib/science/
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+adderpath
+
+% addpath /asl/matlib/rtptools/
+% addpath /asl/matlib/aslutil
+% addpath /asl/matlib/h4tools
+% addpath /asl/matlib/science/
+% addpath /home/sergio/MATLABCODE
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
+% addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
 
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
 disp('make sure you check "set_iQAX" and "set_start_stop_dates" ')
@@ -31,18 +33,27 @@ set_iQAX              %%% <<<< CHECK THIS
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
-junk = load('airs_f.mat');
-f2645 = junk.fairs;
+%junk = load('airs_f.mat');
+%f2645 = junk.fairs;
+junk = load('h2645structure.mat');
+f2645 = junk.h.vchan;
+i2645 = junk.h.ichan;
 junk = -1;
 
 %% see /home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/read_fileMean17years.m
 fileMean17years = '/home/sergio/KCARTA/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/RTP/summary_20years_all_lat_all_lon_2002_2022_monthlyERA5.rp.rtp';
+fileMean17years = '/home/sergio/git/kcarta_gen/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/RTP/summary_23years_all_lat_all_lon_2002_2025_monthlyERA5.op.rtp';
+fileMean17years = '/home/sergio/git/kcarta_gen/WORK/RUN_TARA/GENERIC_RADSnJACS_MANYPROFILES/RTP/summary_23years_all_lat_all_lon_2002_2025_monthlyERA5.op.rtp'; 
 [h,ha,p,pa] = rtpread(fileMean17years);
-figure(3); clf; plot(1:2645,rad2bt(h.vchan,p.rcalc(:,2000)))
+if isfield(p,'rcalc')
+  figure(3); clf; plot(1:2645,rad2bt(h.vchan,p.rcalc(:,2000)))
+end
 
 while junk < 0
-  figure(3); clf; plot(1:2645,rad2bt(h.vchan,p.rcalc(:,2000)))
-  figure(3); clf; plot(h.vchan,rad2bt(h.vchan,p.rcalc(:,2000))); xlim([640 1640])
+  if isfield(p,'rcalc')
+    figure(3); clf; plot(1:2645,rad2bt(h.vchan,p.rcalc(:,2000)))
+    figure(3); clf; plot(h.vchan,rad2bt(h.vchan,p.rcalc(:,2000))); xlim([640 1640])
+  end
   disp('see Mitchell_Goldberg-Dissertation.pdf for list of chans : wget https://aosc.umd.edu/sites/default/files/dissertations-theses/Mitchell%20Goldberg-Dissertation.pdf')
 
   disp('Fig 5.8        667.766 cm-1       1 mb')
@@ -70,7 +81,10 @@ while junk < 0
   %if length(iChanID) == 0
   %  iChanID = 1520;
   %end
-  plot(h.vchan,rad2bt(h.vchan,p.rcalc(:,2000)),h.vchan(iChanID),rad2bt(h.vchan(iChanID),p.rcalc(iChanID,2000)),'ro')
+
+  if isfield(p,'rcalc')
+    plot(h.vchan,rad2bt(h.vchan,p.rcalc(:,2000)),h.vchan(iChanID),rad2bt(h.vchan(iChanID),p.rcalc(iChanID,2000)),'ro')
+  end
   fprintf(1,'iChanID = %5i ----> f(iChanID) = %12.6f \n',iChanID,f2645(iChanID));
   junk = input('is this OK [-1/+1 default] : ');
   if length(junk) == 0
@@ -80,7 +94,8 @@ end
 fuse = f2645(iChanID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-se = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+%se = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+se = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2028_0012.mat');
 
 booS = find(se.thedateS(:,1) == startdate(1) & se.thedateS(:,2) == startdate(2) & se.thedateS(:,3) >= startdate(3),1);
 booE = find(se.thedateE(:,1) == stopdate(1)  & se.thedateE(:,2) == stopdate(2)  & se.thedateE(:,3) <= stopdate(3));    booE = max(booE);   % booE = max(booE)+1;

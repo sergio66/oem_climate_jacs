@@ -1,7 +1,9 @@
-addpath /home/motteler/shome/chirp_test
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /asl/matlib/aslutil
+adderpath
+
+% addpath /home/motteler/shome/chirp_test
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /asl/matlib/aslutil
 
 %{
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/                        | wc -l      64 subdirs
@@ -74,9 +76,10 @@ end
 %% 2015_s283
 date_stamp = ['2015_s283'];
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
+%disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
 
 iaFound = zeros(1,600);
 for ii = 3 : length(hugedir)
@@ -268,7 +271,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fn = ['/asl/isilon/airs/tile_test7/' date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
+fn = [isilon_tiledir date_stamp '/N00p00/tile_' date_stamp '_N00p00_E000p00.nc'];
 [s, a] = read_netcdf_h5(fn);
 
 ianpts = 1:s.total_obs;
@@ -286,7 +289,7 @@ pause(1)
 
 dbt = 180 : 1 : 340;
 iCnt = 0;
-thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
+thedir0 = dir([isilon_tiledir date_stamp '/']);
 
 iii0 = 3; iiiE = length(thedir0);
 jjj0 = 1; jjjE = 72; 
@@ -300,7 +303,7 @@ end
 %%     INNER  LOOP  072 LONBINS
 
 for iii = iii0 : iiiE   %% default 64 latbins << 3 : length(thedir0) >>
-  dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
+  dirdirname = [isilon_tiledir date_stamp '/' thedir0(iii).name];
   dirx = dir([dirdirname '/*.nc']);
   for jjj = jjj0 : jjjE    %% default 72 lonbins << 1 : 72 >>
     fname = [dirdirname '/' dirx(jjj).name];

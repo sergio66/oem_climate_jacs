@@ -1,6 +1,10 @@
 %% check clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
+%disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
+
 %%for JOBB = 1 : length(hugedir)
 % JOB =  103 date_stamp = 2007_s101
 % JOB =  104 date_stamp = 2007_s101.bak
@@ -18,10 +22,10 @@ for JOBB = 1 : 102
   
   date_stamp = hugedir(JOB).name;
   fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
-  thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
+  thedir0 = dir([isilon_tiledir date_stamp '/']);
 
   for iii = 3 : length(thedir0)
-    dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
+    dirdirname = [isilon_tiledir date_stamp '/' thedir0(iii).name];
     dirx = dir([dirdirname '/*.nc']);
     for jjj = 1 : length(dirx)
       fname = [dirdirname '/' dirx(jjj).name];

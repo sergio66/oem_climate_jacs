@@ -15,9 +15,11 @@ addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/rtptools
 addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/aslutil
 addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/h4tools
 addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/time
+addpath /home/sergio/git/matlabcode/matlibSergio/matlib2025/science
+
 addpath /home/sergio/git/matlabcode
 addpath /home/sergio/git/matlabcode/TIME
 addpath /home/sergio/git/matlabcode/PLOTTER
-addpath /home/sergio/git/matlabcode/matlib/clouds/sarta
 addpath /home/sergio/git/matlabcode/CONVERT_GAS_UNITS
+addpath /home/sergio/git/matlib/clouds/sarta
 addpath /home/sergio/git/oem_climate_jacs/StrowCodeforTrendsAndAnomalies

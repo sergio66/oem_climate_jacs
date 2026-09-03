@@ -1,8 +1,8 @@
 function [y,ySKT,iaTimeStepsFound] = get_1231_timeseries_JOB(loni,lati,iQAX,stopdate,startdate,ia16daysSteps,fdirpre,AorD,iChanID);
 
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/time
-addpath /home/strow/Matlab/Math
+% addpath /asl/matlib/aslutil
+% addpath /asl/matlib/time
+% addpath /home/strow/Matlab/Math
 
 i16daysSteps = length(ia16daysSteps);
 
@@ -11,14 +11,10 @@ load_fairs
 p = [-0.17 -0.15 -1.66  1.06];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%disp(' ')
-%% see eg ~/MATLABCODE/oem_pkg_run_sergio_AuxJacs/TILES_TILES_TILES_MakeAvgCldProfs2002_2020/Code_For_HowardObs_TimeSeries/clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 433 timesteps till Nov 2021
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 457 timesteps till Nov 2020
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
 %disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
-
-%fprintf(1,'found %3i timesteps there \n',length(hugedir)-2); %% remember first two are . and ..
+fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
 
 iaFound = zeros(1,length(hugedir)-2);
 for ii = 3 : length(hugedir)
@@ -27,7 +23,7 @@ for ii = 3 : length(hugedir)
   iaFound(junk) = 1;
 end
 junk = find(iaFound == 1); junk = max(junk); maxN = junk;
-%  fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
+fprintf(1,'max(iaFound) = %3i so should do "kleenslurm; sbatch             --array=430-%3i  sergio_matlab_jobB.sbatch 10" \n',junk,junk+2);
 
 %disp('these timesteps are not found : '); junk = find(iaFound(1:junk) == 0); iaNoData = junk
   iTimeStepNotFound = 0;             iaNoData = [];
@@ -86,15 +82,18 @@ dtime = datenum(mtime);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+%timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2024_09.mat');
+timeSE = load('../Code_For_HowardObs_TimeSeries/timestepsStartEnd_2002_09_to_2028_0012.mat');
+
 rtimeS = utc2taiSergio(startdate(1),startdate(2),startdate(3),0.0001);
 rtimeE = utc2taiSergio(stopdate(1),stopdate(2),stopdate(3),24-0.0001);
 iaSE = find(timeSE.rtimeS >= rtimeS & timeSE.rtimeE <= rtimeE);
 if length(iaNoData) > 0
   iaSE = setdiff(iaSE,iaNoData);
 end
+
 iaTimeStepsFound = find(iaFound(1:length(ia16daysSteps)) == 1);
-%% fprintf(1,'taking into account %3i missing timesteps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
+fprintf(1,'taking into account %3i missing timesteps, anticipate %4i timesteps to be used \n',iTimeStepNotFound,length(iaSE));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

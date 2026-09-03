@@ -382,3 +382,211 @@ heads-down on the KCARTA dump for a few days. Come back whenever —
 whether that's wiring in the masking, debugging whatever the
 composition loop throws on first run, or once the effective-OD data is
 ready to swap into the supervised version.
+
+>>>
+
+What exactly are these
+
+% layerFeaturesAll_batch: cell{nLayers}, each (10 x miniBatchSize), sliced
+%   from your precomputed per-layer predictor arrays for this batch's profiles
+% layerTempAll_batch:     (nLayers x miniBatchSize)
+% Rtrue_batch: dlarray 'CB', (nChannelsBand x miniBatchSize), your ACTUAL
+%              stored KCARTA (or KCARTA-SARTA residual) radiance for this band
+%
+
+Good instinct to check this before running it — and there's a mix here: two things are basically right, one has a physics bug, and one is a real conceptual gap worth clearing up before you build the data assembly.
+Rtrue_batch — correct as written.
+
+surfTempBatch/emisBatch — right idea, wrong shape/type. composeRTUpward needs these as dlarray with format 'CB', and batch has to be the last dimension:
+
+  matlabsurfTempBatch = dlarray(single(surfTemp(batchIdx))', 'CB');           % (1 x miniBatchSize)
+  emisBatch     = dlarray(single(emissivityRaw(batchIdx,:))', 'CB');    % (nChannelsBand x miniBatchSize)
+
+Without the dlarray(...,'CB') wrap and transpose, the broadcasting
+inside planckRadianceVec/the emissivity blend won't line up the way
+the function expects.
+
+muBatch — this one's an actual physics bug, not just a formatting
+issue. composeRTUpward computes t_k = exp(-tau_k ./ mu), which
+requires mu = cos(viewAngle) — that's what turns τ into slant-path
+optical depth (tau/cos(angle) = tau*secant(angle), the standard
+Beer's-law path-length scaling). But viewAngleSecant_00 is already the
+secant (1/cos), based on its name and everything you've built with it
+earlier in this conversation. Passing secant in as mu inverts the
+physics — you'd get tau*cos(angle) instead of tau*secant(angle),
+i.e. less absorption at larger angles instead of more.
+
+Fix:
+
+  muBatch = dlarray(single(1 ./ viewAngleSecant_00(batchIdx))', 'CB');   % mu = cos(angle), NOT the secant
+
+layerFeaturesAll_batch — this is the one that needs rethinking, not
+just reshaping. X(batchIdx,:) would be a single flat feature vector
+per profile — that's the shape for your global EOF network, not this
+one. Here, each layer needs its own 10-number predictor vector, built
+from things local to that layer (T(z) and W(z) at and around that
+specific layer, not the whole profile). So the predictor arrays
+themselves need to already exist as (nProfiles × nLayers × 10) before
+you ever get to batching — i.e., you'd compute T(z)-Tref(z),
+W(z)/Wref(z), their sqrt/square, secant-weighting, etc. per layer,
+producing one 10-vector per layer per profile, not one long vector per
+profile. That 3-D array is what I called predictorsAll a couple
+messages back. Once that exists:
+
+  layerFeaturesAll_batch = cell(nLayers,1);
+  for k = 1:nLayers
+    layerFeaturesAll_batch{k} = dlarray(single(squeeze(predictorsAll(batchIdx, k, :)))', 'CB');  % (10 x miniBatchSize)
+  end
+
+layerTempAll_batch — right array, needs transpose + dlarray wrap:
+
+  layerTempAll_batch = dlarray(single(temp(batchIdx,:))', 'CB');   % (nLayers x miniBatchSize)...
+
+wait — check this one: composeRTUpward indexes layerTempAll(k,:)
+expecting layers on rows, batch on columns, so temp(batchIdx,:)'
+(transposed) is right if temp is (nProfiles × nLayers).
+
+The predictor-array construction (predictorsAll, per-layer,
+per-profile) is the real remaining work here — worth building and
+sanity-checking that 3-D array's shape and a couple of sample rows
+before wiring up the rest of the batch loop.
+
+>>>>
+
+Yes, I did mean the secant so ok need the cosine, easy fix. ALso for now
+I'll stick with this but in the long run we actualy do ray tracing to
+account for earth atmosphere curvature ... which means local satelite
+zenith angle at ground > satellite view angle 700 km up. OK to say
+they are the same for small angles but will need layr corrections
+eventually
+
+Good flag, and worth being precise about scope for now versus later.
+
+For now: cosine fix is the right move, and treating the local zenith
+angle as equal to the satellite view angle is a standard,
+well-justified approximation at small-to-moderate angles — the
+curvature correction only becomes significant as you approach the
+limb. That's a reasonable place to defer it.
+
+For later, when you do add it: the mechanically important thing to
+know now, so the current code doesn't fight you when you get there, is
+that the curvature correction breaks a simplifying assumption baked
+into the composition loop as written: mu is currently a single scalar
+per profile ((1 x batch)), used identically at every layer via t_k =
+exp(-tau_k ./ mu). Real ray-traced geometry through a curved
+atmosphere gives you a different effective local zenith angle at each
+layer (the path bends and the angle relative to local vertical
+increases as you go down, even for a fixed satellite view angle) — so
+mu becomes layer-dependent, not just profile-dependent: mu_k instead
+of mu.
+
+The good news: the composition loop already has the right structure to
+absorb this cleanly later, since it's already looping per-layer —
+you'd just change mu from a (1 x batch) array passed in once, to a
+(nLayers x batch) array (precomputed from your ray-tracing geometry,
+same way layerTempAll is precomputed per layer now) and index into it
+inside the loop: t_k = exp(-tau_k ./ mu(k,:)) instead of t_k =
+exp(-tau_k ./ mu). No architectural change needed, no change to tauNet
+at all — this is purely a plumbing change in composeRTUpward's
+signature, whenever you get to it.
+
+Not something to build now — just worth knowing the current single-mu
+shortcut isn't a dead end, it's a clean subset of the more general
+per-layer version you'll eventually want.
+
+>>>>
+
+lots of issues in  function composeRTupward
+
+Error using dlarray/permute
+Permutation must be between dimensions that have the same label.
+Error in ' (line 20)
+obj = conj(permute(obj, [2 1]));
+Error in composeRTUpward (line 31)
+      feats = cat(1, layerFeaturesAll{k}', layerIdxEncoded);   % (11 x batch)
+
+That error is coming from the ' (transpose) applied directly to a
+formatted dlarray — MATLAB's dlarray disallows transposing across
+labeled dimensions like 'C' and 'B' via a plain ', because swapping
+"channel" and "batch" isn't a generic permute, it's supposed to be a
+deliberate reshape with new format labels. That's what "permutation
+must be between dimensions that have the same label" is telling you.
+
+The real fix isn't to work around the transpose — it's that
+layerFeaturesAll{k} shouldn't need transposing at all here. Per the
+shape convention throughout this code, it should already be (10 x
+batch) with format 'CB' by the time it reaches composeRTUpward, built
+when you sliced the batch:
+
+  layerFeaturesAll_batch{k} = dlarray(single(squeeze(predictorsAll(batchIdx, k, :)))', 'CB');
+
+That transpose belongs once, at construction time, on the plain
+numeric array, before it's ever wrapped in dlarray. If it's already
+correctly oriented there, the line inside composeRTUpward should just
+be:
+
+  feats = cat(1, layerFeaturesAll{k}, layerIdxEncoded);   % no ' here
+
+Quick check before touching the composition code further — verify the
+actual shape you're feeding in:
+
+  size(layerFeaturesAll_batch{1})   % should print [10 miniBatchSize], NOT [miniBatchSize 10]
+
+If that comes back [10 miniBatchSize] already, just delete the stray '
+inside composeRTUpward and move on. If it comes back [miniBatchSize
+10], fix the transpose at the point you built layerFeaturesAll_batch
+(on the plain array, before dlarray(...)), not inside the composition
+function.
+
+Given you mentioned "tons of errors after that" — I'd fix this one,
+rerun, and paste whatever the next error is rather than trying to
+anticipate the rest. These dlarray format mismatches tend to cascade
+in a way that's much faster to fix one at a time against real error
+messages than to guess ahead of time.
+
+>>>>
+
+Umm, same error
+
+size(layerFeaturesAll_batch{1}) = 12 x 256
+
+then running the code, these are the first few meaningful error lines
+Error using cat
+Dimensions of arrays being concatenated are not consistent.
+Error in deep.internal.recording.operations.ConcatOp/forward (line 45)
+            z = cat(op.Dim,c{:});
+
+That error confirms a batch-size mismatch between layerFeaturesAll{k}
+(batch=256) and layerIdxEncoded (probably batch=1) — cat requires
+every non-concatenated dimension to match, and the 'B' dimension isn't
+matching here even though the 'C' dimension differs
+fine. layerIdxEncoded's batch size comes from batchSize =
+size(surfTemp, 2), so if surfTempBatch got built as (batchSize x 1)
+instead of (1 x batchSize) — likely the same transpose slip as
+viewAngleSecant/emis a couple messages back, just not yet applied here
+— batchSize comes out as 1, not 256, and layerIdxEncoded ends up 1x1
+instead of 1x256.
+
+Check directly:
+
+  size(surfTempBatch)   % must be [1 256], not [256 1]
+
+If it's [256 1], fix at construction:
+
+  surfTempBatch = dlarray(single(surfTemp(batchIdx))', 'CB');
+
+[[[[ this is irrelevant, i fixed it earlier
+Separate issue you'll hit right after this one, worth fixing now
+rather than one error at a time: layerFeaturesAll{k} is 12 x 256 — you
+apparently have 12 local predictors, not the 10 I assumed when writing
+the script. The network's first layer was sized for 10+1=11 inputs
+(nLayerFeatures = 10 + 1 at the top of the file). With 12 predictors +
+1 layer-position feature, that needs to become 13:
+
+  nLayerFeatures = 12 + 1;   % update to match your actual predictor count
+
+and rebuild params.tau_fc1_W with that corrected nLayerFeatures before
+retraining — otherwise the next error will be a fullyconnect dimension
+mismatch once the cat succeeds.
+
+Fix surfTempBatch's orientation first, rerun, and paste whatever comes next.

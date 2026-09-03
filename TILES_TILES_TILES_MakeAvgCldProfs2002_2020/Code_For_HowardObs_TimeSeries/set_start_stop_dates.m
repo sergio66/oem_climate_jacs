@@ -78,6 +78,11 @@ startdate = [2002 09 01]; stopdate = [2024 06 30];  % 21.5 years! %% AIRS STM Fa
 startdate = [2002 09 01]; stopdate = [2024 08 27];  % 22.0 years! %% AIRS STM Fall 2024 *** THIS IS THE MASTER BLASTER
 startdate = [2002 09 01]; stopdate = [2025 08 31];  % 23.0 years! %% AIRS 23 years
 
+startdate = [2002 09 01]; stopdate = [2022 08 31];  % 20.0 years! %% AIRS 20 years for JGR 2025 paper
+startdate = [2003 01 01]; stopdate = [2022 12 31];  % 20.0 years! %% AIRS 20 years for Ryan Measures, for anomalies
+
+startdate = [2002 09 01]; stopdate = [2025 08 31];  % 23.0 years! %% AIRS 23 years
+
 disp(' ')
 fprintf(1,'Code_for_TileTrends/clust_tile_fits_quantiles.m : set_start_stop_dates.m : REFINED SUBSET start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdate,stopdate)
 fprintf(1,'Code_for_TileTrends/clust_tile_fits_quantiles.m : set_start_stop_dates.m : REFINED SUBSET start/stop date = %4i/%02i/%02i to %4i/%02i/%02i \n',startdate,stopdate)
@@ -85,3 +90,4 @@ fprintf(1,'Code_for_TileTrends/clust_tile_fits_quantiles.m : set_start_stop_date
 disp(' ')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

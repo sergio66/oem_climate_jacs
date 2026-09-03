@@ -1,7 +1,9 @@
-addpath /home/motteler/shome/chirp_test
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /asl/matlib/aslutil
+adderpath
+
+% addpath /home/motteler/shome/chirp_test
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /asl/matlib/aslutil
 
 %{
 ls -lt /asl/isilon/airs/tile_test7/2002_s008/                        | wc -l      64 subdirs
@@ -26,7 +28,8 @@ JOB = 100
 JOB = 2291
 %JOB = 1
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  %% 417 timesteps till Nov 2020
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);  %% 417 timesteps till Nov 2020
 
 % indonesia = 0.78S, 113E   so latbin32,lonbin 113/180*36 + 36 = 59
 % jj = 32; ii = 59;  
@@ -144,9 +147,9 @@ for ttt = 1 : length(hugedir)-2
   tt = ttt + 2; %% since the first two are . and ..
   date_stamp = hugedir(tt).name;
 
-  thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
+  thedir0 = dir([isilon_tiledir date_stamp '/']);
   iii = ii + 2;
-  dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
+  dirdirname = [isilon_tiledir date_stamp '/' thedir0(iii).name];
   dirx = dir([dirdirname '/*.nc']);
   jjj = jj;
 

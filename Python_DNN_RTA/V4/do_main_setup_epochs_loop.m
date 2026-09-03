@@ -18,9 +18,24 @@ clear X Y
 if iFitChan == -1
   X = [dttEOF, qEOF, o3EOF, scalarTensor, emisEOF];                   % (nSamples x nFeatures)
 
-elseif iFitChan == 1  
-  X = [dt1_00, dt2_00, dt3_00, dt4_00, dt5_00, dt6_00, Wr1_00, Wr2_00, Wr3_00, Wr4_00, Wr5_00, Wr6_00];
-  
+elseif iFitChan == 1
+  whos dt1_00 dt2_00 dt3_00 dt4_00 dt5_00 dt6_00 Wr1_00 Wr2_00 Wr3_00 Wr4_00 Wr5_00 Wr6_00
+  whos T1 T2 T3 T4 T5 T6 Q1 Q2 Q3 Q4 Q5 Q6
+  %% So the predictor arrays themselves need to already exist as (nProfiles × nLayers × 10)
+  X(:,:,1) = T1;
+  X(:,:,2) = T2;
+  X(:,:,3) = T3;
+  X(:,:,4) = T4;
+  X(:,:,5) = T5;
+  X(:,:,6) = T6;  
+
+  X(:,:,7)  = Q1;
+  X(:,:,8)  = Q2;
+  X(:,:,9)  = Q3;
+  X(:,:,10) = Q4;
+  X(:,:,11) = Q5;
+  X(:,:,12) = Q6;  
+
 end  
 Y = targetCoeffs;                                                 % (nSamples x nPCA_BT)
 
@@ -68,6 +83,4 @@ iteration = 0;
 
 nTrainSamples = size(Xtrain,1);
 numBatchesPerEpoch = floor(nTrainSamples / miniBatchSize);
-
-epoch_loop
 

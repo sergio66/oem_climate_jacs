@@ -122,10 +122,10 @@ if ~exist(fdirpre_out)
   mkdir(fdirpre_out)
 end
 
-%if exist(fnout)
-%  fprintf(1,'fnout = %s already exists, skipping \n',fnout)
-%  return
-%end
+if exist(fnout)
+  fprintf(1,'fnout = %s already exists, skipping \n',fnout)
+  return
+end
 
 % run the target script
 %tile_fits_quantiles(loni,lati,fdirpre,fnout,i16daysSteps); %% can technically put [yy mm dd]_stop date   and [yy mm dd]_start date as two extra arguments

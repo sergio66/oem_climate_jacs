@@ -1,10 +1,12 @@
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/COLORMAP
-addpath /asl/matlib/aslutil
-addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
-addpath ../../StrowCodeforTrendsAndAnomalies/
+adderpath
+
+% addpath /home/sergio/MATLABCODE
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/COLORMAP
+% addpath /asl/matlib/aslutil
+% addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
+% addpath ../../StrowCodeforTrendsAndAnomalies/
 
 %% see clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
 %% see clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
@@ -69,7 +71,8 @@ junk = translator_wrong2correct(iTile)
 EW = junk.correctname(end-09:end-03);
 NS = junk.correctname(end-16:end-11);
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
 
 rKtoCoffset = 273.15;
 
@@ -126,7 +129,7 @@ for tt = 3 : iNumTimeSteps+2                       %% LOOPS OVER TIMESTEPS FOR T
 %for tt = 3 : 3 + 23*3                       %% LOOPS OVER TIMESTEPS FOR TIME
   date_stamp = ['2015_s283'];   %% example
   date_stamp = hugedir(tt).name;
-  fname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' NS '/tile_' date_stamp '_' NS '_' EW '.nc'];
+  fname = [isilon_tiledir date_stamp '/' NS '/tile_' date_stamp '_' NS '_' EW '.nc'];
   fprintf(1,' >>> reading Howard tile %s \n',fname);
   [s0, a0] = read_netcdf_h5(fname);
   ianpts0 = 1:s0.total_obs;  

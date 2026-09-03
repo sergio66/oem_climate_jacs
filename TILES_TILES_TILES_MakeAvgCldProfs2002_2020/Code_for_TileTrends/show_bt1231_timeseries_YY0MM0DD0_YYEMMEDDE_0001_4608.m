@@ -1,19 +1,32 @@
-addpath /asl/matlib/rtptools/
-addpath /asl/matlib/aslutil
-addpath /asl/matlib/h4tools
-addpath /asl/matlib/science/
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
-addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+adderpath
+
+% addpath /asl/matlib/rtptools/
+% addpath /asl/matlib/aslutil
+% addpath /asl/matlib/h4tools
+% addpath /asl/matlib/science/
+% addpath /home/sergio/MATLABCODE
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/matlib/clouds/sarta
+% addpath /home/sergio/MATLABCODE/CONVERT_GAS_UNITS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 KtoC = 273.15;
 
-rlat = load('/home/sergio/MATLABCODE/oem_pkg_run/AIRS_gridded_STM_May2021_trendsonlyCLR/latB64.mat'); rlat65 = rlat.latB2; rlat = 0.5*(rlat.latB2(1:end-1)+rlat.latB2(2:end));
+rlat = load('latB64.mat');
+rlat65 = rlat.latB2;
+rlat = 0.5*(rlat.latB2(1:end-1)+rlat.latB2(2:end));
 rlon73 = (1:73); rlon73 = -180 + (rlon73-1)*5;  rlon = (1:72); rlon = -177.5 + (rlon-1)*5;
-[Y,X] = meshgrid(rlat,rlon); 
-[salti, landfrac] = usgs_deg10_dem(Y,X);
+[Y,X] = meshgrid(rlat,rlon);
+
+%[salti, landfrac] = usgs_deg10_dem(Y,X);
+%% see /home/sergio/git/rtpmake/CLUST_RTPMAKE/COMMON_SETTINGS/set_landfrac_using_L1B_L1C_or_usgs.m
+addpath /home/sergio/git/matlabcode/DEM_DigitalELeveationModel
+  %p.landfrac_fromL1B = p.landfrac;
+  %p.salti_fromL1B = p.salti;
+  [salti,landfrac,gebco] = gdemm_dem_and_imerg_lf(Y,X);
+
 
 lf = landfrac; lf = lf(:);
 XX = X; XX = XX(:); %% MAN THIS IS CONFUSING BUT IT IS RIGHT  ie do not do XX = X'; see pcolor below

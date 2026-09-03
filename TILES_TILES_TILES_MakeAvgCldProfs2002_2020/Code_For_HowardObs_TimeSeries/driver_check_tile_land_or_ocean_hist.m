@@ -2,12 +2,14 @@
 %% see clust_check_howard_16daytimesetps_2013_raw_griddedV2.m -> clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
 %% see clust_check_howard_16daytimesetps_2013_raw_griddedV2.m -> clust_check_howard_16daytimesetps_2013_raw_griddedV2_WRONG_LatLon.m
 
-addpath /home/sergio/MATLABCODE
-addpath /home/sergio/MATLABCODE/PLOTTER
-addpath /home/sergio/MATLABCODE/TIME
-addpath /home/sergio/MATLABCODE/COLORMAP
-addpath /asl/matlib/aslutil
-addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
+adderpath 
+
+% addpath /home/sergio/MATLABCODE
+% addpath /home/sergio/MATLABCODE/PLOTTER
+% addpath /home/sergio/MATLABCODE/TIME
+% addpath /home/sergio/MATLABCODE/COLORMAP
+% addpath /asl/matlib/aslutil
+% addpath /home/sergio/MATLABCODE/oem_pkg_run_sergio_AuxJacs/StrowCodeforTrendsAndAnomalies
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% INPUT
@@ -49,15 +51,18 @@ EW = junk.correctname(end-09:end-03);
 NS = junk.correctname(end-16:end-11);
 %% comment6 = 'India : if you want sergioindex = 2788 = latbin=39,lonbin=52, then you need howard index from correct.wrongind(2788) = 0448 = correct.name{2788} = N16p50_E075p00.nc';
 
-hugedir = dir('/asl/isilon/airs/tile_test7/');  
+dir_isilon_find_howard_tiles
+hugedir = dir(isilon_tiledir);
+%disp('>>>>>>>> looking at /asl/isilon/airs/tile_test7/ ')
+%fprintf(1,'found %3i hard tile timesteps in %s \n',length(hugedir)-2,isilon_tiledir); %% remember first two are . and ..
 
 date_stamp = ['2015_s283'];   %% example
 date_stamp = hugedir(JOB).name;
 fprintf(1,'JOB = %4i date_stamp = %s \n',JOB,date_stamp);
 
-thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
+thedir0 = dir([isilon_tiledir date_stamp '/']);
 % for iii = 3 : length(thedir0)
-%  dirdirname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' thedir0(iii).name];
+%  dirdirname = [isilon_tiledir date_stamp '/' thedir0(iii).name];
 %   dirx = dir([dirdirname '/*.nc']);
 %   for jjj = 1 : length(dirx)
 %     fname = [dirdirname '/' dirx(jjj).name];
@@ -67,11 +72,11 @@ thedir0 = dir(['/asl/isilon/airs/tile_test7/' date_stamp '/']);
 %   end
 % end
 
-fname = ['/asl/isilon/airs/tile_test7/' date_stamp '/N16p50_E075p00/*.nc'];
-fname = ['/asl/isilon/airs/tile_test7/2013_s239/N16p50/tile_2013_s239_N16p50_E075p00.nc'];
-fname = ['/asl/isilon/airs/tile_test7/' date_stamp '/N16p50/tile_' date_stamp '_N16p50_E075p00.nc'];
-fname = ['/asl/isilon/airs/tile_test7/' date_stamp '/N16p50/tile_' date_stamp '_N16p50_' EW '.nc'];
-fname = ['/asl/isilon/airs/tile_test7/' date_stamp '/' NS '/tile_' date_stamp '_' NS '_' EW '.nc'];
+%fname = [isilon_tiledir date_stamp '/N16p50_E075p00/*.nc'];
+%fname = ['/asl/isilon/airs/tile_test7/2013_s239/N16p50/tile_2013_s239_N16p50_E075p00.nc'];
+fname = [isilon_tiledir date_stamp '/N16p50/tile_' date_stamp '_N16p50_E075p00.nc'];
+fname = [isilon_tiledir date_stamp '/N16p50/tile_' date_stamp '_N16p50_' EW '.nc'];
+fname = [isilon_tiledir date_stamp '/' NS '/tile_' date_stamp '_' NS '_' EW '.nc'];
 fprintf(1,' >>> reading Howard tile %s \n',fname);
 [s, a] = read_netcdf_h5(fname);
 
